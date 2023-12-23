@@ -10,7 +10,7 @@ import datetime
 from ikabot.config import *
 from ikabot.web.session import *
 from ikabot.helpers.gui import *
-from ikabot.function.donate import donate
+from ikabot.function.islandWorkplaces import islandWorkplaces
 from ikabot.function.update import update
 from ikabot.helpers.pedirInfo import read
 from ikabot.function.getStatus import getStatus
@@ -87,7 +87,7 @@ def menu(session, checkUpdate=True):
         102:            alertLowWine,
         111:            buyResources,
         112:            sellResources,
-        121:            donate,
+        121:            islandWorkplaces,
         122:            donationBot,
         10:            vacationMode,
         11:            activateMiracle,
@@ -118,7 +118,7 @@ def menu(session, checkUpdate=True):
     print(_('(6)  Login daily'))
     print(_('(7)  Alerts / Notifications'))
     print(_('(8)  Marketplace'))
-    print(_('(9)  Donate'))
+    print(_('(9)  Resource & Donate'))
     print(_('(10) Activate vacation mode'))
     print(_('(11) Activate miracle'))
     print(_('(12) Military actions'))
@@ -163,7 +163,7 @@ def menu(session, checkUpdate=True):
     if selected == 9:
         banner()
         print(_('(0) Back'))
-        print(_('(1) Donate once'))
+        print(_('(1) Resources and Donate once'))
         print(_('(2) Donate automatically'))
 
         selected = read(min=0, max=2, digit=True)
