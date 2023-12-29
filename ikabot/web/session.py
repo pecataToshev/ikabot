@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import multiprocessing
 import time
 import traceback
 from collections import deque
@@ -31,6 +31,7 @@ class Session:
         self.requestHistory = deque(maxlen=5) #keep last 5 requests in history
         # disable ssl verification warning
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+        self.update_process_list_lock = multiprocessing.Lock()
         self.__login()
 
     def setStatus(self, message):

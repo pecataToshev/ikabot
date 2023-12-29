@@ -170,7 +170,7 @@ def menu(session):
             )
 
             process.start()
-            process_list_manager.add_process({
+            process_list_manager.upsert_process({
                 'pid': process.pid,
                 'action': selected.__name__,
                 'date': time.time(),

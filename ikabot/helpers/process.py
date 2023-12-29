@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import subprocess
+import time
 
 import psutil
 
@@ -18,7 +19,6 @@ def set_child_mode(session):
     session.padre = False
     deactivate_sigint()
 
-
 def run(command):
     ret = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()
     try:
@@ -26,64 +26,84 @@ def run(command):
     except Exception:
         return ret
 
+
 class IkabotProcessListManager:
+    __process_list = 'processList'
+    __process_table = [
+        {'key': 'pid', 'title': 'pid'},
+        {'key': 'action', 'title': 'Task'},
+        {'key': 'status', 'title': 'Status'},
+        {'key': 'date', 'title': 'Last Action Time', 'fmt': lambda x: datetime.datetime.fromtimestamp(x).strftime('%b %d %H:%M:%S')},
+        {'key': 'nextActionDate', 'title': 'Next Action Time', 'fmt': lambda x: datetime.datetime.fromtimestamp(x).strftime('%b %d %H:%M:%S')},
+        {'key': 'info', 'title': 'Info'},
+    ]
+
     def __init__(self, session):
         """
         Init processes -> reads and updates the file
         :param session: ikabot.web.session.Session
         """
         self.__session = session
-        self.__process_dict = self.__read_from_files()
-        self.__write_to_file()
 
-    def __read_from_files(self):
+    def __get_processes(self, session_data):
         """
-        Reads all process from file.
-        :return: dict[pid -> dict of proces]
+        Reads all process from session_data.
+        :param session_data: sessionData
+        :return: dict[dict[]] -> dict of processes
         """
-        # read from file
-        try:
-            fileList = (self.__session.getSessionData())['processList']
-        except KeyError:
-            fileList = []
+        process_list = session_data.get(self.__process_list, [])
 
         # check it's still running
         running_ikabot_processes = []
         ika_process = psutil.Process(pid=os.getpid()).name()
-        for process in fileList:
+        for process in process_list:
             try:
                 proc = psutil.Process(pid=process['pid'])
             except psutil.NoSuchProcess:
                 continue
 
             # windows doesn't support the status method
-            isAlive = True if isWindows else proc.status() != 'zombie'
+            is_alive = True if isWindows else proc.status() != 'zombie'
 
-            if proc.name() == ika_process and isAlive:
+            if is_alive and proc.name() == ika_process:
                 running_ikabot_processes.append(process)
-
 
         return {p['pid']: p for p in running_ikabot_processes}
 
-    def __write_to_file(self):
+    def __update_processes(self, session_data, processes):
         """
-        Writes processes list to the file
+        Writes processes into session.
+        :param session_data: sessionData
+        :param processes: dict[dict[]] -> process dict
         :return: None
         """
-        session_data = (self.__session.getSessionData())
-        session_data['processList'] = self.get_process_list()
+        session_data[self.__process_list] = [p for p in processes.values()]
         self.__session.setSessionData(session_data)
 
     def get_process_list(self):
-        return [p for p in self.__process_dict.values()]
+        return self.__get_processes(self.__session.getSessionData()).values()
 
-    def add_process(self, process):
-        self.__process_dict[process['pid']] = process
-        self.__write_to_file()
+    def upsert_process(self, process):
+        """
+        Insert or updates process data.
+        :param process: dict[] -> process to update
+        :return:
+        """
+        with self.__session.update_process_list_lock:
+            _session_data = self.__session.getSessionData()
+            _processes = self.__get_processes(_session_data)
+            _pid = process.get('pid', os.getpid())
 
-    def update_process(self, process):
-        self.__process_dict[process['pid']] = process
-        self.__write_to_file()
+            # Merge with old data
+            _new_process = dict(_processes.get(_pid, {}))
+            _new_process.update(process)
+            _new_process['date'] = time.time()
+
+            logging.info("Update process data %s", str(_new_process))
+
+            # Write to session
+            _processes[_pid] = _new_process
+            self.__update_processes(_session_data, _processes)
 
     def print_proces_table(self):
         process_list = self.get_process_list()
@@ -91,14 +111,22 @@ class IkabotProcessListManager:
         if len(process_list) == 0:
             return
 
-        # Insert table header
-        table = process_list.copy()
-        table.insert(0,{'pid':'pid', 'action':'task','date':'date','status':'status'})
-        # Get max length of strings in each category (date is always going to be 15)
-        maxPid, maxAction, maxStatus = [max(i) for i in [[len(str(r['pid'])) for r in table], [len(str(r['action'])) for r in table], [len(str(r['status'])) for r in table]]]
-        # Print header
-        print('|{:^{maxPid}}|{:^{maxAction}}|{:^15}|{:^{maxStatus}}|'.format(table[0]['pid'], table[0]['action'], table[0]['date'], table[0]['status'], maxPid=maxPid, maxAction=maxAction, maxStatus=maxStatus))
-        # Print process list
-        [print('|{:^{maxPid}}|{:^{maxAction}}|{:^15}|{:^{maxStatus}}|'.format(r['pid'], r['action'], datetime.datetime.fromtimestamp(r['date']).strftime('%b %d %H:%M:%S'), r['status'], maxPid=maxPid, maxAction=maxAction, maxStatus=maxStatus)) for r in process_list]
-        print('')
+        _max_len = [len(pt['title']) for pt in self.__process_table]
+        _table = [[pt['title'] for pt in self.__process_table]]
+        for p in process_list:
+            _row = []
+            for ind, pt in enumerate(self.__process_table):
+                _v = p.get(pt['key'], None)
+                if 'fmt' in pt and _v is not None:
+                    _v = pt['fmt'](_v)
+                _row.append(_v or '-')
+                _max_len[ind] = max(_max_len[ind], len(str(_v or '-')))
+            _table.append(_row)
 
+        for tr in _table:
+            print(' | '.join(
+                ['{: ^{len}}'.format(c, len=_max_len[i])
+                 for i, c in enumerate(tr)]
+            ))
+
+        print()
