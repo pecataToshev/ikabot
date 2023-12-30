@@ -315,6 +315,7 @@ def wait_until_can_attack(session, city, island, travel_time=0):
 
     if island['barbarians']['underAttack'] == 0 and island['barbarians']['destroyed'] == 0:
         # an attack might be on its way
+        session.setProcessInfo('An attack is on its way')
         wait_for_arrival(session, city, island)
         html = session.get(island_url + island['id'])
         island = getIsland(html)
@@ -327,7 +328,7 @@ def wait_until_can_attack(session, city, island, travel_time=0):
         if len(eventTimes) > 0:
             wait_time = max(eventTimes)
             wait_time -= time.time()
-            wait(wait_time + 5)
+            session.wait(wait_time + 5, 'A battle is taking place')
         wait_until_can_attack(session, city, island, travel_time)
 
     if island['barbarians']['destroyed'] == 1:
@@ -337,7 +338,7 @@ def wait_until_can_attack(session, city, island, travel_time=0):
             wait_time = resp[2][1]['barbarianCityCooldownTimer']['countdown']['enddate']
             wait_time -= time.time()
             wait_time -= travel_time
-            wait(wait_time + 5)
+            session.wait(wait_time + 5, "The barbarians are destroyed and can't be attacked")
         wait_until_can_attack(session, city, island, travel_time)
 
 
@@ -392,7 +393,7 @@ def wait_for_arrival(session, city, island):
 
     wait_time = max(eventTimes)
     wait_time -= time.time()
-    wait(wait_time + 5)
+    session.wait(wait_time + 5, 'Waiting for arrival')
 
     wait_for_arrival(session, city, island)
 
@@ -404,7 +405,7 @@ def wait_for_round(session, city, island, travel_time, battle_start, round_numbe
         wait_time = battle_start + (round_number - 2) * 15 * 60
         wait_time -= time.time()
         wait_time -= travel_time
-        wait(wait_time + 5)
+        session.wait(wait_time + 5, 'Waiting for round ' + round_number)
 
         if battle_start < time.time():
             html = session.get(island_url + city['id'])
@@ -445,7 +446,7 @@ def wait_until_attack_is_over(session, city, island):
         eventTimes = [attack['eventTime'] for attack in attacks]
         wait_time = min(eventTimes)
         wait_time -= time.time()
-        wait(wait_time + 5)
+        session.wait(wait_time + 5, 'Waiting until attack is over')
 
         html = session.get(island_url + island['id'])
         island = getIsland(html)

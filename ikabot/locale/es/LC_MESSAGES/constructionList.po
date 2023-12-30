@@ -20,8 +20,8 @@ msgid "{}: No espero nada para que {} suba al nivel {:d}"
 msgstr "{}: I don't wait anything so that {} gets to the level {:d}"
 
 #: ../../../function/constructionList.py:46
-msgid "{}: Espero {:d} segundos para que {} suba al nivel {:d}"
-msgstr "{}: I wait {:d} seconds so that {} gets to the level {:d}"
+msgid "{}: Espero para que {} suba al nivel {:d}"
+msgstr "{}: I wait so that {} gets to the level {:d}"
 
 #: ../../../function/constructionList.py:60
 msgid "{}: El edificio {} alcanzó el nivel {:d}."

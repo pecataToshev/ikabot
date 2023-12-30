@@ -57,29 +57,6 @@ def daysHoursMinutes(totalSeconds):
         texto = texto + str(minutos) + 'M '
     return texto[:-1]
 
-
-def wait(seconds, maxrandom=0):
-    """This function will wait the provided number of seconds plus a random number of seconds between 0 and maxrandom
-    Parameters
-    -----------
-    seconds : int
-        the number of seconds to wait for
-    maxrandom : int
-        the maximum number of additional seconds to wait for
-    """
-    if seconds <= 0:
-        return
-    randomTime = random.randint(0, maxrandom)
-    ratio = (1 + 5 ** 0.5) / 2 - 1  # 0.6180339887498949
-    comienzo = time.time()
-    fin = comienzo + seconds
-    restantes = seconds
-    while restantes > 0:
-        time.sleep(restantes * ratio)
-        restantes = fin - time.time()
-    time.sleep(randomTime)
-
-
 def getCurrentCityId(session):
     """
     Parameters

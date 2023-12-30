@@ -8,7 +8,6 @@ from ikabot.config import *
 from ikabot.helpers.botComm import *
 from ikabot.helpers.pedirInfo import *
 from ikabot.helpers.gui import *
-from ikabot.helpers.varios import wait
 from ikabot.helpers.process import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 from ikabot.helpers.getJson import getCity
@@ -177,7 +176,7 @@ def do_it(session, cities_ids, cities_dict, waiting_time, max_random_waiting_tim
                 forrest = int(to_donate / 2)
                 trade = int(to_donate / 2)
                 session.post(params={'islandId': islandId, 'type': 'resource', 'action': 'IslandScreen', 'function': 'donate', 'donation': forrest, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
-                wait(1, maxrandom=5)# just to simulate user interaction
+                session.wait(1, max_random=5, info='Simulating user interaction')
                 session.post(params={'islandId': islandId, 'type': 'tradegood', 'action': 'IslandScreen', 'function': 'donate', 'donation': trade, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
             else:
                 session.post(params={'islandId': islandId, 'type': donation_type, 'action': 'IslandScreen', 'function': 'donate', 'donation': to_donate, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
@@ -185,5 +184,5 @@ def do_it(session, cities_ids, cities_dict, waiting_time, max_random_waiting_tim
         msg = _('I donated automatically.')
         sendToBotDebug(session, msg, debugON_donationBot)
 
-        # sleep a day
-        wait(waiting_time*60, maxrandom=max_random_waiting_time*60)
+        session.wait(waiting_time * 60, max_random=max_random_waiting_time * 60,
+                     info='Sleeping till next donation')

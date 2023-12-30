@@ -9,7 +9,6 @@ import requests
 from ikabot.helpers.botComm import *
 from ikabot.helpers.pedirInfo import *
 from ikabot.helpers.process import run
-from ikabot.helpers.varios import wait
 
 t = gettext.translation('buyResources', localedir, languages=languages, fallback=True)
 _ = t.gettext
@@ -144,7 +143,7 @@ def autoPirate(session, event, stdin_fd, predetermined_input):
     event.set()
     try:
         while (pirateCount > 0):
-            session.setStatus('Pirating for '+str(pirateCount)+' more runs')
+            session.setProcessInfo('Pirating for ' + str(pirateCount) + ' more runs')
             if pirateSchedule == True:
                 current_hour = int(time.strftime("%H"))
                 if current_hour >= dayStart and current_hour <= dayEnd:
@@ -161,7 +160,9 @@ def autoPirate(session, event, stdin_fd, predetermined_input):
             if '"showPirateFortressShip":0' in html:  # this is in case the user has manually run a capture run, in that case, there is no need to wait 150secs instead we can check every 5
                 url = 'view=pirateFortress&cityId={}&position=17&backgroundView=city&currentCityId={}&actionRequest={}&ajax=1'.format(piracyCities[0]['id'], piracyCities[0]['id'], actionRequest)
                 html = session.post(url)
-                wait(getCurrentMissionWaitingTime(html), maxRandomWaitingTime)
+                session.wait(getCurrentMissionWaitingTime(html), 'Waiting user started mission to end')
+                if maxRandomWaitingTime > 0:
+                    session.wait(1, 'Waiting additional time after mission end', maxRandomWaitingTime)
                 pirateCount += 1  # don't count this as an iteration of the loop
                 continue
 
@@ -171,14 +172,14 @@ def autoPirate(session, event, stdin_fd, predetermined_input):
             if 'function=createCaptcha' in html:
                 try:
                     for i in range(20):
-                        session.setStatus('Resolving captcha '+str(i)+'/20')
+                        session.setProcessInfo('Resolving captcha ' + str(i) + '/20')
                         if i == 19:
                             msg = 'Failed to resolve captcha too many times, autoPirate has been terminated.'
                             sendToBot(session, msg)
                             raise Exception("Failed to resolve captcha too many times")
                         picture = session.get('action=Options&function=createCaptcha', fullResponse=True).content
                         captcha = resolveCaptcha(session, picture)
-                        session.setStatus('Got captcha: '+captcha)
+                        session.setProcessInfo('Got captcha: ' + captcha)
                         if captcha == 'Error':
                             continue
                         session.post(city_url + str(piracyCities[0]['id']))
@@ -194,7 +195,9 @@ def autoPirate(session, event, stdin_fd, predetermined_input):
                     break
             if autoConvert.lower() == 'y':
                 convertCapturePoints(session, piracyCities, convertPerMission)
-            wait(piracyMissionWaitingTime[pirateMissionChoice], maxRandomWaitingTime)
+            session.wait(piracyMissionWaitingTime[pirateMissionChoice], 'Piracy mission in progress. {} more'.format(pirateCount))
+            if maxRandomWaitingTime > 0:
+                session.wait(1, 'Waiting additional time after mission end. {} more'.format(pirateCount), maxRandomWaitingTime)
 
     except Exception:
         info = ''
@@ -230,7 +233,7 @@ def resolveCaptcha(session, picture):
             captcha_result = requests.get("https://www.9kw.eu/index.cgi?action=usercaptchacorrectdata&id={}&apikey={}".format(captcha_id, session_data['decaptcha']['relevant_data']['apiKey'])).text
             if captcha_result != '':
                 return captcha_result.upper()
-            wait(5)
+            session.wait(5, 'Resolving Captcha')
     elif session_data['decaptcha']['name'] == 'telegram':
         sendToBot(session, 'Please solve the captcha', Photo=picture)
         captcha_time = time.time()

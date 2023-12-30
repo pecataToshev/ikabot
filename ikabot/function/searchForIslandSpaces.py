@@ -9,7 +9,7 @@ from ikabot.helpers.gui import enter
 from ikabot.helpers.pedirInfo import getIslandsIds
 from ikabot.helpers.process import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
-from ikabot.helpers.varios import wait, getDateTime, decodeUnicodeEscape
+from ikabot.helpers.varios import getDateTime, decodeUnicodeEscape
 
 t = gettext.translation('searchForIslandSpaces', localedir, languages=languages, fallback=True)
 _ = t.gettext
@@ -140,8 +140,8 @@ def __execute_monitoring(session, specified_island_ids, waiting_minutes, inform_
             # update cities_before_per_island for the current island
             cities_before_per_island[island_id] = dict(cities_now)
 
-        session.setStatus(f'Checked islands {str([int(i) for i in islands_ids]).replace(" ","")} @ {getDateTime()[-8:]}')
-        wait(waiting_minutes * 60)
+        session.wait(waiting_minutes * 60,
+                     f'Checked islands {str([int(i) for i in islands_ids]).replace(" ","")} @ {getDateTime()[-8:]}')
 
 def __extract_cities(island):
     """
