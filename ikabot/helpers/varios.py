@@ -54,7 +54,7 @@ def daysHoursMinutes(totalSeconds, include_seconds=False):
         texto = str(dias) + 'D '
     if horas > 0:
         texto = texto + str(horas) + 'H '
-    if minutos > 0 and dias == 0:
+    if minutos > 0:
         texto = texto + str(minutos) + 'M '
     if include_seconds and seconds > 0:
         texto = texto + str(seconds) + 'S '

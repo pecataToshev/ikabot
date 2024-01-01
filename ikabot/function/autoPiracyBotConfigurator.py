@@ -138,11 +138,12 @@ def __select_schedule_time(template_data, schedule_type, default_start, default_
           "(Default: {} hours from {} till {})".format(
             schedule_type, operating_hours, default_start, default_end)
     )
-    schedule['startHour'] = read(min=0, max=23, digit=True, msg='\nFrom: ',
+    schedule['startHour'] = read(min=0, max=23, digit=True, msg='From: ',
                                  default=default_start)
-    schedule['endHour'] = read(min=0, max=23, digit=True, msg='\nTill: ',
+    schedule['endHour'] = read(min=0, max=23, digit=True, msg='Till: ',
                                default=default_end)
 
+    print()
     print("I'll operate with the {} config from {} including to {} including".format(
         schedule_type, schedule['startHour'], schedule['endHour']
     ))

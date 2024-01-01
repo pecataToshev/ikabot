@@ -22,7 +22,7 @@ def showPiracyInfo(session, event, stdin_fd, predetermined_input):
         great_pirate_city = findCityWithTheBiggestPiracyFortress(session)
         template_data = getPiracyTemplateData(session, great_pirate_city)
 
-        print(' Max fortress lvl:', template_data['buildingLevel'])
+        print('Biggest fortress level:', template_data['buildingLevel'])
 
         print()
         print('Crew points:', addThousandSeparator(template_data['completeCrewPoints']))
@@ -60,6 +60,7 @@ def showPiracyInfo(session, event, stdin_fd, predetermined_input):
                 {'key': 'place', 'title': '#'},
                 {'key': 'name', 'title': 'Player', 'fmt': decodeUnicodeEscape},
                 {'key': 'capturePoints', 'title': 'Capture Points', 'fmt': addThousandSeparator},
+                {'key': 'distance', 'title': 'Distance'},
             ],
             table_data=template_data['highscore'],
             row_color=lambda row_id: bcolors.ENDC if row_id - 1 != template_data['highscorePlayerPosition'] else bcolors.WARNING,
