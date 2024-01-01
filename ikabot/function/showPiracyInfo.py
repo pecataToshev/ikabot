@@ -22,6 +22,8 @@ def showPiracyInfo(session, event, stdin_fd, predetermined_input):
         great_pirate_city = findCityWithTheBiggestPiracyFortress(session)
         template_data = getPiracyTemplateData(session, great_pirate_city)
 
+        print(template_data)
+
         print(' Max fortress lvl:', template_data['buildingLevel'])
         print('      Crew points: {} ({} basic + {} own + {} bonus)'.format(
             addThousandSeparator(template_data['completeCrewPoints']),

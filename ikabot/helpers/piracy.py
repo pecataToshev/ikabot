@@ -23,7 +23,9 @@ def getPiracyTemplateData(session, city_id):
       'ajax': 1
     })
 
-    return json.loads(html, strict=False)[2][1]
+    _template_data = json.loads(html, strict=False)[2][1]
+    _template_data = _template_data['load_js']['params']
+    return json.loads(_template_data, strict=False)
 
 
 def findCityWithTheBiggestPiracyFortress(session):
