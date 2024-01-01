@@ -84,6 +84,18 @@ def read(min=None, max=None, digit=False, msg=prompt, values=None, empty=False, 
     return read_input
 
 
+def askUserYesNo(question):
+    """
+    Asks user the yes/no question in the message and returns his response.
+    :param question: question
+    :return: bool
+    """
+    return read(
+        msg=' - {}? (y|N) '.format(question),
+        values=['y', 'Y', 'n', 'N'],
+    ).lower() == 'y'
+
+
 def chooseCity(session, foreign=False):
     """Prompts the user to chose a city
     Parameters
