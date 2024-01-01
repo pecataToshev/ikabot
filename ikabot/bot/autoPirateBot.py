@@ -31,10 +31,6 @@ def startAutoPirateBot(session, piracy_config):
         else:
             __execute_piracy_tasks(session, piracy_config)
 
-        if piracy_config['notifyWhenFinished']:
-            sendToBot(session,
-                      "I'm done with {} pirating".format(piracy_config['type']))
-
     except Exception as e:
         msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
         sendToBot(session, msg)
@@ -148,6 +144,9 @@ def __execute_piracy_tasks(session, piracy_config):
     logging.info("Successfully executed %d piracy missions",
                  total_missions)
 
+    if piracy_config['notifyWhenFinished']:
+        sendToBot(session, "I'm done with pirating")
+
 
 def __is_config_active(given_time, schedule_config):
     """
@@ -160,7 +159,7 @@ def __is_config_active(given_time, schedule_config):
     _s = schedule_config['startHour']
     _e = schedule_config['endHour']
     return _s < _e and _s <= current_hour <= _e \
-        or _s > _e and ( current_hour <= _e or _s <= current_hour)
+        or _s > _e and (current_hour <= _e or _s <= current_hour)
 
 
 def __perform_break_between_missions(session, max_break_time, additional_info):
@@ -175,7 +174,7 @@ def __perform_break_between_missions(session, max_break_time, additional_info):
         session.wait(
             seconds=1,
             info='Waiting between missions. ' + additional_info,
-            max_random_time=max_break_time-1)
+            max_random=max_break_time-1)
 
 
 def __get_template_data_and_wait_ongoing_mission(session, city_id):

@@ -43,6 +43,10 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
             msg="Enter the number of missions you would like me to do (min=1): ",
             min=1,
         )
+
+        print()
+        bot_config['notifyWhenFinished'] = askUserYesNo("Would you like to be notified when I'm done with the pirating")
+
     else:
         bot_config['type'] = 'daily'
         bot_config['dailyScheduleConfig'] = __select_schedule_time(
