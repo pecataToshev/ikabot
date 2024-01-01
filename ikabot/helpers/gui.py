@@ -6,6 +6,7 @@ import os
 import gettext
 from ikabot import config
 from ikabot.config import *
+from ikabot.helpers.pedirInfo import read
 
 t = gettext.translation('gui', localedir, languages=languages, fallback=True)
 _ = t.gettext
@@ -57,6 +58,17 @@ def printChoiceList(list):
         list to be printed
     """
     [print('{:>{pad}}) '.format(str(i+1), pad=len(str(len(list)))) + str(item)) for i, item in enumerate(list)]
+
+def askUserYesNo(question):
+    """
+    Asks user the yes/no question in the message and returns his response.
+    :param question: question
+    :return: bool
+    """
+    return read(
+        msg=' - {}? (y|N) '.format(question),
+        values=['y', 'Y', 'n', 'N'],
+    ).lower() == 'y'
 
 class bcolors:
     HEADER = '\033[95m'

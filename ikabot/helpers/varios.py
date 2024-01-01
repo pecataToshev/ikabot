@@ -29,7 +29,7 @@ def addThousandSeparator(num, character='.', include_sign=False):
     return format(int(num), sign+',').replace(',', character)
 
 
-def daysHoursMinutes(totalSeconds):
+def daysHoursMinutes(totalSeconds, include_seconds=False):
     """Formats the total number of seconds into days hours minutes (eg. 321454 -> 3D 17H)
     Parameters
     ----------
@@ -48,6 +48,7 @@ def daysHoursMinutes(totalSeconds):
     horas = int(totalSeconds / Decimal(3600))
     totalSeconds -= horas * Decimal(3600)
     minutos = int(totalSeconds / Decimal(60))
+    seconds = int(totalSeconds % Decimal(60))
     texto = ''
     if dias > 0:
         texto = str(dias) + 'D '
@@ -55,6 +56,8 @@ def daysHoursMinutes(totalSeconds):
         texto = texto + str(horas) + 'H '
     if minutos > 0 and dias == 0:
         texto = texto + str(minutos) + 'M '
+    if include_seconds and seconds > 0:
+        texto = texto + str(seconds) + 'S '
     return texto[:-1]
 
 def getCurrentCityId(session):
