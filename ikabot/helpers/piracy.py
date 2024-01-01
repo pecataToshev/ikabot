@@ -3,7 +3,6 @@ import json
 from ikabot.config import city_url, actionRequest
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.pedirInfo import getIdsOfCities
-from ikabot.helpers.varios import decodeUnicodeEscape
 
 
 def getPiracyTemplateData(session, city_id):
@@ -24,7 +23,7 @@ def getPiracyTemplateData(session, city_id):
       'ajax': 1
     })
 
-    return json.loads(decodeUnicodeEscape(html), strict=False)[2][1]
+    return json.loads(html, strict=False)[2][1]
 
 
 def findCityWithTheBiggestPiracyFortress(session):

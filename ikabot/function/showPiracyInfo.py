@@ -36,7 +36,7 @@ def showPiracyInfo(session, event, stdin_fd, predetermined_input):
             mission = [m for m in template_data['pirateCaptureLevels']
                        if m['buildingLevel'] == template_data['ongoingMissionLevel']][0]
             print("   Ongoing mission: {} ({} time left)".format(
-                mission['name'],
+                decodeUnicodeEscape(mission['name']),
                 daysHoursMinutes(template_data['ongoingMissionTimeRemaining'], include_seconds=True)
             ))
 
@@ -47,28 +47,14 @@ def showPiracyInfo(session, event, stdin_fd, predetermined_input):
                 daysHoursMinutes(template_data['ongoingConvertionTimeRemaining'], include_seconds=True)
             ))
 
-        print()
-        score = template_data['highscore']
-        column_keys = ['place', 'name', 'capturePoints']
-        header = {
-          'place': 'Place',
-          'name': 'Player',
-          'capturePoints': 'Capture Points'
-        }
-        table_data = [header] + score
-        _len = [max([len(str(s[ck])) for s in table_data]) for ck in column_keys]
-
-        for player_pos, row_data in enumerate(table_data):
-            row = []
-
-            for ind, ck in enumerate(column_keys):
-                row.append("{: >{len}}".format(row_data[ck], len=_len[ind]))
-
-            color = bcolors.ENDC
-            if player_pos - 1 == template_data['highscorePlayerPosition']:
-                color = bcolors.WARNING
-
-            print(color, " | ".join(row), bcolors.ENDC)
+        printTable(
+            table_config=[
+                {'key': 'place', 'title': 'Place'},
+                {'key': 'name', 'title': 'Player', 'fmt': decodeUnicodeEscape},
+                {'key': 'capturePoints', 'title': 'Capture Points', 'fmt': addThousandSeparator},
+            ],
+            table_data=template_data['highscore']
+        )
 
         enter()
     except KeyboardInterrupt:

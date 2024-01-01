@@ -80,7 +80,7 @@ def __select_piracy_mission(template_data, additional_select_message=''):
             mission[missions_count] = mission['mobilePic']
             print(" {}) {} (points: {}, gold: {}, duration: {})".format(
                 missions_count,
-                mission['name'],
+                decodeUnicodeEscape(mission['name']),
                 mission['capturePoints'],
                 mission['gold'],
                 daysHoursMinutes(mission['duration'], include_seconds=True),
