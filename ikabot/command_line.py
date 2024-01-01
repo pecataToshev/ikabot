@@ -1,14 +1,12 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-import logging
 import os
 import sys
 import gettext
 import multiprocessing
-import time
-import datetime
-from logging.handlers import TimedRotatingFileHandler
 
+from ikabot.function.autoPiracyBotConfigurator import autoPiracyBotConfigurator
+from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.helpers.logs import setup_logging
 from ikabot.config import *
 from ikabot.web.session import *
@@ -95,7 +93,12 @@ _global_menu = [
     ['Construct building', constructBuilding],
     ['Update Ikabot', update],
     ['Import / Export cookie', importExportCookie],
-    ['Auto-Pirate', autoPirate],
+    ['Piracy', [
+        __command_back,
+        ['Show piracy stats', showPiracyInfo],
+        ['Configure Auto_pirate bot', autoPiracyBotConfigurator],
+        ['Auto Pirate', autoPirate],
+    ]],
     ['Investigate', investigate],
     ['Attack barbarians', attackBarbarians],
     ['Dump / View world', dumpWorld],
