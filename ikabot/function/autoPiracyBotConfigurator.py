@@ -2,7 +2,7 @@ from ikabot.bot.autoPirateBot import startAutoPirateBot
 from ikabot.helpers.pedirInfo import *
 from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
   getPiracyTemplateData
-from ikabot.helpers.varios import daysHoursMinutes
+from ikabot.helpers.varios import daysHoursMinutes, addThousandSeparator
 
 
 def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
@@ -36,7 +36,13 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
     print(" 2) Regular Day/Night missions")
     if read(min=1, max=2, digit=True) == 1:
         bot_config['type'] = 'fixed number'
-        bot_config['missionMobilePic'] = __select_piracy_mission(template_data)
+        bot_config['missionBuildingLevel'] = __select_piracy_mission(template_data)
+
+        print()
+        bot_config['totalMissions'] = read(
+            msg="Enter the number of missions you would like me to do (min=1): ",
+            min=1,
+        )
     else:
         bot_config['type'] = 'daily'
         bot_config['dailyScheduleConfig'] = __select_schedule_time(
@@ -46,6 +52,7 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
             template_data, 'night', 20, 8
         )
 
+    print()
     if askUserYesNo("Would you like to convert some capture points after each mission"):
         _all = 'all'
         _mission = 'mission'
@@ -54,7 +61,8 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
         print('Type any number, to convert exact amount')
         bot_config['convertPoints'] = read(min=1, additionalValues=[_all, _mission])
 
-    bot_config['maxBreakTime'] = read(min=0, digit=True, msg="Enter the maximum additional waiting time between consecutive missions in seconds. (min = 0)")
+    print()
+    bot_config['maxBreakTime'] = read(min=0, digit=True, msg="Enter the maximum additional waiting time between consecutive missions in seconds. (min = 0) ")
 
     print('YAAAAAR!')
 
@@ -71,20 +79,33 @@ def __select_piracy_mission(template_data, additional_select_message=''):
     :param additional_select_message: str -> additional text to show the user
     :return: str
     """
+    __missions_table_config = [
+        {}
+    ]
+
+    print()
     print('Select privacy missions{}:'.format(additional_select_message))
     missions = {}
     missions_count = 0
+    missions_table = []
     for mission_index, mission in enumerate(template_data['pirateCaptureLevels']):
-        if mission['buildingLevel'] >= template_data['buildingLevel']:
+        if mission['buildingLevel'] <= template_data['buildingLevel']:
             missions_count += 1
-            mission[missions_count] = mission['mobilePic']
-            print(" {}) {} (points: {}, gold: {}, duration: {})".format(
-                missions_count,
-                decodeUnicodeEscape(mission['name']),
-                mission['capturePoints'],
-                mission['gold'],
-                daysHoursMinutes(mission['duration'], include_seconds=True),
-            ))
+            mission['id'] = "{})".format(missions_count)
+            missions[missions_count] = mission['buildingLevel']
+            missions_table.append(mission)
+
+    printTable(
+        table_config=[
+            {'key': 'id', 'title': '#'},
+            {'key': 'name', 'title': 'Mission Name', 'fmt': decodeUnicodeEscape},
+            {'key': 'capturePoints', 'title': 'Capture Points', 'fmt': addThousandSeparator},
+            {'key': 'gold', 'title': 'Gold', 'fmt': addThousandSeparator},
+            {'key': 'duration', 'title': 'Duration', 'fmt': lambda x: daysHoursMinutes(x, include_seconds=True)},
+        ],
+        table_data=missions_table,
+        row_additional_indentation='  '
+    )
 
     selected = read(min=1, max=missions_count, digit=True)
     return missions[selected]
@@ -99,6 +120,7 @@ def __select_schedule_time(template_data, schedule_type, default_start, default_
     :param default_end: int -> default end hour
     :return: dict[] with the schedule
     """
+    print()
     print("Let's configure the {} time schedule:".format(schedule_type))
 
     schedule = {
@@ -112,16 +134,16 @@ def __select_schedule_time(template_data, schedule_type, default_start, default_
           "(Default: {} hours from {} till {})".format(
             schedule_type, operating_hours, default_start, default_end)
     )
-    schedule['startHour'] = read(min=0, max=23, digit=True, msg='From: ',
+    schedule['startHour'] = read(min=0, max=23, digit=True, msg='\nFrom: ',
                                  default=default_start)
-    schedule['endHour'] = read(min=0, max=23, digit=True, msg='Till: ',
+    schedule['endHour'] = read(min=0, max=23, digit=True, msg='\nTill: ',
                                default=default_end)
 
     print("I'll operate with the {} config from {} including to {} including".format(
         schedule_type, schedule['startHour'], schedule['endHour']
     ))
 
-    schedule['missionMobilePic'] = __select_piracy_mission(
+    schedule['missionBuildingLevel'] = __select_piracy_mission(
         template_data,
         ' at {} time'.format(schedule_type)
     )

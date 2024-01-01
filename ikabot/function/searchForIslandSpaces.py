@@ -6,7 +6,7 @@ import traceback
 from ikabot.helpers.botComm import *
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import enter
-from ikabot.helpers.pedirInfo import getIslandsIds
+from ikabot.helpers.pedirInfo import getIslandsIds, askUserYesNo
 from ikabot.helpers.process import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 from ikabot.helpers.varios import getDateTime, decodeUnicodeEscape
@@ -17,7 +17,6 @@ _ = t.gettext
 __inform_fights = 'inform-fights'
 __inform_inactive = 'inform-inactive'
 __inform_vacation = 'inform-vacation'
-__yes_no_values = ['y', 'Y', 'n', 'N']
 __state_inactive = 'inactive'
 __state_vacation = 'vacation'
 
@@ -72,10 +71,7 @@ def searchForIslandSpaces(session, event, stdin_fd, predetermined_input):
             [__inform_inactive, 'A player becomes active/inactive'],
             [__inform_vacation, 'A player activates/deactivates vacation'],
         ]:
-            if read(
-                msg=' - {}? (Y|N)'.format(msg),
-                values=['y', 'Y', 'n', 'N'],
-              ).lower() == 'y':
+            if askUserYesNo(' - ' + msg):
                 inform_list.append(val)
 
         print(_('I will search for changes in the selected islands'))

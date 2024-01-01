@@ -91,7 +91,7 @@ def askUserYesNo(question):
     :return: bool
     """
     return read(
-        msg=' - {}? (y|N) '.format(question),
+        msg=question + '? (y|N) ',
         values=['y', 'Y', 'n', 'N'],
     ).lower() == 'y'
 

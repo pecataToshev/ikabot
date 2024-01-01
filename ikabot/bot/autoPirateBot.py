@@ -77,7 +77,7 @@ def __execute_piracy_daily_missions(session, piracy_config):
             __execute_piracy_mission(
                 session,
                 piracy_config['cityId'],
-                day_config['missionMobilePic'],
+                day_config['missionBuildingLevel'],
                 '@daily'
             )
             __perform_break_between_missions(
@@ -99,7 +99,7 @@ def __execute_piracy_daily_missions(session, piracy_config):
                 __execute_piracy_mission(
                     session,
                     piracy_config['cityId'],
-                    night_config['missionMobilePic'],
+                    night_config['missionBuildingLevel'],
                     '@nightly'
                 )
 
@@ -136,7 +136,7 @@ def __execute_piracy_tasks(session, piracy_config):
         __execute_piracy_mission(
             session,
             piracy_config['cityId'],
-            piracy_config['missionMobilePic'],
+            piracy_config['missionBuildingLevel'],
             'Mission {}/{}'.format(task_index + 1, total_missions)
         )
         __perform_break_between_missions(
@@ -196,17 +196,17 @@ def __get_template_data_and_wait_ongoing_mission(session, city_id):
     return data
 
 
-def __execute_piracy_mission(session, city_id, mission_mobile_pic, additional_message):
+def __execute_piracy_mission(session, city_id, mission_building_level, additional_message):
     """
     Executes piracy mission without additional waiting time and solving captcha.
     :param session: ikabot.web.session.Session
     :param city_id: int -> city with the fortress
-    :param mission_mobile_pic: str -> the unique identifier in the missions list
+    :param mission_building_level: int -> the building level of the mission
     :param additional_message: str -> additional message in the statuses
     :return: void
     """
     data = __get_template_data_and_wait_ongoing_mission(session, city_id)
-    mission = [p for p in data['pirateCaptureLevels'] if p['mobilePic'] == mission_mobile_pic][0]
+    mission = [p for p in data['pirateCaptureLevels'] if p['buildingLevel'] == mission_building_level][0]
 
     if mission['buildingLevel'] > data['buildingLevel']:
         raise Exception(('This piracy mission ({}) requires {} building level' 
