@@ -58,7 +58,8 @@ def printChoiceList(list):
     [print('{:>{pad}}) '.format(str(i+1), pad=len(str(len(list)))) + str(item)) for i, item in enumerate(list)]
 
 
-def printTable(table_config, table_data, missing_value='', column_align='>'):
+def printTable(table_config, table_data, missing_value='', column_align='>',
+               row_additional_indentation='', row_color=lambda i: bcolors.ENDC):
     """
     Formats table and prints it
 
@@ -74,6 +75,10 @@ def printTable(table_config, table_data, missing_value='', column_align='>'):
     :param table_data: list[dict[]] -> data to print
     :param missing_value: str -> what to print if value is missing
     :param column_align: str -> default align of all table columns
+    :param row_additional_indentation: str -> add some prefix data before
+                                              printing the row
+    :param row_color: lambda int -> str: determine row color by row index
+                                         starting with 0 for table headers
     :return: void
     """
     print()
@@ -92,8 +97,8 @@ def printTable(table_config, table_data, missing_value='', column_align='>'):
             _max_len[ind] = max(_max_len[ind], len(str(_v or missing_value)))
         _table.append(_row)
 
-    for tr in _table:
-        print(' | '.join(
+    for tri, tr in enumerate(_table):
+        print(row_color(tri) + row_additional_indentation + ' | '.join(
             ['{column: {align}{len}}'.format(
                 column=c,
                 align=table_config[ci].get('align', column_align),
