@@ -8,6 +8,7 @@ import psutil
 
 from ikabot.config import *
 from ikabot.helpers.signals import deactivate_sigint
+from ikabot.helpers.varios import formatTimestamp
 
 
 def set_child_mode(session):
@@ -18,6 +19,7 @@ def set_child_mode(session):
     """
     session.padre = False
     deactivate_sigint()
+
 
 def run(command):
     ret = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()
@@ -33,8 +35,8 @@ class IkabotProcessListManager:
         {'key': 'pid', 'title': 'pid'},
         {'key': 'action', 'title': 'Task'},
         {'key': 'status', 'title': 'Status'},
-        {'key': 'date', 'title': 'Last Action Time', 'fmt': lambda x: datetime.datetime.fromtimestamp(x).strftime('%b %d %H:%M:%S')},
-        {'key': 'nextActionDate', 'title': 'Next Action Time', 'fmt': lambda x: datetime.datetime.fromtimestamp(x).strftime('%b %d %H:%M:%S')},
+        {'key': 'date', 'title': 'Last Action Time', 'fmt': formatTimestamp},
+        {'key': 'nextActionDate', 'title': 'Next Action Time', 'fmt': formatTimestamp},
         {'key': 'info', 'title': 'Info'},
     ]
 
@@ -99,7 +101,12 @@ class IkabotProcessListManager:
             _new_process.update(process)
             _new_process['date'] = time.time()
 
-            logging.info("Update process data %s", str(_new_process))
+            _log_process = dict(_new_process)
+            _log_process.pop('pid')
+            _log_process.pop('date')
+            if _log_process.get('nextActionDate', None) is not None:
+                _log_process['nextActionDate'] = formatTimestamp(_log_process['nextActionDate'])
+            logging.info("Upsert process: %s", _log_process)
 
             # Write to session
             _processes[_pid] = _new_process
