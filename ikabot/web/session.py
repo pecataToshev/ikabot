@@ -90,7 +90,7 @@ class Session:
         """
         self.__process_manager.upsert_process({
             'info': message,
-            'nextAction': None
+            'nextActionDate': None
         })
     
     def updateLogLevel(self, level=None):
