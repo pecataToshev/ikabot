@@ -10,6 +10,8 @@ from ikabot.helpers.process import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 
+__MAXIMUM_PIRATE_MISSION_START_ATTEMPTS=20
+
 def startAutoPirateBot(session, piracy_config):
     """
     Performs auto pirate scheduled tasks.
@@ -71,10 +73,10 @@ def __execute_piracy_daily_missions(session, piracy_config):
             logging.debug('Executing daily mission')
             last_mission_type = 'daily'
             __execute_piracy_mission(
-                session,
-                piracy_config['cityId'],
-                day_config['missionBuildingLevel'],
-                '@daily'
+                session=session,
+                city_id=piracy_config['cityId'],
+                mission_building_level=day_config['missionBuildingLevel'],
+                additional_message='@daily'
             )
             __perform_break_between_missions(
                 session,
@@ -93,10 +95,10 @@ def __execute_piracy_daily_missions(session, piracy_config):
             else:
                 logging.debug('Executing nightly mission')
                 __execute_piracy_mission(
-                    session,
-                    piracy_config['cityId'],
-                    night_config['missionBuildingLevel'],
-                    '@nightly'
+                    session=session,
+                    city_id=piracy_config['cityId'],
+                    mission_building_level=night_config['missionBuildingLevel'],
+                    additional_message='@nightly'
                 )
 
             last_mission_type = 'nightly'
@@ -130,10 +132,11 @@ def __execute_piracy_tasks(session, piracy_config):
 
     for task_index in range(total_missions):
         __execute_piracy_mission(
-            session,
-            piracy_config['cityId'],
-            piracy_config['missionBuildingLevel'],
-            'Mission {}/{}'.format(task_index + 1, total_missions)
+            session=session,
+            city_id=piracy_config['cityId'],
+            mission_building_level=piracy_config['missionBuildingLevel'],
+            additional_message='Mission {}/{}'.format(task_index + 1,
+                                                      total_missions)
         )
         __perform_break_between_missions(
             session,
@@ -195,44 +198,36 @@ def __get_template_data_and_wait_ongoing_mission(session, city_id):
     return data
 
 
-def __execute_piracy_mission(session, city_id, mission_building_level, additional_message):
+def __execute_piracy_mission(
+    session,
+    city_id,
+    mission_building_level,
+    additional_message,
+    captcha=None,
+    remaining_attempts=__MAXIMUM_PIRATE_MISSION_START_ATTEMPTS,
+):
     """
-    Executes piracy mission without additional waiting time and solving captcha.
+    Executes piracy mission and handles captcha.
     :param session: ikabot.web.session.Session
     :param city_id: int -> city with the fortress
     :param mission_building_level: int -> the building level of the mission
     :param additional_message: str -> additional message in the statuses
-    :return: void
-    """
-    data = __get_template_data_and_wait_ongoing_mission(session, city_id)
-    mission = [p for p in data['pirateCaptureLevels'] if p['buildingLevel'] == mission_building_level][0]
-
-    if mission['buildingLevel'] > data['buildingLevel']:
-        raise Exception(('This piracy mission ({}) requires {} building level' 
-                  'but found {}').format(
-            mission['name'],
-                 mission['buildingLevel'],
-            data['buildingLevel'],
-        ))
-
-    __execute_piracy_mission_and_handle_captcha(session, mission, city_id, None, 20)
-    session.wait(mission['duration'],
-                 'Executing piracy mission {}. {}'.format(mission['name'],
-                                                          additional_message))
-
-
-def __execute_piracy_mission_and_handle_captcha(session, mission, city_id, captcha, remaining_attempts):
-    """
-    Executes piracy mission and handles captcha.
-    :param session: ikabot.web.session.Session
-    :param mission: dict[] -> mission info
-    :param city_id: int -> city with the fortress
     :param captcha: str -> resolved captcha
     :param remaining_attempts: times to try id captcha is not solved
     :return: void
     """
     if remaining_attempts <= 0:
         raise Exception('Failed to start the mission too many times. Terminating')
+
+    data = __get_template_data_and_wait_ongoing_mission(session, city_id)
+    mission = [p for p in data['pirateCaptureLevels'] if p['buildingLevel'] == mission_building_level][0]
+
+    if mission['buildingLevel'] > data['buildingLevel']:
+        _msg = 'This piracy mission ({}) requires {} building level' \
+               'but found {}'.format(mission['name'],
+                                     mission['buildingLevel'],
+                                     data['buildingLevel'], )
+        raise Exception(_msg)
 
     params = {
         'action': 'PiracyScreen',
@@ -255,42 +250,49 @@ def __execute_piracy_mission_and_handle_captcha(session, mission, city_id, captc
         })
 
     # try to execute the pirate mission
-    html = session.post(params=params)
-    if 'function=createCaptcha' not in html:
-        logging.info("Executing piracy mission %s", mission['name'])
+    html = session.post(params=params, noIndex=captcha is not None)
+    if 'function=createCaptcha' not in html \
+            and '"showPirateFortressShip":0' in html:
+
+        # execution is successful, go get some sleep
+        session.wait(mission['duration'],
+                     'Executing piracy mission {}. {}'.format(mission['name'],
+                                                              additional_message))
         return
 
-    captcha = None # well, captcha failed, let's generate a new one
-
-    if '"showPirateFortressShip":1' in html:
-        # if this is true, then the crew is still in the town.
-        # that means that the request didn't succeed
-        return __execute_piracy_mission_and_handle_captcha(
-            session,
-            mission,
-            city_id,
-            captcha,
-            remaining_attempts-1
+    if 'function=createCaptcha' not in html:
+        logging.warning('Mission has not started, but captcha not required. '
+                        'Retrying the mission execution')
+        return __execute_piracy_mission(
+            session=session,
+            city_id=city_id,
+            mission_building_level=mission_building_level,
+            additional_message=additional_message,
+            captcha=None,
+            remaining_attempts=remaining_attempts-1,
         )
 
-    # generate captcha
+    session.setProcessInfo('We have to solve some captcha. Let me handle that')
+    captcha = None  # well, captcha failed, let's generate a new one
     while (captcha is None or captcha == 'Error') and remaining_attempts > 0:
+        remaining_attempts -= 1
+        logging.info("Found captcha. Trying to resolve it. "
+                     "%d attempts remaining", remaining_attempts)
 
-        logging.info("Found captcha. Trying to resolve it. %d attempts remaining", remaining_attempts)
-        picture = session.get('action=Options&function=createCaptcha', fullResponse=True).content
+        picture = session.get('action=Options&function=createCaptcha',
+                              fullResponse=True).content
         captcha = resolveCaptcha(session, picture)
-        session.setProcessInfo('Got captcha: ' + captcha)
+
         logging.info("Resolved captcha to %s", captcha)
 
-        remaining_attempts -= 1
-
-    # captcha has been resolves, let's try again.
+    # captcha has been resolved, let's try again.
     # or no more remaining attempts
-    return __execute_piracy_mission_and_handle_captcha(
-        session,
-        mission,
-        city_id,
-        captcha,
-        remaining_attempts
+    return __execute_piracy_mission(
+        session=session,
+        city_id=city_id,
+        mission_building_level=mission_building_level,
+        additional_message=additional_message,
+        captcha=captcha,
+        remaining_attempts=remaining_attempts,
     )
 
