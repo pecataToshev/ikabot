@@ -16,6 +16,8 @@ jobs:
 
       - name: Set Version
         run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           version=$(.githooks/pre-commit)
           git commit -m "Set release version to $version"
           git push
