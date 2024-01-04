@@ -12,6 +12,7 @@ from ikabot.helpers.gui import *
 from ikabot.helpers.pedirInfo import *
 from ikabot.helpers.process import IkabotProcessListManager
 from ikabot.helpers.varios import decodeUnicodeEscape
+from ikabot.helpers.varios import getDateTime, decodeUnicodeEscape
 
 t = gettext.translation('session', localedir, languages=languages, fallback=True)
 _ = t.gettext
