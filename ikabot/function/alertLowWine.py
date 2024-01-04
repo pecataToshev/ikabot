@@ -69,6 +69,8 @@ def do_it(session, hours):
 
     was_alerted = {}
     while True:
+        session.setProcessInfo('Checking for low wine')
+
         # getIdsOfCities is called on a loop because the amount of cities may change
         ids, cities = getIdsOfCities(session)
 
@@ -95,7 +97,7 @@ def do_it(session, hours):
                     was_alerted[cityId] = False
                     continue
 
-            consumption_per_seg = Decimal(consumption_per_hour) / Decimal(3600)
+            consumption_per_seg = Decimal(consumption_per_hour) / Decimal(SECONDS_IN_HOUR)
             wine_available = city['availableResources'][1]
 
             if consumption_per_seg == 0:
@@ -115,4 +117,4 @@ def do_it(session, hours):
             else:
                 was_alerted[cityId] = False
 
-        time.sleep(20*60)
+        session.wait(20*60, 'I wait for the next check')
