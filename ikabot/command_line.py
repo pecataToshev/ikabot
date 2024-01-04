@@ -1,12 +1,15 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import logging
 import os
 import sys
 import gettext
 import multiprocessing
 import time
 import datetime
+from logging.handlers import TimedRotatingFileHandler
+
+from ikabot.helpers.logs import setup_logging
 from ikabot.config import *
 from ikabot.web.session import *
 from ikabot.helpers.gui import *
@@ -205,8 +208,8 @@ def start():
         clear()
         session.logout()
 
-
 def main():
+    setup_logging()
     manager = multiprocessing.Manager()
     predetermined_input = manager.list()
     config.predetermined_input = predetermined_input
