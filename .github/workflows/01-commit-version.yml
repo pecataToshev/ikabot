@@ -1,0 +1,23 @@
+name: Set Version on Main/Master
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - setup-automatic-versioning
+
+jobs:
+  set-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set Version
+        run: |
+          .githooks/pre-commit
+          git add setup.py
+          git commit -m "Set release version"
+          git push
