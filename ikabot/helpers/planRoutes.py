@@ -8,7 +8,6 @@ import json
 import random
 from decimal import *
 from ikabot.config import *
-from ikabot.helpers.varios import wait
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.naval import *
 
@@ -89,7 +88,7 @@ def sendGoods(session, originCityId, destinationCityId, islandId, ships, send):
         if resp[3][1][0]['type'] == 10:
             break
         elif resp[3][1][0]['type'] == 11:
-            wait(getMinimumWaitingTime(session))
+            session.wait(getMinimumWaitingTime(session), 'Waiting in the if')
         time.sleep(5)
 
 
@@ -107,7 +106,7 @@ def executeRoutes(session, routes):
         destination_city_id = destination_city['id']
 
         while sum(toSend) > 0:
-            session.setStatus(f'Sending {toSend[0]}W, {toSend[1]}V, {toSend[2]}M, {toSend[3]}C, {toSend[4]}S ---> {destination_city["name"]}')
+            session.setProcessInfo(f'Sending {toSend[0]}W, {toSend[1]}V, {toSend[2]}M, {toSend[3]}C, {toSend[4]}S ---> {destination_city["name"]}')
             ships_available = waitForArrival(session)
             storageCapacityInShips = ships_available * 500
 
@@ -134,7 +133,7 @@ def executeRoutes(session, routes):
             if resources_to_send == 0:
                 # no space available
                 # wait an hour and try again
-                wait(60 * 60)
+                session.wait(60 * 60, 'No space available. Will retry')
                 continue
 
             available_ships = int(math.ceil((Decimal(resources_to_send) / Decimal(500))))
@@ -190,6 +189,6 @@ def waitForArrival(session):
     available_ships = getAvailableShips(session)
     while available_ships == 0:
         minimum_waiting_time_for_ship = getMinimumWaitingTime(session)
-        wait(minimum_waiting_time_for_ship)
+        session.wait(minimum_waiting_time_for_ship, 'Waiting for arrival')
         available_ships = getAvailableShips(session)
     return available_ships

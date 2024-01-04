@@ -66,7 +66,7 @@ def respondToAttack(session):
 
     # this allows the user to respond to an attack via telegram
     while True:
-        time.sleep(60 * 3)
+        time.sleep(60 * 3)  # this sleep is on the thread
         responses = getUserResponse(session)
         for response in responses:
             # the response should be in the form of:
@@ -154,4 +154,4 @@ def do_it(session, minutes):
             if event_id not in currentAttacks:
                 knownAttacks.remove(event_id)
 
-        time.sleep(minutes * 60)
+        session.wait(minutes * 60, 'Waiting for next check')

@@ -63,8 +63,9 @@ _global_menu = [
     ['Send resources', sendResources],
     ['Distribute resources', distributeResources],
     ['Account status', [
-      ['Simplified', getStatus],
-      ['All Cities', getStatusForAllCities],
+        __command_back,
+        ['Simplified', getStatus],
+        ['All Cities', getStatusForAllCities],
     ]],
     ['Monitor islands', searchForIslandSpaces],
     ['Login daily', loginDaily],
@@ -169,10 +170,9 @@ def menu(session):
             )
 
             process.start()
-            process_list_manager.add_process({
+            process_list_manager.upsert_process({
                 'pid': process.pid,
                 'action': selected.__name__,
-                'date': time.time(),
                 'status': 'started'
             })
 
@@ -207,6 +207,7 @@ def start():
     finally:
         clear()
         session.logout()
+
 
 def main():
     setup_logging()

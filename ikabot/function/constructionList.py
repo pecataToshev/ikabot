@@ -57,10 +57,10 @@ def waitForConstruction(session, city_id):
         final_time = int(construction_time)
         seconds_to_wait = final_time - current_time
 
-        msg = _('{}: I wait {:d} seconds so that {} gets to the level {:d}').format(city['cityName'], seconds_to_wait, construction_building['name'], construction_building['level'] + 1)
+        msg = _('{}: I wait so that {} gets to the level {:d}').format(city['cityName'], construction_building['name'], construction_building['level'] + 1)
         sendToBotDebug(session, msg, debugON_constructionList)
 
-        wait(seconds_to_wait + 10)
+        session.wait(seconds_to_wait + 10, msg)
 
     html = session.get(city_url + city_id)
     city = getCity(html)
@@ -82,7 +82,7 @@ def expandBuilding(session, cityId, building, waitForResources):
     levels_to_upgrade = building['upgradeTo'] - current_level
     position = building['position']
 
-    time.sleep(random.randint(5, 15))  # to avoid race conditions with sendResourcesNeeded
+    session.wait(5, max_random=15, info='Waiting to avoid race conditions with sendResourcesNeeded')
 
     for lv in range(levels_to_upgrade):
         city = waitForConstruction(session, cityId)
@@ -90,7 +90,7 @@ def expandBuilding(session, cityId, building, waitForResources):
 
         if building['canUpgrade'] is False and waitForResources is True:
             while building['canUpgrade'] is False:
-                time.sleep(60)
+                session.wait(60, 'Waiting to have some more resources')
                 seconds = getMinimumWaitingTime(session)
                 html = session.get(city_url + cityId)
                 city = getCity(html)
@@ -98,13 +98,14 @@ def expandBuilding(session, cityId, building, waitForResources):
                 # if no ships are comming, exit no matter if the building can or can't upgrade
                 if seconds == 0:
                     break
-                wait(seconds + 5)
+                session.wait(seconds + 5, 'Waiting the ships to arrive')
 
         if building['canUpgrade'] is False:
             msg = _('City:{}\n').format(city['cityName'])
             msg += _('Building:{}\n').format(building['name'])
             msg += _('The building could not be completed due to lack of resources.\n')
             msg += _('Missed {:d} levels').format(levels_to_upgrade - lv)
+            logging.info(msg)
             sendToBot(session, msg)
             return
 
@@ -121,9 +122,11 @@ def expandBuilding(session, cityId, building, waitForResources):
 
         msg = _('{}: The building {} is being extended to level {:d}.').format(city['cityName'], building['name'], building['level']+1)
         sendToBotDebug(session, msg, debugON_constructionList)
+        logging.info(msg)
 
     msg = _('{}: The building {} finished extending to level: {:d}.').format(city['cityName'], building['name'], building['level']+1)
     sendToBotDebug(session, msg, debugON_constructionList)
+    logging.info(msg)
 
 
 def getCostsReducers(city):

@@ -12,7 +12,7 @@ from ikabot.helpers.gui import *
 from ikabot.helpers.market import *
 from ikabot.helpers.botComm import *
 from ikabot.helpers.naval import getTotalShips
-from ikabot.helpers.varios import addThousandSeparator, wait
+from ikabot.helpers.varios import addThousandSeparator
 from ikabot.helpers.pedirInfo import read
 from ikabot.helpers.signals import setInfoSignal
 from ikabot.helpers.process import set_child_mode
@@ -331,7 +331,7 @@ def do_it2(session, amount_to_sell, price, resource_type, sell_market_capacity, 
                 break
 
         # sleep for 2 hours
-        wait(60 * 60 * 2)
+        session.wait(60 * 60 * 2, 'Waiting in the loop')
 
     # wait until the last of our offer is actualy bought, and let the user know
     while True:
@@ -343,4 +343,4 @@ def do_it2(session, amount_to_sell, price, resource_type, sell_market_capacity, 
             return
 
         # sleep for 2 hours
-        wait(60 * 60 * 2)
+        session.wait(60 * 60 * 2, 'Waiting in the loop v2')

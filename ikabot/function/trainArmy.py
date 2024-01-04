@@ -74,7 +74,7 @@ def waitForTraining(session, city, trainTroops):
     if seconds:
         seconds = seconds.group(1)
         seconds = int(seconds) - data[0][1]['time']
-        wait(seconds + 5)
+        session.wait(seconds + 5, 'Waiting for training')
 
 
 def planTrainings(session, city, trainings, trainTroops):

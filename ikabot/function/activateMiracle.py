@@ -3,13 +3,14 @@
 
 import json
 import gettext
+import logging
 import traceback
 from ikabot.config import *
 from ikabot.helpers.gui import *
 from ikabot.helpers.varios import *
 from ikabot.helpers.botComm import *
 from ikabot.helpers.pedirInfo import *
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.process import set_child_mode, IkabotProcessListManager
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.signals import setInfoSignal
 
@@ -93,6 +94,7 @@ def activateMiracleHttpCall(session, island):
     -------
     json : dict
     """
+    logging.info("Trying to activate the miracle")
     params = {'action': 'CityScreen', 'cityId': island['ciudad']['id'], 'function': 'activateWonder', 'position': island['ciudad']['pos'], 'backgroundView': 'city', 'currentCityId': island['ciudad']['id'], 'templateView': 'temple', 'actionRequest': actionRequest, 'ajax': '1'}
     response = session.post(params=params)
     return json.loads(response, strict=False)
@@ -275,7 +277,9 @@ def wait_for_miracle(session, island):
     session : ikabot.web.session.Session
     island : dict
     """
+    logging.info('Waiting for miracle')
     while True:
+        session.setProcessInfo('Checking if miracle {} can be activated'.format(island['wonderName']))
         params = {"view": "temple", "cityId": island['ciudad']['id'], "position": island['ciudad']['pos'], "backgroundView": "city", "currentCityId": island['ciudad']['id'], "actionRequest": actionRequest, "ajax": "1"}
         temple_response = session.post(params=params)
         temple_response = json.loads(temple_response, strict=False)
@@ -294,9 +298,9 @@ def wait_for_miracle(session, island):
             else:
                 wait_time = 60
 
-        msg = _('I wait {:d} seconds to activate the miracle {}').format(wait_time, island['wonderName'])
+        msg = _('I wait to activate the miracle {}').format(island['wonderName'])
         sendToBotDebug(session, msg, debugON_activateMiracle)
-        wait(wait_time + 5)
+        session.wait(wait_time + 5, msg)
 
 
 def do_it(session, island, iterations):
@@ -315,8 +319,10 @@ def do_it(session, island, iterations):
 
         if response[1][1][0] == 'error':
             msg = _('The miracle {} could not be activated.').format(island['wonderName'])
+            logging.error(msg)
             sendToBot(session, msg)
             return
 
         msg = _('Miracle {} successfully activated').format(island['wonderName'])
+        logging.info(msg)
         sendToBotDebug(session, msg, debugON_activateMiracle)

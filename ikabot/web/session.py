@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import multiprocessing
 import time
 import traceback
 from collections import deque
@@ -11,6 +11,7 @@ from urllib3.exceptions import InsecureRequestWarning
 from ikabot.helpers.aesCipher import *
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.process import IkabotProcessListManager
 from ikabot.helpers.varios import getDateTime, decodeUnicodeEscape
 
 t = gettext.translation('session', localedir, languages=languages, fallback=True)
@@ -31,27 +32,66 @@ class Session:
         self.requestHistory = deque(maxlen=5) #keep last 5 requests in history
         # disable ssl verification warning
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+        self.update_process_list_lock = multiprocessing.Lock()
+        self.__process_manager = IkabotProcessListManager(self)
         self.__login()
 
-    def setStatus(self, message):
-        """This function will modify the current tasks status message that appears in the table on the main menu
+    def wait(self, seconds, info, max_random=0):
+        """
+        This function will wait the provided number of seconds plus a random
+        number of seconds between min_random and max_random.
+
+        Parameters
+        -----------
+        seconds : int
+            the number of seconds to wait for
+        info : str
+            Process info for waiting
+        max_random : int
+            the maximum number of additional seconds to wait for
+        """
+        if seconds <= 0:
+            return
+
+        random_delay = random.randint(0, max_random)
+        ratio = (1 + 5 ** 0.5) / 2 - 1  # 0.6180339887498949
+
+        total_sleep_time = seconds + random_delay
+        remaining_time = total_sleep_time
+        actual_sleep_time = 0
+
+        # The following code adds additional variability to the sleeping time
+        while remaining_time > 0:
+            actual_sleep_time += remaining_time * ratio
+            remaining_time = total_sleep_time - actual_sleep_time
+
+        self.__process_manager.upsert_process({
+            'status': 'sleeping',
+            'nextActionDate': time.time() + actual_sleep_time,
+            'info': info
+        })
+
+        time.sleep(actual_sleep_time)
+
+        self.__process_manager.upsert_process({
+            'status': 'running',
+            'nextActionDate': None,
+            'info': 'After ' + info
+        })
+
+    def setProcessInfo(self, message):
+        """
+        This function will modify the current tasks info message that
+        appears in the table on the main menu
+
         Parameters
         ----------
         message : Message to be displayed in the table in main menu
         """
-        logging.info('Changing status to %s', message)
-
-        # read from file
-        sessionData = self.getSessionData()
-        try:
-            fileList = sessionData['processList']
-        except KeyError:
-            fileList = []
-        # modify current process' status message
-        [p.update({'status': message}) for p in fileList if p['pid'] == os.getpid()]
-        # dump back to session data
-        sessionData['processList'] = fileList
-        self.setSessionData(sessionData)
+        self.__process_manager.upsert_process({
+            'info': message,
+            'nextActionDate': None
+        })
     
     def updateLogLevel(self, level=None):
         """Updates the sessions logging level. If none is passed, will load level from session data."""
