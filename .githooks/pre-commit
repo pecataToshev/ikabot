@@ -1,16 +1,17 @@
 #!/bin/bash
 
 branch_name=$(git rev-parse --abbrev-ref HEAD)
+release='dev'
 if [ "$current_branch" == "main" ] || [ "$current_branch" == "master" ]; then
     echo Remove the branch name if main/master
-    current_branch=''
+    release=''
 fi
 
 year=$(date +%Y)
 month=$(date +%m)
 day=$(date +%d)
 current_time=$(date +"%H%M%S")
-version="$year.$month$day.$branch_name$current_time"
+version="$year.$month$day.$release$current_time"
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 setup_file=$REPO_ROOT/setup.py
