@@ -2,12 +2,12 @@ import setuptools
 
 setuptools.setup(
     name="ikabot",
-    version="6.6.6",
-    author="physics-sp",
-    author_email="physics-sp@protonmail.com",
+    version='2024.0104.dev232827',
+    author="Petar Toshev",
+    author_email="pecata.toshev+ikabot@gmail.com",
     license='MIT',
     description="A bot for ikariam",
-    url="https://github.com/physics-sp/ikabot",
+    url="https://github.com/pecataToshev/ikabot",
     include_package_data=True,
     packages=setuptools.find_packages(),
     install_requires=[
@@ -15,7 +15,7 @@ setuptools.setup(
         'requests[socks]',
         'cryptography',
         'psutil',
-        'beautifulsoup4'
+        'beautifulsoup4',
     ],
     entry_points={
         'console_scripts': ['ikabot=ikabot.command_line:main'],

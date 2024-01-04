@@ -8,7 +8,7 @@ import requests
 
 from ikabot.helpers.botComm import *
 from ikabot.helpers.pedirInfo import *
-from ikabot.helpers.process import run
+from ikabot.helpers.process import run, set_child_mode
 
 t = gettext.translation('buyResources', localedir, languages=languages, fallback=True)
 _ = t.gettext
@@ -140,7 +140,10 @@ def autoPirate(session, event, stdin_fd, predetermined_input):
     except KeyboardInterrupt:
         event.set()
         return
+
+    set_child_mode(session)
     event.set()
+
     try:
         while (pirateCount > 0):
             session.setProcessInfo('Pirating for ' + str(pirateCount) + ' more runs')

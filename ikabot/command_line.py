@@ -64,8 +64,8 @@ _global_menu = [
     ['Distribute resources', distributeResources],
     ['Account status', [
         __command_back,
-        ['Old Status', getStatus],
-        ['New Status', getStatusForAllCities],
+        ['Simplified', getStatus],
+        ['All Cities', getStatusForAllCities],
     ]],
     ['Monitor islands', searchForIslandSpaces],
     ['Login daily', loginDaily],
@@ -81,7 +81,7 @@ _global_menu = [
     ]],
     ['Donate', [
         __command_back,
-        ['Resources and Donate once', islandWorkplaces],
+        ['Donate once', islandWorkplaces],
         ['Donate automatically', donationBot],
     ]],
     ['Activate vacation mode', vacationMode],
@@ -115,10 +115,10 @@ _global_menu = [
 ]
 
 
-def choose_from_menu(menu_options, prefix = ''):
+def choose_from_menu(menu_options, prefix=''):
     for ind, option in enumerate(menu_options):
         print(prefix, "{: >3})".format(ind), option[0])
-    selected = read(min=0, max=len(menu_options), digit=True)
+    selected = read(min=0, max=len(menu_options)-1, digit=True)
 
     print()
     [name, fn] = menu_options[selected]
@@ -143,24 +143,24 @@ def menu(session):
 
         process_list_manager.print_proces_table()
 
-        selected = choose_from_menu(_global_menu)
-
-        if selected == __function_exit:
-            # Perform exit of the app
-            if isWindows:
-                # in unix, you can exit ikabot and close the terminal and the processes will continue to execute
-                # in windows, you can exit ikabot but if you close the terminal, the processes will die
-                print(_('Closing this console will kill the processes.'))
-                enter()
-            clear()
-            os._exit(0)  # kills the process which executes this statement, but it does not kill it's child processes
-
-        if selected == __function_refresh:
-            # we just need to refresh the menu
-            continue
-
-        # we've selected a function, let's execute it
         try:
+            selected = choose_from_menu(_global_menu)
+
+            if selected == __function_exit:
+                # Perform exit of the app
+                if isWindows:
+                    # in unix, you can exit ikabot and close the terminal and the processes will continue to execute
+                    # in windows, you can exit ikabot but if you close the terminal, the processes will die
+                    print(_('Closing this console will kill the processes.'))
+                    enter()
+                clear()
+                os._exit(0)  # kills the process which executes this statement, but it does not kill it's child processes
+
+            if selected == __function_refresh:
+                # we just need to refresh the menu
+                continue
+
+            # we've selected a function, let's execute it
             event = multiprocessing.Event()  # creates a new event
             config.has_params = len(config.predetermined_input) > 0
             process = multiprocessing.Process(
