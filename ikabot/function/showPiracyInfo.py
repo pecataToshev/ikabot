@@ -1,7 +1,12 @@
-from ikabot.helpers.pedirInfo import *
+import os
+import os
+import sys
+
+from ikabot import config
+from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, decodeUnicodeEscape, enter, \
+    printTable
 from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
-  getPiracyTemplateData
-from ikabot.helpers.varios import addThousandSeparator, daysHoursMinutes
+    getPiracyTemplateData
 
 
 def showPiracyInfo(session, event, stdin_fd, predetermined_input):
@@ -40,7 +45,7 @@ def showPiracyInfo(session, event, stdin_fd, predetermined_input):
             print("Ongoing mission:", decodeUnicodeEscape(mission['name']))
             print(" Capture points:", addThousandSeparator(mission['capturePoints']))
             print("           Gold:", addThousandSeparator(mission['gold']))
-            print("      Time left:", daysHoursMinutes(template_data['ongoingMissionTimeRemaining'], include_seconds=True))
+            print("      Time left:", daysHoursMinutes(template_data['ongoingMissionTimeRemaining']))
 
         if template_data['hasOngoingConvertion']:
             print()
@@ -48,12 +53,12 @@ def showPiracyInfo(session, event, stdin_fd, predetermined_input):
                 addThousandSeparator(template_data['ongoingConvertionCapturePoints']),
                 addThousandSeparator(template_data['ongoingConvertionCrewPoints'])
             ))
-            print("        Time left:", daysHoursMinutes(template_data['ongoingConvertionTimeRemaining'], include_seconds=True))
+            print("        Time left:", daysHoursMinutes(template_data['ongoingConvertionTimeRemaining']))
 
 
         print()
         print('Piracy Ranking:')
-        print('     Time left:', daysHoursMinutes(template_data['highscoreTimeLeft'], include_seconds=True))
+        print('     Time left:', daysHoursMinutes(template_data['highscoreTimeLeft']))
 
         printTable(
             table_config=[

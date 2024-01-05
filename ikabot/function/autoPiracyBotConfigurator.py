@@ -1,8 +1,16 @@
+import os
+import re
+import sys
+
+from ikabot import config
 from ikabot.bot.autoPirateBot import startAutoPirateBot
-from ikabot.helpers.pedirInfo import *
+from ikabot.config import isWindows
+from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, decodeUnicodeEscape, enter, \
+    printTable
+from ikabot.helpers.pedirInfo import askUserYesNo, read
 from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
-  getPiracyTemplateData
-from ikabot.helpers.varios import daysHoursMinutes, addThousandSeparator
+    getPiracyTemplateData
+from ikabot.helpers.process import run
 
 
 def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
@@ -17,6 +25,17 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
     sys.stdin = os.fdopen(stdin_fd)
     config.predetermined_input = predetermined_input
     banner()
+
+    if not isWindows:
+        path = run('which nslookup')
+        is_installed = re.search(r'/.*?/nslookup', path) is not None
+        if is_installed is False:
+            print('you must first install nslookup')
+            enter()
+            event.set()
+            return
+
+    print('{}⚠️ USING THIS FEATURE WILL EXPOSE YOUR IP ADDRESS TO A THIRD PARTY FOR CAPTCHA SOLVING ⚠️{}\n\n'.format(bcolors.WARNING, bcolors.ENDC))
 
     great_pirate_city_id = findCityWithTheBiggestPiracyFortress(session)
     if great_pirate_city_id is None:
@@ -105,7 +124,7 @@ def __select_piracy_mission(template_data, additional_select_message=''):
             {'key': 'name', 'title': 'Mission Name', 'fmt': decodeUnicodeEscape},
             {'key': 'capturePoints', 'title': 'Capture Points', 'fmt': addThousandSeparator},
             {'key': 'gold', 'title': 'Gold', 'fmt': addThousandSeparator},
-            {'key': 'duration', 'title': 'Duration', 'fmt': lambda x: daysHoursMinutes(x, include_seconds=True)},
+            {'key': 'duration', 'title': 'Duration', 'fmt': lambda x: daysHoursMinutes(x)},
         ],
         table_data=missions_table,
         row_additional_indentation='  '

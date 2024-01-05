@@ -2,19 +2,19 @@
 # -*- coding: utf-8 -*-
 
 import json
-import gettext
+import os
+import sys
+import time
 import traceback
-from ikabot.config import *
-from ikabot.helpers.gui import *
-from ikabot.helpers.varios import *
-from ikabot.helpers.botComm import *
-from ikabot.helpers.pedirInfo import *
-from ikabot.helpers.process import set_child_mode
-from ikabot.helpers.getJson import getCity
-from ikabot.helpers.signals import setInfoSignal
 
-t = gettext.translation('investigate', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.config import actionRequest
+from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.getJson import getCity
+from ikabot.helpers.gui import addThousandSeparator, banner, enter
+from ikabot.helpers.pedirInfo import chooseCity, read
+from ikabot.helpers.process import set_child_mode
+
 
 def get_studies(session):
     html = session.get()
@@ -90,12 +90,12 @@ def investigate(session, event, stdin_fd, predetermined_input):
                     available.append(num_study)
 
             if len(available) == 0:
-                print(_('There are no available studies.'))
+                print('There are no available studies.')
                 enter()
                 event.set()
                 return
 
-            print(_('Which one do you wish to study?'))
+            print('Which one do you wish to study?')
             print('0) None')
             for index, num_study in enumerate(available):
                 print('{:d}) {}'.format(index+1, studies['js_researchAdvisorNextResearchName{}'.format(num_study)]))
@@ -106,7 +106,7 @@ def investigate(session, event, stdin_fd, predetermined_input):
                 return
 
             study(session, studies, available[choice-1])
-            print(_('Done.'))
+            print('Done.')
             enter()
             event.set()
         else:

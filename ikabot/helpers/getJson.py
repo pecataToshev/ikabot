@@ -1,10 +1,11 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import re
 import json
-from ikabot.helpers.resources import *
-from ikabot.helpers.varios import decodeUnicodeEscape
+import re
+
+from ikabot.helpers.gui import decodeUnicodeEscape
+from ikabot.helpers.resources import getAvailableResources, getWarehouseCapacity, getWineConsumptionPerHour
 
 
 def getFreeCitizens(html):

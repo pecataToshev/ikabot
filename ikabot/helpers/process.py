@@ -1,15 +1,15 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-import datetime
+import logging
+import os
 import subprocess
 import time
 
 import psutil
 
-from ikabot.config import *
-from ikabot.helpers.gui import printTable
+from ikabot.config import isWindows
+from ikabot.helpers.gui import formatTimestamp, printTable
 from ikabot.helpers.signals import deactivate_sigint
-from ikabot.helpers.varios import formatTimestamp
 
 
 def set_child_mode(session):
@@ -102,6 +102,7 @@ class IkabotProcessListManager:
             _new_process.update(process)
             _new_process['date'] = time.time()
 
+            # Print process
             _log_process = dict(_new_process)
             _log_process.pop('pid')
             _log_process.pop('date')

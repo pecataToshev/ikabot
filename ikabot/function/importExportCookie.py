@@ -1,15 +1,13 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-import gettext
-import json
-import sys
-import requests
-from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.gui import *
-from ikabot.config import *
 
-t = gettext.translation('insertCookies', localedir, languages=languages, fallback=True)
-_ = t.gettext
+import json
+import os
+import sys
+
+from ikabot import config
+from ikabot.helpers.gui import banner, bcolors, enter
+from ikabot.helpers.pedirInfo import read
 
 
 def importExportCookie(session, event, stdin_fd, predetermined_input):

@@ -1,13 +1,11 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 
-from ikabot.config import *
-from ikabot.helpers.gui import *
-
-t = gettext.translation('update', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.helpers.gui import enter
 
 
 def update(session, event, stdin_fd, predetermined_input):
@@ -22,7 +20,7 @@ def update(session, event, stdin_fd, predetermined_input):
     sys.stdin = os.fdopen(stdin_fd)
     config.predetermined_input = predetermined_input
     try:
-        print(_('To update ikabot run:'))
+        print('To update ikabot run:')
         print('python3 -m pip install --user --upgrade ikabot')
         enter()
         event.set()

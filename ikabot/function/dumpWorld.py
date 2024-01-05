@@ -1,29 +1,24 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import time
-import gettext
-import traceback
+import ast
+import gzip
+import json
+import os
 import sys
 import threading
-import json
-import gzip
-import re
-import os
-import ast
-import ikabot.config as config
+import time
+import traceback
 from pathlib import Path
-from ikabot.config import *
-from ikabot.helpers.gui import enter, banner, bcolors
-from ikabot.helpers.varios import getDateTime
-from ikabot.helpers.botComm import sendToBot
-from ikabot.helpers.signals import setInfoSignal
-from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.getJson import getIsland
-from ikabot.helpers.process import set_child_mode
 
-t = gettext.translation('dumpWorld', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.config import isWindows
+from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.getJson import getIsland
+from ikabot.helpers.gui import banner, bcolors, enter, getDateTime
+from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.signals import setInfoSignal
 
 LINE_UP = '\033[1A'
 LINE_CLEAR = '\x1b[2K'
@@ -77,7 +72,7 @@ def dumpWorld(session, event, stdin_fd, predetermined_input):
         thread = threading.Thread(target=update_terminal, args=(shared_data,))
         thread.start()
         set_child_mode(session)
-        info = _('\nDumped world data\n')
+        info = '\nDumped world data\n'
         setInfoSignal(session, info)
 
         dump_path = do_it(session, waiting_time, start_id, shallow)
@@ -95,7 +90,7 @@ def dumpWorld(session, event, stdin_fd, predetermined_input):
         shared_data[3].set()
         shared_data[4].acquire(timeout=10)
         event.set()
-        msg = _('Error in:\n{}\nCause:\n{}').format(info, traceback.format_exc())
+        msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
         sendToBot(session, msg)
         return
 

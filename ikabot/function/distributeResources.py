@@ -1,21 +1,19 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import gettext
+import os
+import sys
 import traceback
-from ikabot.config import *
-from ikabot.helpers.botComm import *
-from ikabot.helpers.pedirInfo import *
-from ikabot.helpers.signals import setInfoSignal
-from ikabot.helpers.getJson import getCity
-from ikabot.helpers.planRoutes import executeRoutes
-from ikabot.helpers.resources import *
-from ikabot.helpers.varios import addThousandSeparator
-from ikabot.helpers.process import set_child_mode
-from ikabot.helpers.gui import banner
 
-t = gettext.translation('distributeResources', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.config import city_url, materials_names
+from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.getJson import getCity
+from ikabot.helpers.gui import banner, enter
+from ikabot.helpers.pedirInfo import getIdsOfCities, read
+from ikabot.helpers.planRoutes import executeRoutes
+from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.signals import setInfoSignal
 
 
 def distributeResources(session, event, stdin_fd, predetermined_input):
@@ -32,8 +30,8 @@ def distributeResources(session, event, stdin_fd, predetermined_input):
     try:
         banner()
 
-        print(_('What resource do you want to distribute?'))
-        print(_('(0) Exit'))
+        print('What resource do you want to distribute?')
+        print('(0) Exit')
         for i in range(len(materials_names)):
             print('({:d}) {}'.format(i+1, materials_names[i]))
         resource = read(min=0, max=5)
@@ -61,11 +59,11 @@ def distributeResources(session, event, stdin_fd, predetermined_input):
             return
 
         banner()
-        print(_('\nThe following shipments will be made:\n'))
+        print('\nThe following shipments will be made:\n')
         for route in routes:
             print('{} -> {} : {} {}'.format(route[0]['name'], route[1]['name'], route[resource+3], materials_names[resource]))  # displays all routes to be executed in console
 
-        print(_('\nProceed? [Y/n]'))
+        print('\nProceed? [Y/n]')
         rta = read(values=['y', 'Y', 'n', 'N', ''])
         if rta.lower() == 'n':
             event.set()
@@ -78,13 +76,13 @@ def distributeResources(session, event, stdin_fd, predetermined_input):
     set_child_mode(session)
     event.set()  # this is where we give back control to main process
 
-    info = _('\nDistribute {}\n').format(materials_names[resource])
+    info = '\nDistribute {}\n'.format(materials_names[resource])
     setInfoSignal(session, info)
 
     try:
         executeRoutes(session, routes)  # plan trips for all the routes
     except Exception as e:
-        msg = _('Error in:\n{}\nCause:\n{}').format(info, traceback.format_exc())
+        msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
         sendToBot(session, msg)  # sends message to telegram bot
     finally:
         session.logout()
@@ -206,11 +204,11 @@ def distribute_unevenly(session, resource_type):
                 destination_cities[destination_city_id] = city
 
     if total_available_resources_from_all_cities <= 0:
-        print(_('\nThere are no resources to send.'))
+        print('\nThere are no resources to send.')
         enter()
         return None
     if len(destination_cities) == 0:
-        print(_('\nThere is no space available to send resources.'))
+        print('\nThere is no space available to send resources.')
         enter()
         return None
 

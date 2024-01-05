@@ -10,7 +10,8 @@ from ikabot.helpers.process import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 
-__MAXIMUM_PIRATE_MISSION_START_ATTEMPTS=20
+__MAXIMUM_PIRATE_MISSION_START_ATTEMPTS = 20
+
 
 def startAutoPirateBot(session, piracy_config):
     """

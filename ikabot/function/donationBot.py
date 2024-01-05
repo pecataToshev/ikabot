@@ -1,20 +1,20 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import time
-import gettext
+import logging
+import os
+import sys
 import traceback
-from ikabot.config import *
-from ikabot.helpers.botComm import *
-from ikabot.helpers.pedirInfo import *
-from ikabot.helpers.gui import *
-from ikabot.helpers.process import set_child_mode
-from ikabot.helpers.signals import setInfoSignal
-from ikabot.helpers.getJson import getCity
-from ikabot.helpers.resources import getAvailableResources, getProductionPerSecond
 
-t = gettext.translation('donationBot', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.config import actionRequest, city_url, materials_names
+from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.getJson import getCity
+from ikabot.helpers.gui import banner, enter
+from ikabot.helpers.pedirInfo import getIdsOfCities, read
+from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.resources import getProductionPerSecond
+from ikabot.helpers.signals import setInfoSignal
 
 
 def donationBot(session, event, stdin_fd, predetermined_input):
@@ -46,11 +46,11 @@ def donationBot(session, event, stdin_fd, predetermined_input):
         for cityId in cities_ids:
             tradegood = cities[cityId]['tradegood']
             initial = initials[int(tradegood)]
-            print(_('In {} ({}), Do you wish to donate to the forest, to the trading good, to both or none? [f/t/b/n]').format(cities[cityId]['name'], initial))
-            f = _('f')
-            t = _('t')
-            b = _('b')
-            n = _('n')
+            print('In {} ({}), Do you wish to donate to the forest, to the trading good, to both or none? [f/t/b/n]'.format(cities[cityId]['name'], initial))
+            f = 'f'
+            t = 't'
+            b = 'b'
+            n = 'n'
 
             rta = read(values=[f, f.upper(), t, t.upper(), b, b.upper(), n, n.upper()])
             if rta.lower() == f:
@@ -64,21 +64,21 @@ def donationBot(session, event, stdin_fd, predetermined_input):
                 percentage = None
 
             if donation_type is not None and donate_method is 1:
-                print(_('What is the maximum percentage of your storage capacity that you wish to keep occupied? (the resources that exceed it, will be donated) (default: 80%)'))
+                print('What is the maximum percentage of your storage capacity that you wish to keep occupied? (the resources that exceed it, will be donated) (default: 80%)')
                 percentage = read(min=0, max=100, empty=True)
                 if percentage == '':
                     percentage = 80
                 elif percentage == 100:  # if the user is ok with the storage beeing totally full, don't donate at all
                     donation_type = None
             elif donation_type is not None and donate_method is 2:
-                print(_('What is the percentage of your production that you wish to donate? (enter 0 to disable donation for the town) (default: 50%)'))
+                print('What is the percentage of your production that you wish to donate? (enter 0 to disable donation for the town) (default: 50%)')
                 percentage = read(min=0, max=100, empty=True) # max_random_waiting_time increases inaccuracy
                 if percentage == '':
                     percentage = 50
                 elif percentage == 0:
                     donation_type = None
             elif donation_type is not None and donate_method is 3:
-                print(_('What is the amount would you like to donate? (enter 0 to disable donation for the town) (default: 10000)'))
+                print('What is the amount would you like to donate? (enter 0 to disable donation for the town) (default: 10000)')
                 percentage = read(min=0, max=1000000, empty=True) # no point changing the variable's name everywhere just for this
                 if percentage == '':
                     percentage = 10000
@@ -87,7 +87,7 @@ def donationBot(session, event, stdin_fd, predetermined_input):
 
             cities_dict[cityId] = {'donation_type': donation_type, 'percentage': percentage}
 
-        print(_('I will donate every {} minutes.'.format(waiting_time)))
+        print('I will donate every {} minutes.'.format(waiting_time))
         enter()
     except KeyboardInterrupt:
         event.set()
@@ -96,12 +96,12 @@ def donationBot(session, event, stdin_fd, predetermined_input):
     set_child_mode(session)
     event.set()
 
-    info = _('\nI donate every {} minutes\n'.format(waiting_time))
+    info = '\nI donate every {} minutes\n'.format(waiting_time)
     setInfoSignal(session, info)
     try:
         do_it(session, cities_ids, cities_dict, waiting_time, max_random_waiting_time, donate_method)
     except Exception as e:
-        msg = _('Error in:\n{}\nCause:\n{}').format(info, traceback.format_exc())
+        msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
         sendToBot(session, msg)
     finally:
         session.logout()
@@ -169,23 +169,20 @@ def do_it(session, cities_ids, cities_dict, waiting_time, max_random_waiting_tim
                 if max_wood <= 0:
                     continue
             
-            islandId = cities_dict[cityId]['island']
+            island_id = cities_dict[cityId]['island']
 
             # donate
             if donation_type is 'both':
                 forrest = int(to_donate / 2)
                 trade = int(to_donate / 2)
-                session.post(params={'islandId': islandId, 'type': 'resource', 'action': 'IslandScreen', 'function': 'donate', 'donation': forrest, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
-                logging.info("I donated %d wood to the forest on island %s", forrest, islandId)
+                session.post(params={'islandId': island_id, 'type': 'resource', 'action': 'IslandScreen', 'function': 'donate', 'donation': forrest, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
+                logging.info("I donated %d wood to the forest on island %s", forrest, island_id)
                 session.wait(1, max_random=5, info='Simulating user interaction')
-                session.post(params={'islandId': islandId, 'type': 'tradegood', 'action': 'IslandScreen', 'function': 'donate', 'donation': trade, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
-                logging.info("I donated %d wood to the tradegood on island %s", trade, islandId)
+                session.post(params={'islandId': island_id, 'type': 'tradegood', 'action': 'IslandScreen', 'function': 'donate', 'donation': trade, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
+                logging.info("I donated %d wood to the tradegood on island %s", trade, island_id)
             else:
-                session.post(params={'islandId': islandId, 'type': donation_type, 'action': 'IslandScreen', 'function': 'donate', 'donation': to_donate, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
-                logging.info("I donated %d wood to the %s on island %s", to_donate, donation_type, islandId)
-
-        msg = _('I donated automatically.')
-        sendToBotDebug(session, msg, debugON_donationBot)
+                session.post(params={'islandId': island_id, 'type': donation_type, 'action': 'IslandScreen', 'function': 'donate', 'donation': to_donate, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
+                logging.info("I donated %d wood to the %s on island %s", to_donate, donation_type, island_id)
 
         session.wait(waiting_time * 60, max_random=max_random_waiting_time * 60,
                      info='Sleeping till next donation')

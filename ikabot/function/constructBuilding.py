@@ -1,15 +1,15 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import re
 import json
-import gettext
-from ikabot.config import *
-from ikabot.helpers.gui import *
-from ikabot.helpers.pedirInfo import *
+import os
+import re
+import sys
 
-t = gettext.translation('constructBuilding', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.config import actionRequest
+from ikabot.helpers.gui import banner, enter
+from ikabot.helpers.pedirInfo import chooseCity, read
 
 
 def constructBuilding(session, event, stdin_fd, predetermined_input):
@@ -26,7 +26,7 @@ def constructBuilding(session, event, stdin_fd, predetermined_input):
     try:
         banner()
 
-        print(_('City where to build:'))
+        print('City where to build:')
         city = chooseCity(session)
         banner()
 
@@ -54,13 +54,13 @@ def constructBuilding(session, event, stdin_fd, predetermined_input):
                     buildings.append({'building': match[0], 'name': match[1], 'buildingId': match[2], 'type': type_space})
 
         if len(buildings) == 0:
-            print(_('No building can be built.'))
+            print('No building can be built.')
             enter()
             event.set()
             return
 
         # show list of buildings to the user
-        print(_('What building do you want to build?\n'))
+        print('What building do you want to build?\n')
         i = 0
         for building in buildings:
             i += 1
@@ -75,7 +75,7 @@ def constructBuilding(session, event, stdin_fd, predetermined_input):
         if len(options) == 1:
             option = options[0]
         else:
-            print(_('In which position do you want to build?\n'))
+            print('In which position do you want to build?\n')
             i = 0
             for option in options:
                 i += 1

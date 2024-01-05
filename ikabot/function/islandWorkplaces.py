@@ -1,24 +1,20 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import json
+import os
+import re
+import sys
 
-from ikabot.helpers.pedirInfo import *
-from ikabot.helpers.resources import *
-from ikabot.helpers.varios import *
+from ikabot import config
+from ikabot.config import actionRequest, materials_names
+from ikabot.helpers.getJson import getCity
+from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter, printProgressBar, \
+    rightAlign
+from ikabot.helpers.pedirInfo import getIdsOfCities, read
 
-t = gettext.translation('donate', localedir, languages=languages, fallback=True)
-_ = t.gettext
 
 def get_number(s):
     return int(s.replace(',', '').replace('.', ''))
-
-def rightAligh(data, len):
-    return "{:>{len}}".format(data, len=len)
-
-def printProgressBar(msg, current, total):
-    banner()
-    loaded = "#" * (current - 1)
-    waiting = "." * (total - current)
-    print("{}: [{}={}] {}/{}".format(msg, loaded, waiting, current, total))
 
 
 def islandWorkplaces(session, event, stdin_fd, predetermined_input):
@@ -55,7 +51,7 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
         'level',
         'Upgrade wood required',
     ]
-    column_length = [3, MAXIMUM_CITY_NAME_LENGTH, 17, 8, 10, 13, 11, 5, 23]
+    column_length = [3, config.MAXIMUM_CITY_NAME_LENGTH, 17, 8, 10, 13, 11, 5, 23]
     resource_colors = [
         '\033[0;33m',
         bcolors.HEADER,
@@ -111,10 +107,10 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
         return data
 
     def open_city_window(city_id):
-        return session.get(city_url + city_id)
+        return session.get(config.city_url + city_id)
 
     def open_island_window(island_id):
-        return session.get(island_url + island_id)
+        return session.get(config.island_url + island_id)
 
     def open_workplace_window(material_ind, island_id):
         return session.post(params={
@@ -123,7 +119,7 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
             'islandId': island_id,
             'backgroundView': 'island',
             'currentIslandId': island_id,
-            'actionRequest': actionRequest,
+            'actionRequest': config.actionRequest,
             'ajax': '1'
         })
 
@@ -190,7 +186,7 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
         banner()
 
         # Print table header
-        print(column_separator.join([rightAligh(c, cl) for c, cl in zip(columns, column_length)]))
+        print(column_separator.join([rightAlign(c, cl) for c, cl in zip(columns, column_length)]))
 
         # Print table
         for ind, workplace in enumerate(workplaces):
@@ -264,7 +260,7 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
 
             # Combine and print
             print(column_separator.join([
-                (color + rightAligh(data, length) + bcolors.ENDC)
+                (color + rightAlign(data, length) + bcolors.ENDC)
                 for color, data, length in zip(colors, row, column_length)
             ]))
 

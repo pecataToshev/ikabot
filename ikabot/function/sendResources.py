@@ -1,21 +1,18 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import gettext
+import os
+import sys
 import traceback
-from ikabot.config import *
-from ikabot.helpers.gui import *
-from ikabot.helpers.botComm import *
-from ikabot.helpers.pedirInfo import *
-from ikabot.helpers.planRoutes import executeRoutes
-from ikabot.helpers.signals import setInfoSignal
-from ikabot.helpers.getJson import getCity
-from ikabot.helpers.process import set_child_mode
-from ikabot.helpers.varios import addThousandSeparator
-from ikabot.helpers.resources import *
 
-t = gettext.translation('sendResources', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.config import materials_names
+from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.gui import addThousandSeparator, banner
+from ikabot.helpers.pedirInfo import askForValue, chooseCity, read
+from ikabot.helpers.planRoutes import executeRoutes
+from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.signals import setInfoSignal
 
 
 def sendResources(session, event, stdin_fd, predetermined_input):
@@ -34,12 +31,12 @@ def sendResources(session, event, stdin_fd, predetermined_input):
         while True:
 
             banner()
-            print(_('Origin city:'))
+            print('Origin city:')
             try:
                 cityO = chooseCity(session)
             except KeyboardInterrupt:
                 if routes:
-                    print(_('Send shipment? [Y/n]'))
+                    print('Send shipment? [Y/n]')
                     rta = read(values=['y', 'Y', 'n', 'N', ''])
                     if rta.lower() != 'n':
                         break
@@ -47,7 +44,7 @@ def sendResources(session, event, stdin_fd, predetermined_input):
                 return
 
             banner()
-            print(_('Destination city'))
+            print('Destination city')
             cityD = chooseCity(session, foreign=True)
             idIsland = cityD['islandId']
 
@@ -75,21 +72,21 @@ def sendResources(session, event, stdin_fd, predetermined_input):
                         msg += '{} more {}\n'.format(addThousandSeparator(cityD['freeSpaceForResources'][i]), materials_names[i].lower())
 
                 if len(msg) > 0:
-                    print(_('You can store just:\n{}').format(msg))
+                    print('You can store just:\n{}'.format(msg))
 
-            print(_('Available:'))
+            print('Available:')
             for i in range(len(materials_names)):
                 print('{}:{} '.format(materials_names[i], addThousandSeparator(resources_left[i])), end='')
             print('')
 
-            print(_('Send:'))
+            print('Send:')
             try:
                 max_name = max([len(material) for material in materials_names])
                 send = []
                 for i in range(len(materials_names)):
                     material_name = materials_names[i]
                     pad = ' ' * (max_name - len(material_name))
-                    val = askForValue(_('{}{}:'.format(pad, material_name)), resources_left[i])
+                    val = askForValue('{}{}:'.format(pad, material_name), resources_left[i])
                     send.append(val)
             except KeyboardInterrupt:
                 continue
@@ -97,18 +94,18 @@ def sendResources(session, event, stdin_fd, predetermined_input):
                 continue
 
             banner()
-            print(_('About to send from {} to {}').format(cityO['cityName'], cityD['cityName']))
+            print('About to send from {} to {}'.format(cityO['cityName'], cityD['cityName']))
             for i in range(len(materials_names)):
                 if send[i] > 0:
                     print('{}:{} '.format(materials_names[i], addThousandSeparator(send[i])), end='')
             print('')
 
-            print(_('Proceed? [Y/n]'))
+            print('Proceed? [Y/n]')
             rta = read(values=['y', 'Y', 'n', 'N', ''])
             if rta.lower() != 'n':
                 route = (cityO, cityD, idIsland, *send)
                 routes.append(route)
-                print(_('Create another shipment? [y/N]'))
+                print('Create another shipment? [y/N]')
                 rta = read(values=['y', 'Y', 'n', 'N', ''])
                 if rta.lower() != 'y':
                     break
@@ -119,13 +116,13 @@ def sendResources(session, event, stdin_fd, predetermined_input):
     set_child_mode(session)
     event.set()
 
-    info = _('\nSend resources\n')
+    info = '\nSend resources\n'
 
     setInfoSignal(session, info)
     try:
         executeRoutes(session, routes)
     except Exception as e:
-        msg = _('Error in:\n{}\nCause:\n{}').format(info, traceback.format_exc())
+        msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
         sendToBot(session, msg)
     finally:
         session.logout()

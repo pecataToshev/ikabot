@@ -1,15 +1,17 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import json
+import math
+import random
 import re
 import time
-import math
-import json
-import random
-from decimal import *
-from ikabot.config import *
+from datetime import time
+from decimal import Decimal
+
+from ikabot.config import actionRequest, city_url
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.naval import *
+from ikabot.helpers.naval import getAvailableShips
 
 
 def sendGoods(session, originCityId, destinationCityId, islandId, ships, send):

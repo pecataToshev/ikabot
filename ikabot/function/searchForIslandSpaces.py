@@ -1,18 +1,18 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+import sys
 import traceback
 
-from ikabot.helpers.botComm import *
+from ikabot import config
+from ikabot.config import island_url, materials_names
+from ikabot.helpers.botComm import checkTelegramData, sendToBot
 from ikabot.helpers.getJson import getIsland
-from ikabot.helpers.gui import enter
-from ikabot.helpers.pedirInfo import getIslandsIds, askUserYesNo
+from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
+from ikabot.helpers.pedirInfo import askUserYesNo, getIslandsIds, read
 from ikabot.helpers.process import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
-from ikabot.helpers.varios import getDateTime, decodeUnicodeEscape
-
-t = gettext.translation('searchForIslandSpaces', localedir, languages=languages, fallback=True)
-_ = t.gettext
 
 __inform_fights = 'inform-fights'
 __inform_inactive = 'inform-inactive'
@@ -74,7 +74,7 @@ def searchForIslandSpaces(session, event, stdin_fd, predetermined_input):
             if askUserYesNo(' - ' + msg):
                 inform_list.append(val)
 
-        print(_('I will search for changes in the selected islands'))
+        print('I will search for changes in the selected islands')
         enter()
     except KeyboardInterrupt:
         event.set()
@@ -88,7 +88,7 @@ def searchForIslandSpaces(session, event, stdin_fd, predetermined_input):
     try:
         __execute_monitoring(session, island_ids, waiting_minutes, inform_list)
     except Exception as e:
-        msg = _('Error in:\n{}\nCause:\n{}').format(info, traceback.format_exc())
+        msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
         sendToBot(session, msg)
     finally:
         session.logout()
@@ -137,7 +137,7 @@ def __execute_monitoring(session, specified_island_ids, waiting_minutes, inform_
             cities_before_per_island[island_id] = dict(cities_now)
 
         session.wait(waiting_minutes * 60,
-                     f'Checked islands {str([int(i) for i in islands_ids]).replace(" ","")} @ {getDateTime()[-8:]}')
+                     f'Checked islands {str([int(i) for i in islands_ids]).replace(" ","")}')
 
 def __extract_cities(island):
     """

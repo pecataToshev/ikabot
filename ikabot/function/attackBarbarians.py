@@ -1,26 +1,25 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import re
-import time
 import json
 import math
-import gettext
+import os
+import re
+import sys
+import time
 import traceback
-from decimal import *
-from ikabot.config import *
-from ikabot.helpers.gui import *
-from ikabot.helpers.varios import *
-from ikabot.helpers.botComm import *
-from ikabot.helpers.pedirInfo import *
-from ikabot.helpers.naval import *
-from ikabot.helpers.process import set_child_mode
-from ikabot.helpers.getJson import getCity
-from ikabot.helpers.signals import setInfoSignal
-from ikabot.helpers.planRoutes import waitForArrival
+from decimal import Decimal, getcontext
 
-t = gettext.translation('attackBarbarians', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.config import actionRequest, island_url, materials_names
+from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.getJson import getIsland
+from ikabot.helpers.gui import addThousandSeparator, banner, enter, getCurrentCityId
+from ikabot.helpers.naval import getTotalShips
+from ikabot.helpers.pedirInfo import chooseCity, getIslandsIds, read
+from ikabot.helpers.planRoutes import waitForArrival
+from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.signals import setInfoSignal
 
 getcontext().prec = 30
 
@@ -45,15 +44,15 @@ def choose_island(session):
     def pad(island_name):
         return ' ' * (longest_island_name_length - len(island_name)) + island_name
 
-    print(_('In which island do you want to attack the barbarians?'))
-    print(_(' 0) Exit'))
+    print('In which island do you want to attack the barbarians?')
+    print(' 0) Exit')
     for i, island in enumerate(islands):
         num = ' ' + str(i+1) if i < 9 else str(i+1)
         if island['barbarians']['destroyed'] == 1:
-            warn = _('(currently destroyed)')
+            warn = '(currently destroyed)'
         else:
             warn = ''
-        print(_('{}) [{}:{}] {} ({}) : barbarians lv: {} ({}) {}').format(num, island['x'], island['y'], pad(island['name']), materials_names[int(island['tradegood'])][0].upper(), island['barbarians']['level'], island['barbarians']['city'], warn))
+        print('{}) [{}:{}] {} ({}) : barbarians lv: {} ({}) {}'.format(num, island['x'], island['y'], pad(island['name']), materials_names[int(island['tradegood'])][0].upper(), island['barbarians']['level'], island['barbarians']['city'], warn))
 
     index = read(min=0, max=len(islands))
     if index == 0:
@@ -152,13 +151,13 @@ def plan_attack(session, city, babarians_info):
                 units_available[unit_id]['name'] = total_units[unit_id]['name']
 
         if len(units_available) == 0:
-            print(_('No more troops available to send'))
+            print('No more troops available to send')
             enter()
             break
 
         attack_round = {}
         attack_round['units'] = {}
-        print(_('Which troops do you want to send?'))
+        print('Which troops do you want to send?')
         for unit_id in units_available:
             unit_amount = units_available[unit_id]['amount']
             unit_name = units_available[unit_id]['name']
@@ -173,7 +172,7 @@ def plan_attack(session, city, babarians_info):
         else:
             if len(plan) > 0:
                 round_def = len(plan) + 1
-                attack_round['round'] = read(msg=_('In which battle round do you want to send them? (min: 2, default: {:d}): ').format(round_def), min=2, default=round_def)
+                attack_round['round'] = read(msg='In which battle round do you want to send them? (min: 2, default: {:d}): '.format(round_def), min=2, default=round_def)
             else:
                 attack_round['round'] = 1
         print('')
@@ -183,7 +182,7 @@ def plan_attack(session, city, babarians_info):
                 total_ships = getTotalShips(session)
             max_ships = total_ships - sum([ar['ships'] for ar in plan])
             if max_ships > 0:
-                attack_round['ships'] = read(msg=_('How many ships do you want to send in this round? (min: 0, max: {:d}): ').format(max_ships), min=0, max=max_ships)
+                attack_round['ships'] = read(msg='How many ships do you want to send in this round? (min: 0, max: {:d}): '.format(max_ships), min=0, max=max_ships)
                 print('')
             else:
                 attack_round['ships'] = 0
@@ -193,11 +192,11 @@ def plan_attack(session, city, babarians_info):
         if last:
             break
 
-        print(_('Do you want to send another round of troops? [y/N]'))
+        print('Do you want to send another round of troops? [y/N]')
         resp = read(values=['y', 'Y', 'n', 'N'], default='n')
         if resp.lower() != 'y':
             print('')
-            print(_('Do you want to select the troops that will be used to collect the remaining resources? (they need to destroy the wall) [y/N]'))
+            print('Do you want to select the troops that will be used to collect the remaining resources? (they need to destroy the wall) [y/N]')
             resp = read(values=['y', 'Y', 'n', 'N'], default='n')
             if resp.lower() != 'y':
                 break
@@ -230,13 +229,13 @@ def attackBarbarians(session, event, stdin_fd, predetermined_input):
         babarians_info = get_barbarians_lv(session, island)
 
         banner()
-        print(_('The barbarians have:'))
+        print('The barbarians have:')
         for name, amount in babarians_info['troops']:
-            print(_('{} units of {}').format(amount, name))
+            print('{} units of {}'.format(amount, name))
         print('')
 
         banner()
-        print(_('From which city do you want to attack?'))
+        print('From which city do you want to attack?')
         city = chooseCity(session)
 
         plan = plan_attack(session, city, babarians_info)
@@ -245,7 +244,7 @@ def attackBarbarians(session, event, stdin_fd, predetermined_input):
             return
 
         banner()
-        print(_('The barbarians in [{}:{}] will be attacked.').format(island['x'], island['y']))
+        print('The barbarians in [{}:{}] will be attacked.'.format(island['x'], island['y']))
         enter()
 
     except KeyboardInterrupt:
@@ -255,12 +254,12 @@ def attackBarbarians(session, event, stdin_fd, predetermined_input):
     set_child_mode(session)
     event.set()
 
-    info = _('\nI attack the barbarians in [{}:{}]\n').format(island['x'], island['y'])
+    info = '\nI attack the barbarians in [{}:{}]\n'.format(island['x'], island['y'])
     setInfoSignal(session, info)
     try:
         do_it(session, island, city, babarians_info, plan)
     except Exception as e:
-        msg = _('Error in:\n{}\nCause:\n{}').format(info, traceback.format_exc())
+        msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
         sendToBot(session, msg)
     finally:
         session.logout()

@@ -1,11 +1,16 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from ikabot.helpers.varios import *
-from ikabot.helpers.pedirInfo import *
+import json
+import os
+import sys
+from decimal import Decimal, getcontext
 
-t = gettext.translation('getStatus', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.config import materials_names
+from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter
+from ikabot.helpers.pedirInfo import chooseCity, getIdsOfCities
+from ikabot.helpers.resources import getProductionPerSecond
 
 getcontext().prec = 30
 
@@ -61,11 +66,11 @@ def getStatus(session, event, stdin_fd, predetermined_input):
             total_ships = json_data['maxTransporters']
             total_gold = int(Decimal(json_data['gold']))
             total_gold_production = int(Decimal(json_data['scientistsUpkeep'] + json_data['income'] + json_data['upkeep']))
-        print(_('Ships {:d}/{:d}').format(int(available_ships), int(total_ships)))
-        print(_('\nTotal:'))
+        print('Ships {:d}/{:d}'.format(int(available_ships), int(total_ships)))
+        print('\nTotal:')
         print('{:>10}'.format(' '), end='|')
         for i in range(len(materials_names)):
-            print('{:>12}'.format(materials_names_english[i]), end='|')
+            print('{:>12}'.format(materials_names[i]), end='|')
         print()
         print('{:>10}'.format('Available'), end='|')
         for i in range(len(materials_names)):
@@ -79,7 +84,7 @@ def getStatus(session, event, stdin_fd, predetermined_input):
         print('Gold: {}, Gold production: {}'.format(addThousandSeparator(total_gold), addThousandSeparator(total_gold_production)))
         print('Wine consumption: {}'.format(addThousandSeparator(total_wine_consumption)), end='')
 
-        print(_('\nOf which city do you want to see the state?'))
+        print('\nOf which city do you want to see the state?')
         city = chooseCity(session)
         banner()
 
@@ -94,22 +99,22 @@ def getStatus(session, event, stdin_fd, predetermined_input):
                 color_resources.append(bcolors.RED)
             else:
                 color_resources.append(bcolors.ENDC)
-        print(_('Population:'))
+        print('Population:')
         print('{}: {} {}: {}'.format('Housing space', addThousandSeparator(housing_space), 'Citizens', addThousandSeparator(citizens)))
         print(_('Storage: {}'.format(addThousandSeparator(storageCapacity))))
-        print(_('Resources:'))
+        print('Resources:')
         for i in range(len(materials_names)):
             print('{} {}{}{} '.format(materials_names[i], color_resources[i], addThousandSeparator(resources[i]), bcolors.ENDC), end='')
         print('')
 
-        print(_('Production:'))
+        print('Production:')
         print('{}: {} {}: {}'.format(materials_names[0], addThousandSeparator(wood*3600), materials_names[typeGood], addThousandSeparator(good*3600)))
 
         hasTavern = 'tavern' in [building['building'] for building in city['position']]
         if hasTavern:
             consumption_per_hour = city['wineConsumptionPerHour']
             if consumption_per_hour == 0:
-                print(_('{}{}Does not consume wine!{}').format(bcolors.RED, bcolors.BOLD, bcolors.ENDC))
+                print('{}{}Does not consume wine!{}'.format(bcolors.RED, bcolors.BOLD, bcolors.ENDC))
             else:
                 if typeGood == 1 and (good*3600) > consumption_per_hour:
                     elapsed_time_run_out = '∞'
@@ -117,7 +122,7 @@ def getStatus(session, event, stdin_fd, predetermined_input):
                     consumption_per_second = Decimal(consumption_per_hour) / Decimal(3600)
                     remaining_resources_to_consume = Decimal(resources[1]) / Decimal(consumption_per_second)
                     elapsed_time_run_out = daysHoursMinutes(remaining_resources_to_consume)
-                print(_('There is wine for: {}').format(elapsed_time_run_out))
+                print('There is wine for: {}'.format(elapsed_time_run_out))
         
         for building in [building for building in city['position'] if building['name'] != 'empty']:
             if building['isMaxLevel'] is True:
@@ -135,7 +140,7 @@ def getStatus(session, event, stdin_fd, predetermined_input):
             if building['isBusy'] is True:
                 level = level + '+'
 
-            print(_('lv:{}\t{}{}{}').format(level, color, building['name'], bcolors.ENDC))
+            print('lv:{}\t{}{}{}'.format(level, color, building['name'], bcolors.ENDC))
 
         enter()
         print('')
