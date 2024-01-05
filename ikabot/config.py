@@ -23,9 +23,6 @@ LOG_FILE = os.path.join(LOG_DIR, 'ikabot.log')
 do_ssl_verify = True
 has_params = False
 
-ids_cache = None
-cities_cache = None
-
 infoUser = ''
 
 ikaFile = '.ikabot'

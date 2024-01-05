@@ -13,6 +13,8 @@ from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
 getcontext().prec = 30
 
 menu_cities = ''
+ids_cache = None
+cities_cache = None
 
 
 def read(min=None, max=None, digit=False, msg=prompt, values=None, empty=False, additionalValues=None, default=None):  # user input
