@@ -176,10 +176,13 @@ def do_it(session, cities_ids, cities_dict, waiting_time, max_random_waiting_tim
                 forrest = int(to_donate / 2)
                 trade = int(to_donate / 2)
                 session.post(params={'islandId': islandId, 'type': 'resource', 'action': 'IslandScreen', 'function': 'donate', 'donation': forrest, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
+                logging.info("I donated %d wood to the forest", forrest)
                 session.wait(1, max_random=5, info='Simulating user interaction')
                 session.post(params={'islandId': islandId, 'type': 'tradegood', 'action': 'IslandScreen', 'function': 'donate', 'donation': trade, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
+                logging.info("I donated %d wood to the tradegood ", trade)
             else:
                 session.post(params={'islandId': islandId, 'type': donation_type, 'action': 'IslandScreen', 'function': 'donate', 'donation': to_donate, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
+                logging.info("I donated %d wood to the %s ", to_donate, donation_type)
 
         msg = _('I donated automatically.')
         sendToBotDebug(session, msg, debugON_donationBot)
