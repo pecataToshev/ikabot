@@ -99,29 +99,6 @@ class Session:
             'info': message,
             'nextActionDate': None
         })
-    
-    def updateLogLevel(self, level=None):
-        """Updates the sessions logging level. If none is passed, will load level from session data."""
-        shared = self.getSessionData().get('shared', dict({}))
-        if level is None:
-            if 'loggingLevel' in shared:
-                level = shared['loggingLevel']
-            else:
-                level = config.logLevel
-
-        if type(level) == str:
-            level = logging.getLevelName(level)
-
-        # set the level
-        logging.getLogger().setLevel(level)
-
-        # save as string
-        level = logging.getLevelName(level)
-        logging.info('Loglevel set to %s', level)
-        self.logLevel = level
-        shared['loggingLevel'] = level
-
-        self.setSessionData(shared, shared=True)
 
     def __genRand(self):
         return hex(random.randint(0, 65535))[2:]
@@ -191,7 +168,6 @@ class Session:
 
         self.s = requests.Session()
         self.cipher = AESCipher(self.mail, self.password)
-        self.updateLogLevel()
         logging.info("Trying to log in. {loggedIn: %s, retries: %d}",
                      self.logged, retries)
 
