@@ -4,7 +4,6 @@ import logging
 import os
 import subprocess
 import time
-from time import time
 
 import psutil
 
@@ -103,6 +102,7 @@ class IkabotProcessListManager:
             _new_process.update(process)
             _new_process['date'] = time.time()
 
+            # Print process
             _log_process = dict(_new_process)
             _log_process.pop('pid')
             _log_process.pop('date')
