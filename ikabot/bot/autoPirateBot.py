@@ -5,7 +5,7 @@ import traceback
 from ikabot.config import actionRequest
 from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.catpcha import resolveCaptcha
-from ikabot.helpers.piracy import getPiracyTemplateData
+from ikabot.helpers.piracy import getPiracyTemplateData, convertCapturePoints
 from ikabot.helpers.process import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
@@ -76,7 +76,8 @@ def __execute_piracy_daily_missions(session, piracy_config):
                 session=session,
                 city_id=piracy_config['cityId'],
                 mission_building_level=day_config['missionBuildingLevel'],
-                additional_message='@daily'
+                convert_points_to_strength=piracy_config.get('convertPoints', None),
+                additional_message='@daily',
             )
             __perform_break_between_missions(
                 session,
@@ -98,6 +99,7 @@ def __execute_piracy_daily_missions(session, piracy_config):
                     session=session,
                     city_id=piracy_config['cityId'],
                     mission_building_level=night_config['missionBuildingLevel'],
+                    convert_points_to_strength=piracy_config.get('convertPoints', None),
                     additional_message='@nightly'
                 )
 
@@ -135,6 +137,7 @@ def __execute_piracy_tasks(session, piracy_config):
             session=session,
             city_id=piracy_config['cityId'],
             mission_building_level=piracy_config['missionBuildingLevel'],
+            convert_points_to_strength=piracy_config.get('convertPoints', None),
             additional_message='Mission {}/{}'.format(task_index + 1,
                                                       total_missions)
         )
@@ -202,6 +205,7 @@ def __execute_piracy_mission(
     session,
     city_id,
     mission_building_level,
+    convert_points_to_strength,
     additional_message,
     captcha=None,
     remaining_attempts=__MAXIMUM_PIRATE_MISSION_START_ATTEMPTS,
@@ -211,6 +215,7 @@ def __execute_piracy_mission(
     :param session: ikabot.web.session.Session
     :param city_id: int -> city with the fortress
     :param mission_building_level: int -> the building level of the mission
+    :param convert_points_to_strength: int/str -> conversion configuration
     :param additional_message: str -> additional message in the statuses
     :param captcha: str -> resolved captcha
     :param remaining_attempts: times to try id captcha is not solved
@@ -257,7 +262,14 @@ def __execute_piracy_mission(
         # execution is successful, go get some sleep
         session.wait(mission['duration'],
                      'Executing piracy mission {}. {}'.format(mission['name'],
-                                                              additional_message))
+                                                              additional_message),
+                     5)
+
+        if convert_points_to_strength is not None:
+            if convert_points_to_strength == 'mission':
+                convert_points_to_strength = mission['capturePoints']
+            convertCapturePoints(session, city_id, convert_points_to_strength)
+
         return
 
     if 'function=createCaptcha' not in html:
@@ -267,6 +279,7 @@ def __execute_piracy_mission(
             session=session,
             city_id=city_id,
             mission_building_level=mission_building_level,
+            convert_points_to_strength=convert_points_to_strength,
             additional_message=additional_message,
             captcha=None,
             remaining_attempts=remaining_attempts-1,
@@ -291,6 +304,7 @@ def __execute_piracy_mission(
         session=session,
         city_id=city_id,
         mission_building_level=mission_building_level,
+        convert_points_to_strength=convert_points_to_strength,
         additional_message=additional_message,
         captcha=captcha,
         remaining_attempts=remaining_attempts,

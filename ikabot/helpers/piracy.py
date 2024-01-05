@@ -1,4 +1,5 @@
 import json
+import logging
 
 from ikabot.config import city_url, actionRequest
 from ikabot.helpers.getJson import getCity
@@ -45,3 +46,51 @@ def findCityWithTheBiggestPiracyFortress(session):
                 max_level = building['level']
 
     return pirate_city
+
+
+def convertCapturePoints(session, pirate_city_id, conversion_points):
+    """Converts capture points into crew strength
+    Parameters
+    ----------
+    session : ikabot.web.session.Session
+    pirate_city_id: int -> city id with a pirate fortress
+    conversion_points: int/'all' -> how many points to convert
+    :return bool: is successful
+    """
+    template_data = getPiracyTemplateData(session, pirate_city_id)
+    captured_points = template_data['capturePoints']
+
+    if conversion_points == 'all':
+        conversion_points = captured_points
+    else:
+        conversion_points = min(conversion_points, captured_points)
+
+    if template_data['hasOngoingConvertion']:
+        logging.info("Found ongoing conversion. Could will skip this one")
+        return False
+
+    if conversion_points == 0:
+        logging.info("No points to convert")
+        return False
+
+    crew_strength = int(conversion_points / template_data['crewConversionFactor'])
+
+    logging.info("Will start conversion of %d capture points into %d crew strenght",
+                 conversion_points, crew_strength)
+
+    session.post(params={
+      'action': 'PiracyScreen',
+      'function': 'convert',
+      'view': 'pirateFortress',
+      'cityId': pirate_city_id,
+      'activeTab': 'tabCrew',
+      'crewPoints': str(crew_strength),
+      'position': '17',
+      'backgroundView': 'city',
+      'currentCityId': pirate_city_id,
+      'templateView': 'pirateFortress',
+      'actionRequest': actionRequest,
+      'ajax': '1'
+    }, noIndex=True)
+
+    return True

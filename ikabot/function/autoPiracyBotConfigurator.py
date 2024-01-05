@@ -61,7 +61,7 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
         _all = 'all'
         _mission = 'mission'
         print("Type {} for all available capture points".format(_all))
-        print("Type {} for capture points from the previous mission".format(_mission))
+        print("Type {} for capture points from the executed mission".format(_mission))
         print('Type any number, to convert exact amount')
         bot_config['convertPoints'] = read(min=1, additionalValues=[_all, _mission])
 
