@@ -1,16 +1,16 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import json
 import base64
 import hashlib
-from ikabot.config import *
-from ikabot.helpers.botComm import *
+import json
+import os
+
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-t = gettext.translation('aesCipher', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot.config import ikaFile
+from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.pedirInfo import read
 
 
 class AESCipher:
@@ -84,12 +84,12 @@ class AESCipher:
                 try:
                     plaintext = self.decrypt(ciphertext)
                 except Exception:
-                    msg = _('Error while decrypting session data.\nYou may have entered a wrong password.')
+                    msg = 'Error while decrypting session data.\nYou may have entered a wrong password.'
                     if session.padre:
                         print(msg)
                     else:
                         sendToBot(session, msg)
-                    print(_('\nWould you like to delete the ikabot session data associated with this email address? [y/N]'))
+                    print('\nWould you like to delete the ikabot session data associated with this email address? [y/N]')
                     rta = read(values=['n', 'N', 'y', 'Y'])
                     if rta.lower() == 'n':
                         os._exit(0)

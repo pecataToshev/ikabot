@@ -1,10 +1,14 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+import os
 import sys
 
+from ikabot import config
 from ikabot.helpers.botComm import sendToBot
-from ikabot.helpers.pedirInfo import read, enter
-from ikabot.helpers.gui import *
+from ikabot.helpers.gui import enter
+from ikabot.helpers.pedirInfo import read
+
 
 def testTelegramBot(session, event, stdin_fd, predetermined_input):
     """

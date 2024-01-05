@@ -1,23 +1,21 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+import sys
+from decimal import getcontext
+
+from ikabot import config
+from ikabot.config import city_url, materials_names, MAXIMUM_CITY_NAME_LENGTH, SECONDS_IN_HOUR
 from ikabot.function.constructBuilding import constructBuilding
 from ikabot.function.constructionList import constructionList
 from ikabot.helpers.getJson import getCity
+from ikabot.helpers.gui import banner, bcolors, printProgressBar
 from ikabot.helpers.market import printGoldForAllCities
-from ikabot.helpers.pedirInfo import *
-
-t = gettext.translation('getStatus', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot.helpers.pedirInfo import getIdsOfCities, read
+from ikabot.helpers.resources import getProductionPerSecond
 
 getcontext().prec = 30
-
-def printProgressBar(msg, current, total):
-    banner()
-    loaded = "#" * (current - 1)
-    waiting = "." * (total - current)
-    print("{}: [{}={}] {}/{}".format(msg, loaded, waiting, current, total))
-
 
 
 def getStatusForAllCities(session, event, stdin_fd, predetermined_input):

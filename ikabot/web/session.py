@@ -1,21 +1,29 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import base64
+import getpass
+import json
+import logging
 import multiprocessing
+import os
+import random
+import re
+import sys
 import time
 from collections import deque
+from datetime import time
 
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 
-from ikabot.helpers.aesCipher import *
-from ikabot.helpers.gui import *
-from ikabot.helpers.pedirInfo import *
+from ikabot import config
+from ikabot.config import actionRequest, ConnectionError_wait, user_agent
+from ikabot.helpers.aesCipher import AESCipher
+from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.getJson import getCity
+from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
+from ikabot.helpers.pedirInfo import read
 from ikabot.helpers.process import IkabotProcessListManager
-from ikabot.helpers.varios import decodeUnicodeEscape
-from ikabot.helpers.varios import getDateTime, decodeUnicodeEscape
-
-t = gettext.translation('session', localedir, languages=languages, fallback=True)
-_ = t.gettext
 
 #blackbox tokens
 blackbox_tokens = [ #ch, chi, ffi
@@ -173,12 +181,12 @@ class Session:
         if not self.logged:
             banner()
 
-            self.mail = read(msg=_('Mail:'))
+            self.mail = read(msg='Mail:')
 
             if len(config.predetermined_input) != 0:
                 self.password = config.predetermined_input.pop(0)
             else:
-                self.password = getpass.getpass(_('Password:'))
+                self.password = getpass.getpass('Password:')
 
             banner()
 
@@ -311,11 +319,11 @@ class Session:
                         config.predetermined_input[:] = []  # Unholy way to clear a ListProxy object
                         answer = read(values=['y', 'Y', 'n', 'N'], default='y')
                         if answer.lower() == 'n':
-                            sys.exit(_('Captcha error! (Interactive)'))
+                            sys.exit('Captcha error! (Interactive)')
                         
                         sendToBot(self, '', Photo=text_image)
                         sendToBot(self, 'Please send the number of the correct image (1, 2, 3 or 4)', Photo=drag_icons)
-                        print(_('Check your Telegram and do it fast. The captcha expires quickly'))
+                        print('Check your Telegram and do it fast. The captcha expires quickly')
                         captcha_time = time.time()
                         while True:
                             response = getUserResponse(self, fullResponse=True)
@@ -333,7 +341,7 @@ class Session:
                                     data = {'answer': captcha}
                                     break
                                 except ValueError:
-                                    print(_('You sent {}. Please send only a number (1, 2, 3 or 4)').format(captcha))
+                                    print('You sent {}. Please send only a number (1, 2, 3 or 4)'.format(captcha))
                                     time.sleep(5)
                                     continue
                             time.sleep(5)
@@ -363,7 +371,7 @@ class Session:
                 cookie_obj = requests.cookies.create_cookie(domain='.gameforge.com', name='gf-token-production', value=auth_token)
                 self.s.cookies.set_cookie(cookie_obj)
                 if not self.__test_lobby_cookie():
-                    sys.exit(_('Wrong email or password\n'))
+                    sys.exit('Wrong email or password\n')
             else:
                 # get the authentication token and set the cookie
                 ses_json = json.loads(r.text, strict=False)
@@ -399,7 +407,7 @@ class Session:
             if len([account for account in accounts if account['blocked'] is False]) == 1:
                 self.account = [account for account in accounts if account['blocked'] is False][0]
             else:
-                print(_('With which account do you want to log in?\n'))
+                print('With which account do you want to log in?\n')
 
                 max_name = max([len(account['name']) for account in accounts if account['blocked'] is False])
                 i = 0
@@ -422,9 +430,9 @@ class Session:
             
             self.word, self.servidor = [(srv['name'], srv['language']) for srv in servers if srv['accountGroup'] == self.account_group][0]
             
-            config.infoUser = _('Server:{}').format(self.servidor)
-            config.infoUser += _(', World:{}').format(self.word)
-            config.infoUser += _(', Player:{}').format(self.username)
+            config.infoUser = 'Server:{}'.format(self.servidor)
+            config.infoUser += ', World:{}'.format(self.word)
+            config.infoUser += ', Player:{}'.format(self.username)
             banner()
 
         self.host = 's{}-{}.ikariam.gameforge.com'.format(self.mundo, self.servidor)
@@ -553,7 +561,7 @@ class Session:
                     self.__proxy_error()
 
         if self.__isInVacation(html):
-            msg = _('The account went into vacation mode')
+            msg = 'The account went into vacation mode'
             if self.padre:
                 print(msg)
             else:
@@ -563,7 +571,7 @@ class Session:
             if retries > 0:
                 return self.__login(retries-1)
             if self.padre:
-                msg = _('Login error.')
+                msg = 'Login error.'
                 print(msg)
                 os._exit(0)
             raise Exception('Couldn\'t log in')
@@ -603,19 +611,19 @@ class Session:
         if 'proxy' not in sessionData or sessionData['proxy']['set'] is False:
             sys.exit('network error')
         elif self.padre is True:
-            print(_('There seems to be a problem connecting to ikariam.'))
-            print(_('Do you want to disable the proxy? [Y/n]'))
+            print('There seems to be a problem connecting to ikariam.')
+            print('Do you want to disable the proxy? [Y/n]')
             rta = read(values=['y', 'Y', 'n', 'N', ''])
             if rta.lower() == 'n':
                 sys.exit()
             else:
                 sessionData['proxy']['set'] = False
                 self.setSessionData(sessionData)
-                print(_('Proxy disabled, try again.'))
+                print('Proxy disabled, try again.')
                 enter()
                 sys.exit()
         else:
-            msg = _('Network error. Consider disabling the proxy.')
+            msg = 'Network error. Consider disabling the proxy.'
             sendToBot(self, msg)
             sys.exit()
 
@@ -668,6 +676,7 @@ class Session:
                 .replace("  ", ' ')
             )
         return 'only when DEBUG level'
+
     def get(self, url='', params={}, ignoreExpire=False, noIndex=False, fullResponse=False):
         """Sends get request to ikariam
         Parameters
@@ -822,4 +831,4 @@ def normal_get(url, params={}):
         return requests.get(url, params=params)
 
     except requests.exceptions.ConnectionError:
-        sys.exit(_('Internet connection failed'))
+        sys.exit('Internet connection failed')

@@ -1,35 +1,15 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-import logging
-import re
-import os
 import json
+import logging
+import os
 import random
-import gettext
 import sys
+
 import ikabot.web.session
-from ikabot.config import *
-import ikabot.config as config
-from ikabot.helpers.gui import *
+from ikabot import config
+from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.pedirInfo import read
-
-t = gettext.translation('botComm', localedir, languages=languages, fallback=True)
-_ = t.gettext
-
-
-def sendToBotDebug(session, msg, debugON):
-    """This function will send the ``msg`` argument passed to it as a message to the user on Telegram, only if ``debugOn`` is ``True``
-    Parameters
-    ----------
-    session : ikabot.web.session.Session
-        Session object
-    msg : str
-        a string representing the message to send to the user on Telegram
-    debugON : bool
-        a boolean indicating whether or not to send the message.
-    """
-    if debugON:
-        sendToBot(session, msg)
 
 
 def sendToBot(session, msg, Token=False, Photo=None):
@@ -136,10 +116,10 @@ def checkTelegramData(session):
         return True
     else:
         banner()
-        print(_('You must provide valid credentials to communicate by telegram.'))
-        print(_('You require the token of the bot you are going to use and your chat_id'))
-        print(_('For more information about how to obtain them read the readme at https://github.com/physics-sp/ikabot'))
-        rta = read(msg=_('Will you provide the credentials now? [y/N]'), values=['y', 'Y', 'n', 'N', ''])
+        print('You must provide valid credentials to communicate by telegram.')
+        print('You require the token of the bot you are going to use and your chat_id')
+        print('For more information about how to obtain them read the readme at https://github.com/physics-sp/ikabot')
+        rta = read(msg='Will you provide the credentials now? [y/N]', values=['y', 'Y', 'n', 'N', ''])
         if rta.lower() != 'y':
             return False
         else:
@@ -168,15 +148,15 @@ def updateTelegramData(session, event=None, stdin_fd=None, predetermined_input=[
         sys.stdin = os.fdopen(stdin_fd)  # give process access to terminal
     config.predetermined_input = predetermined_input
     banner()
-    print(_('To create your own Telegram Bot, read this: https://core.telegram.org/bots#3-how-do-i-create-a-bot'))
-    print(_('Just talk to @botfather in Telegram, send /newbot and then choose the bot\'s name.'))
-    print(_('Talk to your new bot and send /start'))
-    print(_('Remember to keep the token secret!\n'))
-    botToken = read(msg=_('Bot\'s token:'))
+    print('To create your own Telegram Bot, read this: https://core.telegram.org/bots#3-how-do-i-create-a-bot')
+    print('Just talk to @botfather in Telegram, send /newbot and then choose the bot\'s name.')
+    print('Talk to your new bot and send /start')
+    print('Remember to keep the token secret!\n')
+    botToken = read(msg='Bot\'s token:')
 
     updates = ikabot.web.session.normal_get('https://api.telegram.org/bot{}/getUpdates'.format(botToken)).json()
     if 'ok' not in updates or updates['ok'] is False:
-        print(_('invalid telegram bot, try again.'))
+        print('invalid telegram bot, try again.')
         enter()
         if event is not None and stdin_fd is not None:
             event.set()
@@ -192,28 +172,28 @@ def updateTelegramData(session, event=None, stdin_fd=None, predetermined_input=[
                 user_ids.append(user['id'])
 
     if len(users) == 0:
-        print(_('make sure your personal Telegram account has a username configured and then send a random message to your bot'))
+        print('make sure your personal Telegram account has a username configured and then send a random message to your bot')
         enter()
         if event is not None and stdin_fd is not None:
             event.set()
         return False
     elif len(users) == 1:
-        resp = read(msg=_('is your username {}? [Y/n]').format(users[0]['username']), default='y', values=['y', 'Y', 'N', 'n'])
+        resp = read(msg='is your username {}? [Y/n]'.format(users[0]['username']), default='y', values=['y', 'Y', 'N', 'n'])
         if resp.lower() == 'n':
-            print(_('talk to your bot and try again'))
+            print('talk to your bot and try again')
             if event is not None and stdin_fd is not None:
                 event.set()
             return False
         else:
             chat_id = users[0]['id']
     else:
-        print(_('select your username:'))
-        print(_('0) My username is not listed'))
+        print('select your username:')
+        print('0) My username is not listed')
         for i, user in enumerate(users):
-            print(_('{:d}) {}').format(i+1, user['username']))
+            print('{:d}) {}'.format(i+1, user['username']))
         resp = read(min=0, max=len(users))
         if resp == 0:
-            print(_('talk to your bot and try again'))
+            print('talk to your bot and try again')
             if event is not None and stdin_fd is not None:
                 event.set()
             return False
@@ -227,28 +207,28 @@ def updateTelegramData(session, event=None, stdin_fd=None, predetermined_input=[
     session.setSessionData(telegram_data, shared=True)
 
     rand = str(random.randint(0, 9999)).zfill(4)
-    msg = _('The token is:{}').format(rand)
+    msg = 'The token is:{}'.format(rand)
     sendToBot(session, msg, Token=True)
 
-    rta = read(msg=_('A message was sent by telegram, did you receive it? [Y/n]'), values=['y', 'Y', 'n', 'N', ''])
+    rta = read(msg='A message was sent by telegram, did you receive it? [Y/n]', values=['y', 'Y', 'n', 'N', ''])
     if rta.lower() == 'n':
         valid = False
     else:
-        recibido = read(msg=_('Enter the received token in telegram:'))
+        recibido = read(msg='Enter the received token in telegram:')
         if rand != recibido:
-            print(_('The token is incorrect'))
+            print('The token is incorrect')
             valid = False
         else:
-            print(_('The token is correct'))
+            print('The token is correct')
             valid = True
 
     if valid is False:
         telegram_data['telegram']['botToken'] = ''
         telegram_data['telegram']['chatId'] = ''
         session.setSessionData(telegram_data, shared=True)
-        print(_('Check the credentials and re-supply them.'))
+        print('Check the credentials and re-supply them.')
     else:
-        print(_('The data was saved.'))
+        print('The data was saved.')
     enter()
 
     if event is not None and stdin_fd is not None:

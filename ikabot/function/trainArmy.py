@@ -3,26 +3,20 @@
 
 import asyncio
 import copy
-import re
 import json
-import gettext
+import os
+import re
+import sys
 import traceback
-from ikabot.config import *
-from ikabot.helpers.gui import *
-from ikabot.helpers.botComm import *
-from ikabot.helpers.pedirInfo import *
-from ikabot.helpers.varios import *
-from ikabot.helpers.process import set_child_mode
-from ikabot.helpers.varios import addThousandSeparator
-from ikabot.helpers.getJson import getCity
-from ikabot.helpers.signals import setInfoSignal
-from ikabot.helpers.resources import getAvailableResources
 
-t = gettext.translation('trainArmy',
-                        localedir,
-                        languages=languages,
-                        fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.config import actionRequest, city_url, materials_names
+from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.getJson import getCity
+from ikabot.helpers.gui import addThousandSeparator, banner, daysHoursMinutes, enter
+from ikabot.helpers.pedirInfo import chooseCity, getIdsOfCities, read
+from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.signals import setInfoSignal
 
 
 def getBuildingInfo(session, city, trainTroops):
@@ -111,31 +105,31 @@ def planTrainings(session, city, trainings, trainTroops):
                 # calculate how many units can actually be trained based on the resources available
                 unit['train'] = unit['cantidad']
 
-                for i in range(len(materials_names_english)):
-                    material_name = materials_names_english[i].lower()
+                for i in range(len(materials_names)):
+                    material_name = materials_names[i].lower()
                     if material_name in unit['costs']:
                         limiting = resourcesAvailable[i] // unit['costs'][material_name]
                         unit['train'] = min(unit['train'], limiting)
 
                 if 'citizens' in unit['costs']:
-                    limiting = resourcesAvailable[len(materials_names_english)] // unit['costs']['citizens']
+                    limiting = resourcesAvailable[len(materials_names)] // unit['costs']['citizens']
                     unit['train'] = min(unit['train'], limiting)
 
                 # calculate the resources that will be left
-                for i in range(len(materials_names_english)):
-                    material_name = materials_names_english[i].lower()
+                for i in range(len(materials_names)):
+                    material_name = materials_names[i].lower()
                     if material_name in unit['costs']:
                         resourcesAvailable[i] -= unit['costs'][material_name] * unit['train']
 
                 if 'citizens' in unit['costs']:
-                    resourcesAvailable[len(materials_names_english)] -= unit['costs']['citizens'] * unit['train']
+                    resourcesAvailable[len(materials_names)] -= unit['costs']['citizens'] * unit['train']
 
                 unit['cantidad'] -= unit['train']
 
             # amount of units that will be trained
             total = sum([unit['train'] for unit in training])
             if total == 0:
-                msg = _('It was not possible to finish the training due to lack of resources.')
+                msg = 'It was not possible to finish the training due to lack of resources.'
                 sendToBot(session, msg)
                 return
 
@@ -177,15 +171,15 @@ def trainArmy(session, event, stdin_fd, predetermined_input):
     try:
         banner()
 
-        print(_('Do you want to train troops (1) or ships (2)?'))
+        print('Do you want to train troops (1) or ships (2)?')
         rta = read(min=1, max=2)
         trainTroops = rta == 1
         banner()
 
         if trainTroops:
-            print(_('In what city do you want to train the troops?'))
+            print('In what city do you want to train the troops?')
         else:
-            print(_('In what city do you want to train the fleet?'))
+            print('In what city do you want to train the fleet?')
         city = chooseCity(session)
         banner()
 
@@ -196,9 +190,9 @@ def trainArmy(session, event, stdin_fd, predetermined_input):
                 break
         else:
             if trainTroops:
-                print(_('Barracks not built.'))
+                print('Barracks not built.')
             else:
-                print(_('Shipyard not built.'))
+                print('Shipyard not built.')
             enter()
             event.set()
             return
@@ -213,7 +207,7 @@ def trainArmy(session, event, stdin_fd, predetermined_input):
         tranings = []
         while True:
             units = generateArmyData(units_info)
-            print(_('Train:'))
+            print('Train:')
             for unit in units:
                 pad = ' ' * (maxSize - len(unit['local_name']))
                 amount = read(msg='{}{}:'.format(pad, unit['local_name']), min=0, empty=True)
@@ -222,32 +216,32 @@ def trainArmy(session, event, stdin_fd, predetermined_input):
                 unit['cantidad'] = amount
 
             # calculate costs
-            cost = [0] * (len(materials_names_english) + 3)
+            cost = [0] * (len(materials_names) + 3)
             for unit in units:
-                for i in range(len(materials_names_english)):
-                    material_name = materials_names_english[i].lower()
+                for i in range(len(materials_names)):
+                    material_name = materials_names[i].lower()
                     if material_name in unit['costs']:
                         cost[i] += unit['costs'][material_name] * unit['cantidad']
 
                 if 'citizens' in unit['costs']:
-                    cost[len(materials_names_english)+0] += unit['costs']['citizens'] * unit['cantidad']
+                    cost[len(materials_names)+0] += unit['costs']['citizens'] * unit['cantidad']
                 if 'upkeep' in unit['costs']:
-                    cost[len(materials_names_english)+1] += unit['costs']['upkeep'] * unit['cantidad']
+                    cost[len(materials_names)+1] += unit['costs']['upkeep'] * unit['cantidad']
                 if 'completiontime' in unit['costs']:
-                    cost[len(materials_names_english)+2] += unit['costs']['completiontime'] * unit['cantidad']
+                    cost[len(materials_names)+2] += unit['costs']['completiontime'] * unit['cantidad']
 
-            print(_('\nTotal cost:'))
-            for i in range(len(materials_names_english)):
+            print('\nTotal cost:')
+            for i in range(len(materials_names)):
                 if cost[i] > 0:
-                    print('{}: {}'.format(materials_names_english[i], addThousandSeparator(cost[i])))
-            if cost[len(materials_names_english)+0] > 0:
-                print(_('Citizens: {}').format(addThousandSeparator(cost[len(materials_names_english)+0])))
-            if cost[len(materials_names_english)+1] > 0:
-                print(_('Maintenance: {}').format(addThousandSeparator(cost[len(materials_names_english)+1])))
-            if cost[len(materials_names_english)+2] > 0:
-                print(_('Duration: {}').format(daysHoursMinutes(int(cost[len(materials_names_english)+2]))))
+                    print('{}: {}'.format(materials_names[i], addThousandSeparator(cost[i])))
+            if cost[len(materials_names)+0] > 0:
+                print('Citizens: {}'.format(addThousandSeparator(cost[len(materials_names)+0])))
+            if cost[len(materials_names)+1] > 0:
+                print('Maintenance: {}'.format(addThousandSeparator(cost[len(materials_names)+1])))
+            if cost[len(materials_names)+2] > 0:
+                print('Duration: {}'.format(daysHoursMinutes(int(cost[len(materials_names)+2]))))
 
-            print(_('\nProceed? [Y/n]'))
+            print('\nProceed? [Y/n]')
             rta = read(values=['y', 'Y', 'n', 'N', ''])
             if rta.lower() == 'n':
                 event.set()
@@ -256,40 +250,40 @@ def trainArmy(session, event, stdin_fd, predetermined_input):
             tranings.append(units)
 
             if trainTroops:
-                print(_('\nDo you want to train more troops when you finish? [y/N]'))
+                print('\nDo you want to train more troops when you finish? [y/N]')
             else:
-                print(_('\nDo you want to train more fleets when you finish? [y/N]'))
+                print('\nDo you want to train more fleets when you finish? [y/N]')
             rta = read(values=['y', 'Y', 'n', 'N', ''])
             if rta.lower() == 'y':
                 banner()
                 if trainTroops:
-                    print(_('Train new troops (1) or repeat (2)?'))
+                    print('Train new troops (1) or repeat (2)?')
                 else:
-                    print(_('Train new fleets (1) or repeat (2)?'))
+                    print('Train new fleets (1) or repeat (2)?')
                 rta = read(min=1, max=2)
                 if rta == 1:
                     continue
                 else:
-                    print(_('\nRepeat how many times?'))
+                    print('\nRepeat how many times?')
                     countRepeat = read(min=1, default=0)
                     break
             else:
                 countRepeat = 0
                 break
 
-        print(_('Do you want to replicate the training to other cities? (y/N)'))
+        print('Do you want to replicate the training to other cities? (y/N)')
         replicate = read(values=['y', 'Y', 'n', 'N', ''])
         if replicate.lower() == 'y':
             cityTrainings = []
             ids, cities = getIdsOfCities(session)
 
-            print(_('(0) Back'))
-            print(_('(1) All the wine cities'))
-            print(_('(2) All the marble cities'))
-            print(_('(3) All the cristal cities'))
-            print(_('(4) All the sulfur cities'))
-            print(_('(5) Choose City'))
-            print(_('(6) All City'))
+            print('(0) Back')
+            print('(1) All the wine cities')
+            print('(2) All the marble cities')
+            print('(3) All the cristal cities')
+            print('(4) All the sulfur cities')
+            print('(5) Choose City')
+            print('(6) All City')
 
             selected = read(min=0, max=6, digit=True)
             if selected == 0:
@@ -297,17 +291,17 @@ def trainArmy(session, event, stdin_fd, predetermined_input):
                 return
             elif selected in [1, 2, 3, 4]:
                 cityTrainings = filterCitiesByResource(
-                    cities, resourceMapping[selected], cityTrainings
+                    cities, selected, cityTrainings
                 )
             elif selected == 5:
                 city = []
                 while True:
                     city = chooseCity(session)
                     if city['id'] in cityTrainings:
-                        print(_('\nYou have already selected this city!'))
+                        print('\nYou have already selected this city!')
                         continue
                     cityTrainings.append(city['id'])
-                    print(_('\nDo you want to add another city? [y/N]'))
+                    print('\nDo you want to add another city? [y/N]')
                     rta = read(values=['y', 'Y', 'n', 'N', ''])
                     if rta.lower() == 'y':
                         continue
@@ -325,23 +319,23 @@ def trainArmy(session, event, stdin_fd, predetermined_input):
         for training in tranings:
             for unit in training:
                 if unit['cantidad'] != 0:
-                    for i in range(len(materials_names_english)):
-                        material_name = materials_names_english[i].lower()
+                    for i in range(len(materials_names)):
+                        material_name = materials_names[i].lower()
                         if material_name in unit['costs']:
                             resourcesAvailable[i] -= (
                                 unit['costs'][material_name] * unit['cantidad']
                             )
 
                     if 'citizens' in unit['costs']:
-                        resourcesAvailable[len(materials_names_english)] -= (
+                        resourcesAvailable[len(materials_names)] -= (
                             unit['costs']['citizens'] * unit['cantidad']
                         )
 
         not_enough = [elem for elem in resourcesAvailable if elem < 0] != []
 
         if not_enough:
-            print(_('\nThere are not enough resources:'))
-            for i in range(len(materials_names_english)):
+            print('\nThere are not enough resources:')
+            for i in range(len(materials_names)):
                 if resourcesAvailable[i] < 0:
                     print(
                         '{}:{}'.format(
@@ -350,25 +344,25 @@ def trainArmy(session, event, stdin_fd, predetermined_input):
                         )
                     )
 
-            if resourcesAvailable[len(materials_names_english)] < 0:
+            if resourcesAvailable[len(materials_names)] < 0:
                 print(
-                    _('Citizens:{}').format(
+                    'Citizens:{}'.format(
                         addThousandSeparator(
-                            resourcesAvailable[len(materials_names_english)] * -1
+                            resourcesAvailable[len(materials_names)] * -1
                         )
                     )
                 )
 
-            print(_('\nProceed anyway? [Y/n]'))
+            print('\nProceed anyway? [Y/n]')
             rta = read(values=['y', 'Y', 'n', 'N', ''])
             if rta.lower() == 'n':
                 event.set()
                 return
 
         if trainTroops:
-            print(_('\nThe selected troops will be trained.'))
+            print('\nThe selected troops will be trained.')
         else:
-            print(_('\nThe selected fleet will be trained.'))
+            print('\nThe selected fleet will be trained.')
         enter()
 
 
@@ -394,10 +388,10 @@ def trainArmy(session, event, stdin_fd, predetermined_input):
                                 break
                     except Exception as e:
                         if trainTroops:
-                            info = _('\nI train troops in {}\n').format(city['cityName'])
+                            info = '\nI train troops in {}\n'.format(city['cityName'])
                         else:
-                            info = _('\nI train fleets in {}\n').format(city['cityName'])
-                        msg = _('Error in:\n{}\nCause:\n{}').format(
+                            info = '\nI train fleets in {}\n'.format(city['cityName'])
+                        msg = 'Error in:\n{}\nCause:\n{}'.format(
                             info, traceback.format_exc()
                         )
                         sendToBot(session, msg)
@@ -405,14 +399,14 @@ def trainArmy(session, event, stdin_fd, predetermined_input):
 
         else:
             if trainTroops:
-                info = _('\nI train troops in {}\n').format(city['cityName'])
+                info = '\nI train troops in {}\n'.format(city['cityName'])
             else:
-                info = _('\nI train fleets in {}\n').format(city['cityName'])
+                info = '\nI train fleets in {}\n'.format(city['cityName'])
             setInfoSignal(session, info)
             try:
                 planTrainings(session, city, tranings, trainTroops)
             except Exception as e:
-                msg = _('Error in:\n{}\nCause:\n{}').format(info, traceback.format_exc())
+                msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
                 sendToBot(session, msg)
             finally:
                 session.logout()
@@ -429,11 +423,3 @@ def filterCitiesByResource(cities, resource_id, cityTrainings):
         if cityData['tradegood'] == resource_id:
             cityTrainings.append(cityData['id'])
     return cityTrainings
-
-
-resourceMapping = {
-    1: '1',  # Wine
-    2: '2',  # Marble
-    3: '3',  # Cristal
-    4: '4',  # Sulfur
-}

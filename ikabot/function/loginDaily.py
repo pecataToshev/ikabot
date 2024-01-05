@@ -1,20 +1,18 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import time
-import gettext
-import traceback
-import sys
-from ikabot.config import *
-from ikabot.helpers.botComm import *
-from ikabot.helpers.signals import setInfoSignal
-from ikabot.helpers.process import set_child_mode
-from ikabot.helpers.gui import enter
-from ikabot.helpers.pedirInfo import getIdsOfCities
-from ikabot.helpers.varios import getDateTime
 
-t = gettext.translation('loginDaily', localedir, languages=languages, fallback=True)
-_ = t.gettext
+import os
+import sys
+import traceback
+
+from ikabot import config
+from ikabot.config import actionRequest, city_url
+from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.gui import banner, enter, getDateTime
+from ikabot.helpers.pedirInfo import getIdsOfCities
+from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.signals import setInfoSignal
 
 
 def loginDaily(session, event, stdin_fd, predetermined_input):
@@ -30,7 +28,7 @@ def loginDaily(session, event, stdin_fd, predetermined_input):
     config.predetermined_input = predetermined_input
     try:
         banner()
-        print(_('I will enter every day.'))
+        print('I will enter every day.')
         enter()
     except KeyboardInterrupt:
         event.set()
@@ -39,12 +37,12 @@ def loginDaily(session, event, stdin_fd, predetermined_input):
     set_child_mode(session)
     event.set()
 
-    info = _('\nI enter every day\n')
+    info = '\nI enter every day\n'
     setInfoSignal(session, info)
     try:
         do_it(session)
     except Exception as e:
-        msg = _('Error in:\n{}\nCause:\n{}').format(info, traceback.format_exc())
+        msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
         sendToBot(session, msg)
     finally:
         session.logout()

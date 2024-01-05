@@ -1,10 +1,11 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import re
 import json
-from decimal import *
-from ikabot.config import *
+import re
+from decimal import Decimal, getcontext
+
+from ikabot.config import actionRequest
 
 getcontext().prec = 30
 

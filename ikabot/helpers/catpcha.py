@@ -2,7 +2,7 @@ import time
 
 import requests
 
-from ikabot.helpers.botComm import sendToBot, getUserResponse
+from ikabot.helpers.botComm import getUserResponse, sendToBot
 from ikabot.helpers.process import run
 
 

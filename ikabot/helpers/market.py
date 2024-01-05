@@ -3,7 +3,8 @@
 
 import re
 import json
-from ikabot.config import *
+
+from ikabot.config import actionRequest, city_url
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.pedirInfo import getIdsOfCities
 from bs4 import BeautifulSoup
@@ -60,6 +61,7 @@ def onSellInMarket(html):
     mad, vin, mar, cri, azu = re.findall(r'<input type="text" class="textfield"\s*size="\d+"\s*name=".*?"\s*id=".*?"\s*value="(\d+)"', html)
     return [int(mad), int(vin), int(mar), int(cri), int(azu)]
 
+
 def getFinances(session, city_id):
     """
     Get json of finances screen
@@ -71,6 +73,7 @@ def getFinances(session, city_id):
     url = 'view=finances&backgroundView=city&currentCityId={}&templateView=finances&actionRequest={}&ajax=1'.format(city_id, actionRequest)
     data = session.post(url)
     return json.loads(data, strict=False)
+
 
 def getGold(session, city_id):
     """
@@ -98,6 +101,7 @@ def print_table(html_table):
             cells.append(fmt.format(cell.get_text(strip=True)))
             fmt = "{: >15}"
         print(" | ".join(cells))
+
 
 def printGoldForAllCities(session, city_id):
     """

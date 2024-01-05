@@ -1,26 +1,25 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
 import sys
-import gettext
-import requests
-from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.gui import *
-import ikabot.config as config
 
-t = gettext.translation('proxy', config.localedir, languages=config.languages, fallback=True)
-_ = t.gettext
+import requests
+
+import ikabot.config as config
+from ikabot.helpers.gui import banner, enter
+from ikabot.helpers.pedirInfo import read
 
 
 def show_proxy(session):
     session_data = session.getSessionData()
-    msg = _('using proxy:')
+    msg = 'using proxy:'
     if 'proxy' in session_data and session_data['proxy']['set'] is True:
         curr_proxy = session_data['proxy']['conf']['https']
         if test_proxy(session_data['proxy']['conf']) is False:
             session_data['proxy']['set'] = False
             session.setSessionData(session_data)
-            sys.exit(_('the {} proxy does not work, it has been removed').format(curr_proxy))
+            sys.exit('the {} proxy does not work, it has been removed'.format(curr_proxy))
         if msg not in config.update_msg:
             # add proxy message
             config.update_msg += '{} {}\n'.format(msg, curr_proxy)
@@ -43,14 +42,14 @@ def test_proxy(proxy_dict):
 
 
 def read_proxy():
-    print(_('Enter the proxy (examples: socks5://127.0.0.1:9050, https://45.117.163.22:8080):'))
+    print('Enter the proxy (examples: socks5://127.0.0.1:9050, https://45.117.163.22:8080):')
     proxy_str = read(msg='proxy: ')
     proxy_dict = {'http': proxy_str, 'https': proxy_str}
     if test_proxy(proxy_dict) is False:
-        print(_('The proxy does not work.'))
+        print('The proxy does not work.')
         enter()
         return None
-    print(_('The proxy works and it will be used for all future requests.'))
+    print('The proxy works and it will be used for all future requests.')
     enter()
     return proxy_dict
 
@@ -68,11 +67,11 @@ def proxyConf(session, event, stdin_fd, predetermined_input):
     config.predetermined_input = predetermined_input
     try:
         banner()
-        print(_('Warning: The proxy does not apply to the requests sent to the lobby!\n'))
+        print('Warning: The proxy does not apply to the requests sent to the lobby!\n')
 
         session_data = session.getSessionData()
         if 'proxy' not in session_data or session_data['proxy']['set'] is False:
-            print(_('Right now, there is no proxy configured.'))
+            print('Right now, there is no proxy configured.')
             proxy_dict = read_proxy()
             if proxy_dict is None:
                 event.set()
@@ -82,11 +81,11 @@ def proxyConf(session, event, stdin_fd, predetermined_input):
             session_data['proxy']['set'] = True
         else:
             curr_proxy = session_data['proxy']['conf']['https']
-            print(_('Current proxy: {}').format(curr_proxy))
-            print(_('What do you want to do?'))
-            print(_('0) Exit'))
-            print(_('1) Set a new proxy'))
-            print(_('2) Remove the current proxy'))
+            print('Current proxy: {}'.format(curr_proxy))
+            print('What do you want to do?')
+            print('0) Exit')
+            print('1) Set a new proxy')
+            print('2) Remove the current proxy')
             rta = read(min=0, max=2)
 
             if rta == 0:
@@ -101,7 +100,7 @@ def proxyConf(session, event, stdin_fd, predetermined_input):
                 session_data['proxy']['set'] = True
             if rta == 2:
                 session_data['proxy']['set'] = False
-                print(_('The proxy has been removed.'))
+                print('The proxy has been removed.')
                 enter()
 
         session.setSessionData(session_data)

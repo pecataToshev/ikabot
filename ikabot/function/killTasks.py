@@ -1,14 +1,14 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import datetime
+import os
 import sys
 
-from ikabot.helpers.gui import *
+from ikabot import config
+from ikabot.config import isWindows
+from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.pedirInfo import read
 from ikabot.helpers.process import IkabotProcessListManager, run
-
-t = gettext.translation('killTasks', localedir, languages=languages, fallback=True)
-_ = t.gettext
 
 
 def killTasks(session, event, stdin_fd, predetermined_input):
@@ -31,7 +31,7 @@ def killTasks(session, event, stdin_fd, predetermined_input):
             process_list = process_list_manager.get_process_list()
             process_list = [process for process in process_list if process['action'] != 'killTasks']
             if len(process_list) == 0:
-                print(_('There are no tasks running'))
+                print('There are no tasks running')
                 enter()
                 event.set()
                 return

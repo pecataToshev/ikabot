@@ -1,15 +1,14 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import gettext
+import os
 import sys
-from ikabot.config import *
-from ikabot.helpers.gui import *
-from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.getJson import getCity
 
-t = gettext.translation('vacationMode', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.config import actionRequest
+from ikabot.helpers.getJson import getCity
+from ikabot.helpers.gui import banner, clear, enter
+from ikabot.helpers.pedirInfo import read
 
 
 def activateVacationMode(session):
@@ -38,7 +37,7 @@ def vacationMode(session, event, stdin_fd, predetermined_input):
     config.predetermined_input = predetermined_input
     try:
         banner()
-        print(_('Activate vacation mode? [Y/n]'))
+        print('Activate vacation mode? [Y/n]')
         rta = read(values=['y', 'Y', 'n', 'N', ''])
         if rta.lower() == 'n':
             event.set()
@@ -46,7 +45,7 @@ def vacationMode(session, event, stdin_fd, predetermined_input):
 
         activateVacationMode(session)
 
-        print(_('Vacation mode has been activated.'))
+        print('Vacation mode has been activated.')
         enter()
         event.set()
         clear()

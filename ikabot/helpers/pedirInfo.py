@@ -1,20 +1,14 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import re
-import sys
 import json
-import gettext
-import os
-from ikabot import config
-from decimal import *
-from ikabot.config import *
-from ikabot.helpers.getJson import *
-from ikabot.helpers.gui import *
-from ikabot.helpers.varios import decodeUnicodeEscape
+import re
+from decimal import getcontext
 
-t = gettext.translation('pedirInfo', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot import config
+from ikabot.config import city_url, island_url, MAXIMUM_CITY_NAME_LENGTH, prompt
+from ikabot.helpers.getJson import getCity, getIsland
+from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
 
 getcontext().prec = 30
 
@@ -122,11 +116,11 @@ def chooseCity(session, foreign=False):
         def pad(city_name):
             return ' ' * (longest_city_name_length - len(city_name) + 2)
 
-        resources_abbreviations = {'1': _('(W)'), '2': _('(M)'), '3': _('(C)'), '4': _('(S)')}
+        resources_abbreviations = {'1': '(W)', '2': '(M)', '3': '(C)', '4': '(S)'}
 
         i = 0
         if foreign:
-            print(_(' 0: foreign city'))
+            print(' 0: foreign city')
         else:
             print('')
         for city_id in ids:
@@ -137,7 +131,7 @@ def chooseCity(session, foreign=False):
             menu_cities += '{: >2}: {}{}{}\n'.format(i, city_name, pad(city_name), resource_abb)
         menu_cities = menu_cities[:-1]
     if foreign:
-        print(_(' 0: foreign city'))
+        print(' 0: foreign city')
     print(menu_cities)
 
     if foreign:
@@ -174,7 +168,7 @@ def chooseForeignCity(session):
         islands_json = json.loads(islands_json, strict=False)
         island_id = islands_json['data'][str(x)][str(y)][0]
     except Exception:
-        print(_('Incorrect coordinates'))
+        print('Incorrect coordinates')
         enter()
         banner()
         return chooseCity(session, foreign=True)
@@ -190,7 +184,7 @@ def chooseForeignCity(session):
             print('{: >2}: {: >{max_city_name_length}} ({})'.format(num, decodeUnicodeEscape(city['name']), decodeUnicodeEscape(city['Name']), max_city_name_length=MAXIMUM_CITY_NAME_LENGTH))
             city_options.append(city)
     if i == 0:
-        print(_('There are no cities where to send resources on this island'))
+        print('There are no cities where to send resources on this island')
         enter()
         return chooseCity(session, foreign=True)
     selected_city_index = read(min=1, max=i)

@@ -1,60 +1,48 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-import logging
+import multiprocessing
 import os
 import sys
-import gettext
-import multiprocessing
-import time
-import datetime
-from logging.handlers import TimedRotatingFileHandler
 
 import ikabot.config as config
-
+from ikabot.config import isWindows
+from ikabot.function.activateMiracle import activateMiracle
+from ikabot.function.alertAttacks import alertAttacks
+from ikabot.function.alertLowWine import alertLowWine
+from ikabot.function.attackBarbarians import attackBarbarians
 from ikabot.function.autoPiracyBotConfigurator import autoPiracyBotConfigurator
-from ikabot.function.showPiracyInfo import showPiracyInfo
-from ikabot.helpers.logs import setup_logging
-from ikabot.config import *
-from ikabot.web.session import *
-from ikabot.helpers.gui import *
-from ikabot.function.islandWorkplaces import islandWorkplaces
-from ikabot.function.update import update
-from ikabot.helpers.pedirInfo import read
+from ikabot.function.buyResources import buyResources
+from ikabot.function.checkForUpdate import checkForUpdate
+from ikabot.function.constructBuilding import constructBuilding
+from ikabot.function.constructionList import constructionList
+from ikabot.function.decaptchaConf import decaptchaConf
+from ikabot.function.distributeResources import distributeResources
+from ikabot.function.donationBot import donationBot
+from ikabot.function.dumpWorld import dumpWorld
 from ikabot.function.getStatus import getStatus
 from ikabot.function.getStatusImproved import getStatusForAllCities
-from ikabot.function.donationBot import donationBot
-from ikabot.helpers.botComm import updateTelegramData, telegramDataIsValid
-from ikabot.helpers.process import IkabotProcessListManager
-from ikabot.function.constructionList import constructionList
-from ikabot.function.searchForIslandSpaces import searchForIslandSpaces
-from ikabot.function.alertAttacks import alertAttacks
-from ikabot.function.vacationMode import vacationMode
-from ikabot.function.activateMiracle import activateMiracle
-from ikabot.function.trainArmy import trainArmy
-from ikabot.function.sellResources import sellResources
-from ikabot.function.checkForUpdate import checkForUpdate
-from ikabot.function.distributeResources import distributeResources
-from ikabot.function.alertLowWine import alertLowWine
-from ikabot.function.buyResources import buyResources
-from ikabot.function.loginDaily import loginDaily
-from ikabot.function.sendResources import sendResources
-from ikabot.function.constructBuilding import constructBuilding
-from ikabot.function.shipMovements import shipMovements
 from ikabot.function.importExportCookie import importExportCookie
-from ikabot.function.autoPirate import autoPirate
 from ikabot.function.investigate import investigate
-from ikabot.function.attackBarbarians import attackBarbarians
-from ikabot.function.proxyConf import proxyConf, show_proxy
+from ikabot.function.islandWorkplaces import islandWorkplaces
 from ikabot.function.killTasks import killTasks
-from ikabot.function.decaptchaConf import decaptchaConf
-from ikabot.function.dumpWorld import dumpWorld
+from ikabot.function.loginDaily import loginDaily
+from ikabot.function.proxyConf import proxyConf, show_proxy
+from ikabot.function.searchForIslandSpaces import searchForIslandSpaces
+from ikabot.function.sellResources import sellResources
+from ikabot.function.sendResources import sendResources
+from ikabot.function.shipMovements import shipMovements
+from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.function.stationArmy import stationArmy
-from ikabot.function.logs import logs
 from ikabot.function.testTelegramBot import testTelegramBot
-
-
-t = gettext.translation('command_line', localedir, languages=languages, fallback=True)
-_ = t.gettext
+from ikabot.function.trainArmy import trainArmy
+from ikabot.function.update import update
+from ikabot.function.vacationMode import vacationMode
+from ikabot.helpers.botComm import updateTelegramData
+from ikabot.helpers.gui import banner, enter, clear
+from ikabot.helpers.logs import setup_logging
+from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.process import IkabotProcessListManager
+from ikabot.web.session import Session
 
 __function_refresh = 'refresh'
 __function_exit = 'exit'
@@ -101,9 +89,8 @@ _global_menu = [
     ['Import / Export cookie', importExportCookie],
     ['Piracy', [
         __command_back,
-        ['Show piracy stats', showPiracyInfo],
-        ['Configure Auto_pirate bot', autoPiracyBotConfigurator],
-        ['Auto Pirate', autoPirate],
+        ['Show Piracy Stats', showPiracyInfo],
+        ['Configure Auto-Pirate Bot', autoPiracyBotConfigurator],
     ]],
     ['Investigate', investigate],
     ['Attack barbarians', attackBarbarians],
@@ -118,7 +105,6 @@ _global_menu = [
         ]],
         ['Kill tasks', killTasks],
         ['Configure captcha resolver', decaptchaConf],
-        ['Logs', logs],
     ]],
     ['Refresh process info', __function_refresh],
 ]
@@ -136,6 +122,7 @@ def choose_from_menu(menu_options, prefix=''):
         return choose_from_menu(fn, prefix + '  ')
 
     return fn
+
 
 def menu(session):
     """
@@ -160,7 +147,7 @@ def menu(session):
                     if isWindows:
                         # in unix, you can exit ikabot and close the terminal and the processes will continue to execute
                         # in windows, you can exit ikabot but if you close the terminal, the processes will die
-                        print(_('Closing this console will kill the processes.'))
+                        print('Closing this console will kill the processes.')
                         enter()
                     clear()
                     os._exit(0)  # kills the process which executes this statement, but it does not kill it's child processes
@@ -195,9 +182,9 @@ def menu(session):
 def init():
     home = 'USERPROFILE' if isWindows else 'HOME'
     os.chdir(os.getenv(home))
-    if not os.path.isfile(ikaFile):
-        open(ikaFile, 'w')
-        os.chmod(ikaFile, 0o600)
+    if not os.path.isfile(config.ikaFile):
+        open(config.ikaFile, 'w')
+        os.chmod(config.ikaFile, 0o600)
 
 
 def start():

@@ -17,6 +17,7 @@ def __record_factory(old_factory, *args, **kwargs):
 
     return record
 
+
 def setup_logging():
     os.makedirs(LOG_DIR, exist_ok=True)
     logging.basicConfig(
