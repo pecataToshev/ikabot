@@ -26,7 +26,6 @@ has_params = False
 ids_cache = None
 cities_cache = None
 
-menu_cities = ''
 infoUser = ''
 
 ikaFile = '.ikabot'

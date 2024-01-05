@@ -12,6 +12,8 @@ from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
 
 getcontext().prec = 30
 
+menu_cities = ''
+
 
 def read(min=None, max=None, digit=False, msg=prompt, values=None, empty=False, additionalValues=None, default=None):  # user input
     """Reads input from user
@@ -107,11 +109,7 @@ def chooseCity(session, foreign=False):
     global menu_cities
     (ids, cities) = getIdsOfCities(session)
     if menu_cities == '':
-        longest_city_name_length = 0
-        for city_id in ids:
-            length = len(cities[city_id]['name'])
-            if length > longest_city_name_length:
-                longest_city_name_length = length
+        longest_city_name_length: int = max([len(cities[city_id]['name']) for city_id in ids])
 
         def pad(city_name):
             return ' ' * (longest_city_name_length - len(city_name) + 2)
