@@ -11,7 +11,6 @@ import re
 import sys
 import time
 from collections import deque
-from datetime import time
 
 import requests
 from urllib3.exceptions import InsecureRequestWarning

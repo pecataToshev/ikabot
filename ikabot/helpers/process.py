@@ -4,7 +4,7 @@ import logging
 import os
 import subprocess
 import time
-from datetime import time
+from time import time
 
 import psutil
 

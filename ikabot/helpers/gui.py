@@ -5,7 +5,7 @@ import getpass
 import os
 import re
 import time
-from datetime import datetime, time
+from datetime import datetime
 from decimal import Decimal
 
 from ikabot import config
