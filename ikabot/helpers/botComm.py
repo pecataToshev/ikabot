@@ -6,7 +6,8 @@ import os
 import random
 import sys
 
-import ikabot.web.session
+import requests
+
 from ikabot import config
 from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.pedirInfo import read
@@ -36,7 +37,7 @@ def sendToBot(session, msg, Token=False, Photo=None):
     sessionData = session.getSessionData()
     telegram_data = sessionData['shared']['telegram']
     if Photo is None:
-        ikabot.web.session.normal_get('https://api.telegram.org/bot{}/sendMessage'.format(telegram_data['botToken']), params={'chat_id': telegram_data['chatId'], 'text': msg})
+        requests.get('https://api.telegram.org/bot{}/sendMessage'.format(telegram_data['botToken']), params={'chat_id': telegram_data['chatId'], 'text': msg})
     else:
         # we need to clear the headers here because telegram doesn't like keep-alive, might as well get rid of all headers
         headers = session.s.headers.copy()
@@ -86,7 +87,7 @@ def getUserResponse(session, fullResponse=False):
     telegram_data = sessionData['shared']['telegram']
 
     try:
-        updates = ikabot.web.session.normal_get('https://api.telegram.org/bot{}/getUpdates'.format(telegram_data['botToken'])).text
+        updates = requests.get('https://api.telegram.org/bot{}/getUpdates'.format(telegram_data['botToken'])).text
         updates = json.loads(updates, strict=False)
         if updates['ok'] is False:
             return []
@@ -154,7 +155,7 @@ def updateTelegramData(session, event=None, stdin_fd=None, predetermined_input=[
     print('Remember to keep the token secret!\n')
     botToken = read(msg='Bot\'s token:')
 
-    updates = ikabot.web.session.normal_get('https://api.telegram.org/bot{}/getUpdates'.format(botToken)).json()
+    updates = requests.get('https://api.telegram.org/bot{}/getUpdates'.format(botToken)).json()
     if 'ok' not in updates or updates['ok'] is False:
         print('invalid telegram bot, try again.')
         enter()
