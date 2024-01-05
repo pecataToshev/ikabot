@@ -7,6 +7,7 @@ import time
 import psutil
 
 from ikabot.config import *
+from ikabot.helpers.gui import printTable
 from ikabot.helpers.signals import deactivate_sigint
 from ikabot.helpers.varios import formatTimestamp
 
@@ -113,27 +114,9 @@ class IkabotProcessListManager:
             self.__update_processes(_session_data, _processes)
 
     def print_proces_table(self):
-        process_list = self.get_process_list()
-        print()
-        if len(process_list) == 0:
-            return
-
-        _max_len = [len(pt['title']) for pt in self.__process_table]
-        _table = [[pt['title'] for pt in self.__process_table]]
-        for p in process_list:
-            _row = []
-            for ind, pt in enumerate(self.__process_table):
-                _v = p.get(pt['key'], None)
-                if 'fmt' in pt and _v is not None:
-                    _v = pt['fmt'](_v)
-                _row.append(_v or '-')
-                _max_len[ind] = max(_max_len[ind], len(str(_v or '-')))
-            _table.append(_row)
-
-        for tr in _table:
-            print(' | '.join(
-                ['{: ^{len}}'.format(c, len=_max_len[i])
-                 for i, c in enumerate(tr)]
-            ))
-
-        print()
+        printTable(
+            self.__process_table,
+            self.get_process_list(),
+            missing_value='-',
+            column_align='^'
+        )

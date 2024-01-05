@@ -7,7 +7,9 @@ import traceback
 import requests
 
 from ikabot.helpers.botComm import *
+from ikabot.helpers.catpcha import resolveCaptcha
 from ikabot.helpers.pedirInfo import *
+from ikabot.helpers.piracy import convertCapturePoints
 from ikabot.helpers.process import run, set_child_mode
 
 t = gettext.translation('buyResources', localedir, languages=languages, fallback=True)
@@ -197,7 +199,7 @@ def autoPirate(session, event, stdin_fd, predetermined_input):
                     sendToBot(session, msg)
                     break
             if autoConvert.lower() == 'y':
-                convertCapturePoints(session, piracyCities, convertPerMission)
+                convertCapturePoints(session, piracyCities[0]['id'], convertPerMission)
             session.wait(piracyMissionWaitingTime[pirateMissionChoice], 'Piracy mission in progress. {} more'.format(pirateCount))
             if maxRandomWaitingTime > 0:
                 session.wait(1, 'Waiting additional time after mission end. {} more'.format(pirateCount), maxRandomWaitingTime)
@@ -271,25 +273,6 @@ def getPiracyCities(session, pirateMissionChoice):
                 piracyCities.append(city)
                 break
     return piracyCities
-
-
-def convertCapturePoints(session, piracyCities, convertPerMission):
-    """Converts all the users capture points into crew strength
-    Parameters
-    ----------
-    session : ikabot.web.session.Session
-    piracyCities: a list containing all cities which have a pirate fortress
-    """
-    html = session.get('view=pirateFortress&activeTab=tabCrew&cityId={0}&position=17&backgroundView=city&currentCityId={0}&templateView=pirateFortress'.format(piracyCities[0]['id']))
-    rta = re.search(r'\\"capturePoints\\":\\"(\d+)\\"', html)
-    capturePoints = int(rta.group(1))
-    if convertPerMission == 'all':
-        convertPerMission = capturePoints
-    if 'conversionProgressBar' in html:  # if a conversion is still in progress
-        return
-    data = {'action': 'PiracyScreen', 'function': 'convert', 'view': 'pirateFortress', 'cityId': piracyCities[0]['id'], 'islandId': piracyCities[0]['islandId'], 'activeTab': 'tabCrew', 'crewPoints': str(int(convertPerMission/10)), 'position': '17', 'backgroundView': 'city', 'currentCityId': piracyCities[0]['id'], 'templateView': 'pirateFortress', 'actionRequest': actionRequest, 'ajax': '1'}
-    html = session.post(params=data, noIndex=True)
-
 
 def getCurrentMissionWaitingTime(html):
     match = re.search(r'missionProgressTime\\\\">(.*?)<\\\\\/div>', html)

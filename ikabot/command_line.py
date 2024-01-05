@@ -9,6 +9,10 @@ import time
 import datetime
 from logging.handlers import TimedRotatingFileHandler
 
+import ikabot.config as config
+
+from ikabot.function.autoPiracyBotConfigurator import autoPiracyBotConfigurator
+from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.helpers.logs import setup_logging
 from ikabot.config import *
 from ikabot.web.session import *
@@ -95,7 +99,12 @@ _global_menu = [
     ['Construct building', constructBuilding],
     ['Update Ikabot', update],
     ['Import / Export cookie', importExportCookie],
-    ['Auto-Pirate', autoPirate],
+    ['Piracy', [
+        __command_back,
+        ['Show piracy stats', showPiracyInfo],
+        ['Configure Auto_pirate bot', autoPiracyBotConfigurator],
+        ['Auto Pirate', autoPirate],
+    ]],
     ['Investigate', investigate],
     ['Attack barbarians', attackBarbarians],
     ['Dump / View world', dumpWorld],
@@ -148,13 +157,13 @@ def menu(session):
 
             if selected == __function_exit:
                 # Perform exit of the app
-                if isWindows:
-                    # in unix, you can exit ikabot and close the terminal and the processes will continue to execute
-                    # in windows, you can exit ikabot but if you close the terminal, the processes will die
-                    print(_('Closing this console will kill the processes.'))
-                    enter()
-                clear()
-                os._exit(0)  # kills the process which executes this statement, but it does not kill it's child processes
+                    if isWindows:
+                        # in unix, you can exit ikabot and close the terminal and the processes will continue to execute
+                        # in windows, you can exit ikabot but if you close the terminal, the processes will die
+                        print(_('Closing this console will kill the processes.'))
+                        enter()
+                    clear()
+                    os._exit(0)  # kills the process which executes this statement, but it does not kill it's child processes
 
             if selected == __function_refresh:
                 # we just need to refresh the menu

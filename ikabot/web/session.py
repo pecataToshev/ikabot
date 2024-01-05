@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 import multiprocessing
 import time
-import traceback
 from collections import deque
 
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 
 from ikabot.helpers.aesCipher import *
-from ikabot.helpers.getJson import getCity
-from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.gui import *
+from ikabot.helpers.pedirInfo import *
 from ikabot.helpers.process import IkabotProcessListManager
+from ikabot.helpers.varios import decodeUnicodeEscape
 from ikabot.helpers.varios import getDateTime, decodeUnicodeEscape
 
 t = gettext.translation('session', localedir, languages=languages, fallback=True)
