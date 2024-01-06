@@ -234,7 +234,6 @@ def attackBarbarians(session, event, stdin_fd, predetermined_input):
             print('{} units of {}'.format(amount, name))
         print('')
 
-        banner()
         print('From which city do you want to attack?')
         city = chooseCity(session)
 
@@ -250,6 +249,12 @@ def attackBarbarians(session, event, stdin_fd, predetermined_input):
     except KeyboardInterrupt:
         event.set()
         return
+
+    session.setProcessObjective(
+        action='Attack Barbarians',
+        objective='Hurray!',
+        target_city_name=city['name']
+    )
 
     set_child_mode(session)
     event.set()

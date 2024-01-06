@@ -43,6 +43,11 @@ def alertLowWine(session, event, stdin_fd, predetermined_input):
         event.set()
         return
 
+    session.setProcessObjective(
+        action='Monitoring Wine',
+        objective='Wine Hours {}'.format(hours)
+    )
+
     set_child_mode(session)
     event.set()
 

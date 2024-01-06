@@ -93,6 +93,11 @@ def donationBot(session, event, stdin_fd, predetermined_input):
         event.set()
         return
 
+    session.setProcessObjective(
+        action='Donations',
+        objective='Every {} minutes'.format(waiting_time)
+    )
+
     set_child_mode(session)
     event.set()
 

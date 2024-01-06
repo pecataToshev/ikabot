@@ -41,9 +41,15 @@ def alertAttacks(session, event, stdin_fd, predetermined_input):
         # min_units = read(msg='Attacks with less than how many units should be ignored? (default: 0): ', digit=True, default=0)
         print('I will check for attacks every {:d} minutes'.format(minutes))
         enter()
+
     except KeyboardInterrupt:
         event.set()
         return
+
+    session.setProcessObjective(
+        action='Monitoring Attacks',
+        objective='Every {} minutes'.format(minutes)
+    )
 
     set_child_mode(session)
     event.set()

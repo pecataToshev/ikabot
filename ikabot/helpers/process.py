@@ -120,10 +120,12 @@ class IkabotProcessListManager:
             column_align='^',
             table_config=[
                 {'key': 'pid', 'title': 'pid'},
-                {'key': 'action', 'title': 'Task'},
+                {'key': 'action', 'title': 'Action'},
                 {'key': 'status', 'title': 'Status'},
                 {'key': 'date', 'title': 'Last Action Time', 'fmt': formatTimestamp},
                 {'key': 'nextActionDate', 'title': 'Next Action Time', 'fmt': fmt_next_action, 'align': '<'},
+                {'key': 'targetCity', 'title': 'Target City'},
+                {'key': 'objective', 'title': 'Objective'},
                 {'key': 'info', 'title': 'Info'},
             ],
         )

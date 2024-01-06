@@ -80,6 +80,14 @@ def searchForIslandSpaces(session, event, stdin_fd, predetermined_input):
         event.set()
         return
 
+    session.setProcessObjective(
+        action='Monitoring Islands',
+        objective='{} every {} minutes'.format(
+            '/'.join([i.replace('inform-', '') for i in inform_list]),
+            waiting_minutes
+        )
+    )
+
     set_child_mode(session)
     event.set()
 

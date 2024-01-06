@@ -88,7 +88,7 @@ class Session:
 
     def setProcessInfo(self, message):
         """
-        This function will modify the current tasks info message that
+        This function will modify the current task info message that
         appears in the table on the main menu
 
         Parameters
@@ -98,6 +98,22 @@ class Session:
         self.__process_manager.upsert_process({
             'info': message,
             'nextActionDate': None
+        })
+
+    def setProcessObjective(self, action, objective, target_city_name=None):
+        """
+        This function will modify the current task target city and objective
+
+        Parameters
+        ----------
+        action : str -> What is the action that process is doing
+        objective : str -> Objective of the process
+        target_city_name : str -> name of the city which will fulfil the objective
+        """
+        self.__process_manager.upsert_process({
+            'action': action,
+            'objective': objective,
+            'targetCity': target_city_name
         })
 
     def __genRand(self):

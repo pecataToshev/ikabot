@@ -56,9 +56,8 @@ def waitForConstruction(session, city_id):
         final_time = int(construction_time)
         seconds_to_wait = final_time - current_time
 
-        msg = '{}: I wait so that {} gets to the level {:d}'.format(city['cityName'],
-                                                                    construction_building['name'],
-                                                                    construction_building['level'] + 1)
+        msg = 'I wait {} to get to level {:d}'.format(construction_building['name'],
+                                                      construction_building['level'] + 1)
         session.wait(seconds_to_wait + 10, msg)
 
     html = session.get(city_url + city_id)
@@ -579,6 +578,12 @@ def constructionList(session, event, stdin_fd, predetermined_input):
     except KeyboardInterrupt:
         event.set()
         return
+
+    session.setProcessObjective(
+        action='Upgrade Building',
+        objective='{} to {}'.format(building['name'], final_level),
+        target_city_name=city['cityName']
+    )
 
     set_child_mode(session)
     event.set()

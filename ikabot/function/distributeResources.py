@@ -73,6 +73,14 @@ def distributeResources(session, event, stdin_fd, predetermined_input):
         event.set()
         return
 
+    session.setProcessObjective(
+        action='Distribute Resources',
+        objective='{} {}'.format(
+            materials_names[resource],
+            'evenly' if evenly else 'from produces'
+        ),
+    )
+
     set_child_mode(session)
     event.set()  # this is where we give back control to main process
 

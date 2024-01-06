@@ -35,7 +35,10 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
             event.set()
             return
 
-    print('{}⚠️ USING THIS FEATURE WILL EXPOSE YOUR IP ADDRESS TO A THIRD PARTY FOR CAPTCHA SOLVING ⚠️{}\n\n'.format(bcolors.WARNING, bcolors.ENDC))
+    print(bcolors.WARNING)
+    print('⚠️ USING THIS FEATURE WILL EXPOSE YOUR IP ADDRESS TO A THIRD PARTY FOR CAPTCHA SOLVING ⚠️')
+    print(bcolors.ENDC)
+    print()
 
     great_pirate_city_id = findCityWithTheBiggestPiracyFortress(session)
     if great_pirate_city_id is None:
@@ -66,6 +69,11 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
         print()
         bot_config['notifyWhenFinished'] = askUserYesNo("Would you like to be notified when I'm done with the pirating")
 
+        objective = '{} x {}'.format(
+            bot_config['totalMissions'],
+            __get_mission_formatted_duration(template_data, bot_config['missionBuildingLevel']),
+        )
+
     else:
         bot_config['type'] = 'daily'
         bot_config['dailyScheduleConfig'] = __select_schedule_time(
@@ -73,6 +81,15 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
         )
         bot_config['nightlyScheduleConfig'] = __select_schedule_time(
             template_data, 'night', 20, 8
+        )
+
+        objective = '[{}-{}]x({})/[{}-{}]x({})'.format(
+            bot_config['dailyScheduleConfig']['startHour'],
+            bot_config['dailyScheduleConfig']['endHour'],
+            __get_mission_formatted_duration(template_data, bot_config['dailyScheduleConfig']['missionBuildingLevel']),
+            bot_config['nightlyScheduleConfig']['startHour'],
+            bot_config['nightlyScheduleConfig']['endHour'],
+            __get_mission_formatted_duration(template_data, bot_config['nightlyScheduleConfig']['missionBuildingLevel']),
         )
 
     print()
@@ -89,6 +106,11 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
 
     print('YAAAAAR!')
 
+    session.setProcessObjective(
+        action='Pirating',
+        objective=objective
+    )
+
     enter()
     event.set()
 
@@ -100,7 +122,7 @@ def __select_piracy_mission(template_data, additional_select_message=''):
     Returns mobile pic of the selected available mission
     :param template_data: dict[] ->  fortress template data
     :param additional_select_message: str -> additional text to show the user
-    :return: str
+    :return: int
     """
     __missions_table_config = [
         {}
@@ -174,3 +196,15 @@ def __select_schedule_time(template_data, schedule_type, default_start, default_
 
     return schedule
 
+
+def __get_mission_formatted_duration(template_data, mission_building_level):
+    """
+    Get the formatted duration of the mission
+    :param template_data: dict[] ->  fortress template data
+    :param mission_building_level: int -> building level of the mission
+    :return: str -> formatted mission duration
+    """
+    for mission in template_data['pirateCaptureLevels']:
+        if mission['buildingLevel'] == mission_building_level:
+            return daysHoursMinutes(mission['duration']).replace(' ', '')
+    return 'Unknown mission duration'
