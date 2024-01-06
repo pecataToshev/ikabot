@@ -4,6 +4,7 @@ import logging
 import os
 import subprocess
 import time
+from datetime import datetime
 
 import psutil
 
@@ -32,14 +33,6 @@ def run(command):
 
 class IkabotProcessListManager:
     __process_list = 'processList'
-    __process_table = [
-        {'key': 'pid', 'title': 'pid'},
-        {'key': 'action', 'title': 'Task'},
-        {'key': 'status', 'title': 'Status'},
-        {'key': 'date', 'title': 'Last Action Time', 'fmt': formatTimestamp},
-        {'key': 'nextActionDate', 'title': 'Next Action Time', 'fmt': formatTimestamp},
-        {'key': 'info', 'title': 'Info'},
-    ]
 
     def __init__(self, session):
         """
@@ -115,9 +108,22 @@ class IkabotProcessListManager:
             self.__update_processes(_session_data, _processes)
 
     def print_proces_table(self):
+        now = time.time()
+        print("now: ", formatTimestamp(now))
+
+        fmt_next_action = lambda t: "{} ({})".format(formatTimestamp(t),
+                                                     datetime.utcfromtimestamp(t - now).strftime('%H:%M:%S'))
+
         printTable(
-            self.__process_table,
-            self.get_process_list(),
+            table_data=self.get_process_list(),
             missing_value='-',
-            column_align='^'
+            column_align='^',
+            table_config=[
+                {'key': 'pid', 'title': 'pid'},
+                {'key': 'action', 'title': 'Task'},
+                {'key': 'status', 'title': 'Status'},
+                {'key': 'date', 'title': 'Last Action Time', 'fmt': formatTimestamp},
+                {'key': 'nextActionDate', 'title': 'Next Action Time', 'fmt': fmt_next_action, 'align': '<'},
+                {'key': 'info', 'title': 'Info'},
+            ],
         )

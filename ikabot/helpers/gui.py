@@ -164,7 +164,7 @@ def daysHoursMinutes(totalSeconds):
     horas = int(totalSeconds / Decimal(3600))
     totalSeconds -= horas * Decimal(3600)
     minutos = int(totalSeconds / Decimal(60))
-    seconds = int(totalSeconds % Decimal(60))
+    seconds = int(totalSeconds % 60)
     texto = ''
     if dias > 0:
         texto = str(dias) + 'D '
