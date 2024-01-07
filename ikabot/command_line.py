@@ -3,6 +3,7 @@
 import multiprocessing
 import os
 import sys
+import time
 
 import ikabot.config as config
 from ikabot.config import isWindows
@@ -38,7 +39,7 @@ from ikabot.function.trainArmy import trainArmy
 from ikabot.function.update import update
 from ikabot.function.vacationMode import vacationMode
 from ikabot.helpers.botComm import updateTelegramData
-from ikabot.helpers.gui import banner, enter, clear
+from ikabot.helpers.gui import banner, enter, clear, formatTimestamp
 from ikabot.helpers.logs import setup_logging
 from ikabot.helpers.pedirInfo import read
 from ikabot.helpers.process import IkabotProcessListManager
@@ -137,6 +138,7 @@ def menu(session):
     while True:
         banner()
 
+        print("now: ", formatTimestamp(time.time()))
         process_list_manager.print_proces_table()
 
         try:

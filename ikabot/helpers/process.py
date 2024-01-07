@@ -109,7 +109,6 @@ class IkabotProcessListManager:
 
     def print_proces_table(self, add_process_numbers=False):
         now = time.time()
-        print("now: ", formatTimestamp(now))
 
         fmt_next_action = lambda t: "{} ({})".format(formatTimestamp(t),
                                                      datetime.utcfromtimestamp(t - now).strftime('%H:%M:%S'))
