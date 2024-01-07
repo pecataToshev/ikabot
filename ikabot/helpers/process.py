@@ -32,7 +32,7 @@ def run(command):
 
 
 class IkabotProcessListManager:
-    __process_list = 'processList'
+    __process_list_key = 'processList'
 
     def __init__(self, session):
         """
@@ -47,7 +47,7 @@ class IkabotProcessListManager:
         :param session_data: sessionData
         :return: dict[dict[]] -> dict of processes
         """
-        process_list = session_data.get(self.__process_list, [])
+        process_list = session_data.get(self.__process_list_key, [])
 
         # check it's still running
         running_ikabot_processes = []
@@ -73,11 +73,17 @@ class IkabotProcessListManager:
         :param processes: dict[dict[]] -> process dict
         :return: None
         """
-        session_data[self.__process_list] = [p for p in processes.values()]
+        session_data[self.__process_list_key] = [p for p in processes.values()]
         self.__session.setSessionData(session_data)
 
-    def get_process_list(self):
-        return self.__get_processes(self.__session.getSessionData()).values()
+    def get_process_list(self, filtering=None):
+        """
+        Returns processes as list with the applied filter
+        :param filtering: lambda x: bool -> filter of the processes to return
+        :return: list[dict[]]
+        """
+        return [p for p in self.__get_processes(self.__session.getSessionData()).values()
+                if filtering is None or filtering(p)]
 
     def upsert_process(self, process):
         """
@@ -107,11 +113,21 @@ class IkabotProcessListManager:
             _processes[_pid] = _new_process
             self.__update_processes(_session_data, _processes)
 
-    def print_proces_table(self, add_process_numbers=False):
+    def print_proces_table(self, process_list=None, add_process_numbers=False):
+        """
+        Prints process list table
+        :param process_list: None/list[dict[]] -> if specified, will format this process list
+        :param add_process_numbers: bool -> should I add a numbering of the rows of the table
+        :return: void
+        """
         now = time.time()
 
-        fmt_next_action = lambda t: "{} ({})".format(formatTimestamp(t),
-                                                     datetime.utcfromtimestamp(t - now).strftime('%H:%M:%S'))
+        if process_list is None:
+            process_list = self.get_process_list()
+
+        def __fmt_next_action(t):
+            return "{} ({})".format(formatTimestamp(t),
+                                    datetime.utcfromtimestamp(t - now).strftime('%H:%M:%S'))
 
         additional_columns = []
         if add_process_numbers:
@@ -122,7 +138,7 @@ class IkabotProcessListManager:
             })
 
         printTable(
-            table_data=self.get_process_list(),
+            table_data=process_list,
             missing_value='-',
             column_align='<',
             table_config=additional_columns + [
@@ -130,7 +146,7 @@ class IkabotProcessListManager:
                 {'key': 'action', 'title': 'Action'},
                 {'key': 'status', 'title': 'Status'},
                 {'key': 'date', 'title': 'Last Action', 'fmt': formatTimestamp},
-                {'key': 'nextActionDate', 'title': 'Next Action', 'fmt': fmt_next_action},
+                {'key': 'nextActionDate', 'title': 'Next Action', 'fmt': __fmt_next_action},
                 {'key': 'targetCity', 'title': 'Target City'},
                 {'key': 'objective', 'title': 'Objective'},
                 {'key': 'info', 'title': 'Info'},
