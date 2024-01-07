@@ -15,6 +15,7 @@ from decimal import Decimal
 import requests
 
 from ikabot import config
+from ikabot.bot.upgradeBuildingBot import startUpgradeBuilfingBot
 from ikabot.config import actionRequest, city_url, materials_names, materials_names_tec, \
     MAXIMUM_CITY_NAME_LENGTH
 from ikabot.helpers.botComm import sendToBot
@@ -22,108 +23,12 @@ from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, decodeUnicodeEscape, enter
 from ikabot.helpers.pedirInfo import chooseCity, getIdsOfCities, read
 from ikabot.helpers.planRoutes import executeRoutes, getMinimumWaitingTime
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.process import IkabotProcessListManager, set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 sendResources = True
 expand = True
 thread = None
-
-def waitForConstruction(session, city_id):
-    """
-    Parameters
-    ----------
-    session : ikabot.web.session.Session
-    city_id : int
-
-    Returns
-    -------
-    city : dict
-    """
-    while True:
-
-        html = session.get(city_url + city_id)
-        city = getCity(html)
-
-        construction_buildings = [building for building in city['position'] if 'completed' in building]
-        if len(construction_buildings) == 0:
-            break
-
-        construction_building = construction_buildings[0]
-        construction_time = construction_building['completed']
-
-        current_time = int(time.time())
-        final_time = int(construction_time)
-        seconds_to_wait = final_time - current_time
-
-        msg = 'I wait {} to get to level {:d}'.format(construction_building['positionAndName'],
-                                                      construction_building['level'] + 1).replace('  ', ' ')
-        session.wait(seconds_to_wait + 5, msg, max_random=15)
-
-    html = session.get(city_url + city_id)
-    city = getCity(html)
-    return city
-
-
-def expandBuilding(session, cityId, building, waitForResources):
-    """
-    Parameters
-    ----------
-    session : ikabot.web.session.Session
-    cityId : int
-    building : dict
-    waitForResources : bool
-    """
-    current_level = building['level']
-    if building['isBusy']:
-        current_level += 1
-    levels_to_upgrade = building['upgradeTo'] - current_level
-    position = building['position']
-
-    session.wait(5, max_random=15, info='Waiting to avoid race conditions with sendResourcesNeeded')
-
-    for lv in range(levels_to_upgrade):
-        city = waitForConstruction(session, cityId)
-        building = city['position'][position]
-
-        if building['canUpgrade'] is False and waitForResources is True:
-            while building['canUpgrade'] is False:
-                session.wait(60, 'Waiting to have some more resources')
-                seconds = getMinimumWaitingTime(session)
-                html = session.get(city_url + cityId)
-                city = getCity(html)
-                building = city['position'][position]
-                # if no ships are comming, exit no matter if the building can or can't upgrade
-                if seconds == 0:
-                    break
-                session.wait(seconds + 5, 'Waiting the ships to arrive')
-
-        if building['canUpgrade'] is False:
-            msg = 'City:{}\n'.format(city['cityName'])
-            msg += 'Building:{}\n'.format(building['name'])
-            msg += 'The building could not be completed due to lack of resources.\n'
-            msg += 'Missed {:d} levels'.format(levels_to_upgrade - lv)
-            logging.info(msg)
-            sendToBot(session, msg)
-            return
-
-        url = 'action=CityScreen&function=upgradeBuilding&actionRequest={}&cityId={}&position={:d}&level={}&activeTab=tabSendTransporter&backgroundView=city&currentCityId={}&templateView={}&ajax=1'.format(actionRequest, cityId, position, building['level'], cityId, building['building'])
-        session.post(url)
-        html = session.get(city_url + cityId)
-        city = getCity(html)
-        building = city['position'][position]
-        if building['isBusy'] is False:
-            msg = '{}: The building {} was not extended'.format(city['cityName'], building['positionAndName'])
-            sendToBot(session, msg)
-            return
-
-        msg = '{}: The building {} is being extended to level {:d}.'.format(city['cityName'], building['positionAndName'],
-                                                                            building['level']+1)
-        logging.info(msg)
-
-    msg = '{}: The building {} finished extending to level: {:d}.'.format(city['cityName'], building['positionAndName'],
-                                                                          building['level']+1)
-    logging.info(msg)
 
 
 def getCostsReducers(city):
@@ -425,22 +330,12 @@ def sendResourcesMenu(session, city_id, missing):
     thread.start()
 
 
-def getBuildingToExpand(session, cityId):
+def __choose_building_to_expand(city):
     """
-    Parameters
-    ----------
-    session : ikabot.web.session.Session
-    cityId : int
-
-    Returns
-    -------
-    building : dict
+    Returns user selected building to expand
+    :param city: dict[]
+    :return: dict[] with building
     """
-    html = session.get(city_url + cityId)
-    city = getCity(html)
-
-    banner()
-    # show the buildings available to expand (ignore empty spaces)
     print('Which building do you want to expand?\n')
     print('(0)\tExit')
     buildings = [building for building in city['position'] if building['name'] != 'empty']
@@ -501,6 +396,20 @@ def checkhash(url):
             continue
     return material
 
+
+def __print_related_processes(session, city_name):
+    process_manager = IkabotProcessListManager(session)
+    related_processes = process_manager.get_process_list(
+        filtering=lambda p: p.get('targetCity', '') == city_name
+    )
+    if len(related_processes) <= 0:
+        return
+
+    process_manager.print_proces_table(
+        process_list=related_processes
+    )
+
+
 def constructionList(session, event, stdin_fd, predetermined_input):
     """
     Parameters
@@ -519,11 +428,13 @@ def constructionList(session, event, stdin_fd, predetermined_input):
         sendResources = True
 
         banner()
-        wait_resources = False
         print('In which city do you want to expand a building?')
         city = chooseCity(session)
         cityId = city['id']
-        building = getBuildingToExpand(session, cityId)
+
+        __print_related_processes(session, city['cityName'])
+
+        building = __choose_building_to_expand(city)
         if building is None:
             event.set()
             return
@@ -592,20 +503,14 @@ def constructionList(session, event, stdin_fd, predetermined_input):
         target_city_name=city['cityName']
     )
 
-    set_child_mode(session)
     event.set()
 
-    info = '\nUpgrade building\n'
-    info = info + 'City: {}\nBuilding: {}. From {:d}, to {:d}'.format(city['cityName'], building['name'], current_level, final_level)
-
-    setInfoSignal(session, info)
-    try:
-        if expand:
-            expandBuilding(session, cityId, building, wait_resources)
-        elif thread:
-            thread.join()
-    except Exception as e:
-        msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
-        sendToBot(session, msg)
-    finally:
-        session.logout()
+    if expand:
+        startUpgradeBuilfingBot(session, {
+            'cityId': cityId,
+            'building': building,
+        })
+    elif thread:
+        # TODO: check if we need this thread
+        set_child_mode(session)
+        thread.join()
