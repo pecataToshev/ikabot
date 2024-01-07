@@ -22,7 +22,7 @@ from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, decodeUnicodeEscape, enter
 from ikabot.helpers.pedirInfo import chooseCity, getIdsOfCities, read
 from ikabot.helpers.planRoutes import executeRoutes, getMinimumWaitingTime
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.process import IkabotProcessListManager, set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 sendResources = True
@@ -425,21 +425,16 @@ def sendResourcesMenu(session, city_id, missing):
     thread.start()
 
 
-def getBuildingToExpand(session, cityId):
+def getBuildingToExpand(city):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
-    cityId : int
+    cityId : dict
 
     Returns
     -------
     building : dict
     """
-    html = session.get(city_url + cityId)
-    city = getCity(html)
-
-    banner()
     # show the buildings available to expand (ignore empty spaces)
     print('Which building do you want to expand?\n')
     print('(0)\tExit')
@@ -476,7 +471,8 @@ def getBuildingToExpand(session, cityId):
     if building['isBusy']:
         current_level += 1
 
-    banner()
+    print()
+    print()
     print('         building:', building['positionAndName'])
     print('    current level:', current_level)
     building['upgradeTo'] = read(min=current_level, msg='increase to level: ')
@@ -501,6 +497,20 @@ def checkhash(url):
             continue
     return material
 
+
+def __print_related_processes(session, city_name):
+    process_manager = IkabotProcessListManager(session)
+    related_processes = process_manager.get_process_list(
+        filtering=lambda p: p.get('targetCity', '') == city_name
+    )
+    if len(related_processes) <= 0:
+        return
+
+    process_manager.print_proces_table(
+        process_list=related_processes
+    )
+
+
 def constructionList(session, event, stdin_fd, predetermined_input):
     """
     Parameters
@@ -523,7 +533,12 @@ def constructionList(session, event, stdin_fd, predetermined_input):
         print('In which city do you want to expand a building?')
         city = chooseCity(session)
         cityId = city['id']
-        building = getBuildingToExpand(session, cityId)
+
+        banner()
+        print(city['cityName'])
+        __print_related_processes(session, city['cityName'])
+
+        building = getBuildingToExpand(city)
         if building is None:
             event.set()
             return
