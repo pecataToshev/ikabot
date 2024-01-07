@@ -95,7 +95,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
     :param row_additional_indentation: str -> add some prefix data before
                                               printing the row
     :param row_color: lambda int -> str: determine row color by row index
-                                         starting with 0 for table headers
+                                        starting with 0 for table headers
     :return: void
     """
     print()
@@ -104,14 +104,16 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
 
     _max_len = [len(tc['title']) for tc in table_config]
     _table = [[tc['title'] for tc in table_config]]
-    for d in table_data:
+    for row_index, row_data in enumerate(table_data):
         _row = []
-        for ind, pt in enumerate(table_config):
-            _v = d.get(pt['key'], None)
-            if 'fmt' in pt and _v is not None:
-                _v = pt['fmt'](_v)
+        for column_index, column_config in enumerate(table_config):
+            _v = row_data.get(column_config['key'], None)
+            if 'fmt' in column_config and _v is not None:
+                _v = column_config['fmt'](_v)
+            if 'useDataRowIndexForValue' in column_config:
+                _v = column_config['useDataRowIndexForValue'](row_index)
             _row.append(_v or missing_value)
-            _max_len[ind] = max(_max_len[ind], len(str(_v or missing_value)))
+            _max_len[column_index] = max(_max_len[column_index], len(str(_v or missing_value)))
         _table.append(_row)
 
     for tri, tr in enumerate(_table):
