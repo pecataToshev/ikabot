@@ -107,18 +107,26 @@ class IkabotProcessListManager:
             _processes[_pid] = _new_process
             self.__update_processes(_session_data, _processes)
 
-    def print_proces_table(self):
+    def print_proces_table(self, add_process_numbers=False):
         now = time.time()
         print("now: ", formatTimestamp(now))
 
         fmt_next_action = lambda t: "{} ({})".format(formatTimestamp(t),
                                                      datetime.utcfromtimestamp(t - now).strftime('%H:%M:%S'))
 
+        additional_columns = []
+        if add_process_numbers:
+            additional_columns.append({
+                'key': 'no-data',
+                'title': '#',
+                'useDataRowIndexForValue': lambda data_index: "{})".format(data_index + 1)
+            })
+
         printTable(
             table_data=self.get_process_list(),
             missing_value='-',
             column_align='<',
-            table_config=[
+            table_config=additional_columns + [
                 {'key': 'pid', 'title': 'pid'},
                 {'key': 'action', 'title': 'Action'},
                 {'key': 'status', 'title': 'Status'},
