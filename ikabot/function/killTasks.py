@@ -1,12 +1,11 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-import datetime
 import os
 import sys
 
 from ikabot import config
 from ikabot.config import isWindows
-from ikabot.helpers.gui import banner, enter, formatTimestamp, printTable
+from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.pedirInfo import read
 from ikabot.helpers.process import IkabotProcessListManager, run
 
