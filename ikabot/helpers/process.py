@@ -117,13 +117,13 @@ class IkabotProcessListManager:
         printTable(
             table_data=self.get_process_list(),
             missing_value='-',
-            column_align='^',
+            column_align='<',
             table_config=[
                 {'key': 'pid', 'title': 'pid'},
                 {'key': 'action', 'title': 'Action'},
                 {'key': 'status', 'title': 'Status'},
-                {'key': 'date', 'title': 'Last Action Time', 'fmt': formatTimestamp},
-                {'key': 'nextActionDate', 'title': 'Next Action Time', 'fmt': fmt_next_action, 'align': '<'},
+                {'key': 'date', 'title': 'Last Action', 'fmt': formatTimestamp},
+                {'key': 'nextActionDate', 'title': 'Next Action', 'fmt': fmt_next_action},
                 {'key': 'targetCity', 'title': 'Target City'},
                 {'key': 'objective', 'title': 'Objective'},
                 {'key': 'info', 'title': 'Info'},
