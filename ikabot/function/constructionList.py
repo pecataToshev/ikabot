@@ -56,9 +56,9 @@ def waitForConstruction(session, city_id):
         final_time = int(construction_time)
         seconds_to_wait = final_time - current_time
 
-        msg = 'I wait {} to get to level {:d}'.format(construction_building['name'],
-                                                      construction_building['level'] + 1)
-        session.wait(seconds_to_wait + 10, msg)
+        msg = 'I wait {} to get to level {:d}'.format(construction_building['positionAndName'],
+                                                      construction_building['level'] + 1).replace('  ', ' ')
+        session.wait(seconds_to_wait + 5, msg, max_random=15)
 
     html = session.get(city_url + city_id)
     city = getCity(html)
@@ -108,21 +108,20 @@ def expandBuilding(session, cityId, building, waitForResources):
             return
 
         url = 'action=CityScreen&function=upgradeBuilding&actionRequest={}&cityId={}&position={:d}&level={}&activeTab=tabSendTransporter&backgroundView=city&currentCityId={}&templateView={}&ajax=1'.format(actionRequest, cityId, position, building['level'], cityId, building['building'])
-        resp = session.post(url)
+        session.post(url)
         html = session.get(city_url + cityId)
         city = getCity(html)
         building = city['position'][position]
         if building['isBusy'] is False:
-            msg = '{}: The building {} was not extended'.format(city['cityName'], building['name'])
+            msg = '{}: The building {} was not extended'.format(city['cityName'], building['positionAndName'])
             sendToBot(session, msg)
-            sendToBot(session, resp)
             return
 
-        msg = '{}: The building {} is being extended to level {:d}.'.format(city['cityName'], building['name'],
+        msg = '{}: The building {} is being extended to level {:d}.'.format(city['cityName'], building['positionAndName'],
                                                                             building['level']+1)
         logging.info(msg)
 
-    msg = '{}: The building {} finished extending to level: {:d}.'.format(city['cityName'], building['name'],
+    msg = '{}: The building {} finished extending to level: {:d}.'.format(city['cityName'], building['positionAndName'],
                                                                           building['level']+1)
     logging.info(msg)
 
@@ -445,6 +444,7 @@ def getBuildingToExpand(session, cityId):
     print('Which building do you want to expand?\n')
     print('(0)\tExit')
     buildings = [building for building in city['position'] if building['name'] != 'empty']
+    buildings = [buildings[0]] + sorted(buildings[1:], key=lambda b: b['name'])
     for i, building in enumerate(buildings):
         if building['isMaxLevel'] is True:
             color = bcolors.BLACK
@@ -454,7 +454,16 @@ def getBuildingToExpand(session, cityId):
             color = bcolors.RED
 
         upgrading = '+' if building['isBusy'] is True else ' '
-        print("({})\tlvl {: >2}{}  {}{}{}".format(i+1, building['level'], upgrading, color, building['name'], bcolors.ENDC))
+        position_prefix = ' ' if building['position'] < 10 else ''
+        print("{}{:>2}) lvl {: >2}{}  {}{}{}".format(
+            color,
+            i+1,
+            building['level'],
+            upgrading,
+            position_prefix,
+            building['positionAndName'],
+            bcolors.ENDC)
+        )
 
     selected_building_id = read(min=0, max=len(buildings))
     if selected_building_id == 0:
@@ -468,11 +477,9 @@ def getBuildingToExpand(session, cityId):
         current_level += 1
 
     banner()
-    print('building:{}'.format(building['name']))
-    print('current level:{}'.format(current_level))
-
-    final_level = read(min=current_level, msg='increase to level:')
-    building['upgradeTo'] = final_level
+    print('         building:', building['positionAndName'])
+    print('    current level:', current_level)
+    building['upgradeTo'] = read(min=current_level, msg='increase to level: ')
 
     return building
 def checkhash(url):
@@ -581,7 +588,7 @@ def constructionList(session, event, stdin_fd, predetermined_input):
 
     session.setProcessObjective(
         action='Upgrade Building',
-        objective='{} to {}'.format(building['name'], final_level),
+        objective='{} to {}'.format(building['positionAndName'], final_level),
         target_city_name=city['cityName']
     )
 

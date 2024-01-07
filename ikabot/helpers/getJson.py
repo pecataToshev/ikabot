@@ -123,6 +123,9 @@ def getCity(html):
             position['type'] = position['building'].split(' ')[-1]
             position['building'] = 'empty'
 
+        position['name'] = decodeUnicodeEscape(position['name'])
+        position['positionAndName'] = "[#{}] {}".format(position['position'], position['name'])
+
     city['id'] = str(city['id'])
     city['isOwnCity'] = True
     city['availableResources'] = getAvailableResources(html, num=True)

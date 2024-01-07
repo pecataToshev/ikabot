@@ -111,7 +111,7 @@ def chooseCity(session, foreign=False):
     global menu_cities
     (ids, cities) = getIdsOfCities(session)
     if menu_cities == '':
-        longest_city_name_length: int = max([len(cities[city_id]['name']) for city_id in ids])
+        longest_city_name_length: int = max([len(decodeUnicodeEscape(cities[city_id]['name'])) for city_id in ids])
 
         def pad(city_name):
             return ' ' * (longest_city_name_length - len(city_name) + 2)

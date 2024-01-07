@@ -9,7 +9,8 @@ import traceback
 from ikabot import config
 from ikabot.config import city_url, island_url
 from ikabot.helpers.botComm import sendToBot
-from ikabot.helpers.getJson import getCity, getIsland
+from ikabot.helpers.getJson import (
+    getCity, getIsland)
 from ikabot.helpers.gui import banner, daysHoursMinutes, enter
 from ikabot.helpers.pedirInfo import askUserYesNo, getIdsOfCities, getIslandsIds, read
 from ikabot.helpers.process import set_child_mode
