@@ -52,50 +52,55 @@ __command_back = ['Back', __function_refresh]
 
 _global_menu = [
     ['Exit', __function_exit],
-    ['Construction list', constructionList],
-    ['Send resources', sendResources],
-    ['Distribute resources', distributeResources],
-    ['Account status', [
+    ['Refresh process info', __function_refresh],
+    ['Construction', [
+        __command_back,
+        ['Building Upgrades', constructionList],
+        ['Construct building', constructBuilding],
+    ]],
+    ['Resources & Donations', [
+        __command_back,
+        ['Send resources', sendResources],
+        ['Distribute resources', distributeResources],
+        ['Donate once', islandWorkplaces],
+        ['Donate automatically', donationBot],
+    ]],
+    ['Cities Status', [
         __command_back,
         ['Simplified', getStatus],
-        ['All Cities', getStatusForAllCities],
+        ['Combined', getStatusForAllCities],
     ]],
-    ['Monitor islands', searchForIslandSpaces],
-    ['Login daily', loginDaily],
-    ['Alerts / Notifications', [
+    ['Alerts / Monitoring', [
         __command_back,
         ['Alert attacks', alertAttacks],
         ['Alert wine running out', alertLowWine],
+        ['Monitor islands', searchForIslandSpaces],
     ]],
     ['Marketplace', [
         __command_back,
         ['Buy resources', buyResources],
         ['Sell resources', sellResources],
     ]],
-    ['Donate', [
-        __command_back,
-        ['Donate once', islandWorkplaces],
-        ['Donate automatically', donationBot],
-    ]],
-    ['Activate vacation mode', vacationMode],
     ['Activate miracle', activateMiracle],
     ['Military actions', [
         __command_back,
         ['Train Army', trainArmy],
         ['Send Troops/Ships', stationArmy],
+        ['Attack barbarians', attackBarbarians],
     ]],
     ['See movements', shipMovements],
-    ['Construct building', constructBuilding],
-    ['Update Ikabot', update],
-    ['Import / Export cookie', importExportCookie],
     ['Piracy', [
         __command_back,
         ['Show Piracy Stats', showPiracyInfo],
         ['Configure Auto-Pirate Bot', autoPiracyBotConfigurator],
     ]],
-    ['Investigate', investigate],
-    ['Attack barbarians', attackBarbarians],
-    ['Dump / View world', dumpWorld],
+    ['Academy & Studies', investigate],
+    ['Game Account Functions', [
+        __command_back,
+        ['Login daily', loginDaily],
+        ['Activate vacation mode', vacationMode],
+        ['Dump / View world', dumpWorld],
+    ]],
     ['Options / Settings', [
         __command_back,
         ['Configure Proxy', proxyConf],
@@ -106,8 +111,9 @@ _global_menu = [
         ]],
         ['Kill tasks', killTasks],
         ['Configure captcha resolver', decaptchaConf],
+        ['Import / Export cookie', importExportCookie],
+        ['Update Ikabot', update],
     ]],
-    ['Refresh process info', __function_refresh],
 ]
 
 
