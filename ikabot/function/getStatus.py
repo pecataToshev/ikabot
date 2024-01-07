@@ -101,7 +101,7 @@ def getStatus(session, event, stdin_fd, predetermined_input):
                 color_resources.append(bcolors.ENDC)
         print('Population:')
         print('{}: {} {}: {}'.format('Housing space', addThousandSeparator(housing_space), 'Citizens', addThousandSeparator(citizens)))
-        print(_('Storage: {}'.format(addThousandSeparator(storageCapacity))))
+        print('Storage: {}'.format(addThousandSeparator(storageCapacity)))
         print('Resources:')
         for i in range(len(materials_names)):
             print('{} {}{}{} '.format(materials_names[i], color_resources[i], addThousandSeparator(resources[i]), bcolors.ENDC), end='')
