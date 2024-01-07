@@ -29,8 +29,8 @@ def killTasks(session, event, stdin_fd, predetermined_input):
             banner()
 
             process_list = process_list_manager.get_process_list()
-            process_list = [process for process in process_list if process['action'] != 'killTasks']
-            if len(process_list) == 0:
+            other_tasks = [process for process in process_list if process['action'] != 'killTasks']
+            if len(other_tasks) == 0:
                 print('There are no tasks running')
                 enter()
                 event.set()
@@ -44,10 +44,17 @@ def killTasks(session, event, stdin_fd, predetermined_input):
                 event.set()
                 return
 
+            process_to_kill = process_list[choice - 1]
+
+            if process_to_kill['action'] == 'killTasks':
+                print('You cannot kill me.... From here...')
+                enter()
+                continue
+
             if isWindows:
-                run("taskkill /F /PID {}".format(process_list[choice-1]['pid']))
+                run("taskkill /F /PID {}".format(process_to_kill['pid']))
             else:
-                run("kill -9 {}".format(process_list[choice-1]['pid']))
+                run("kill -9 {}".format(process_to_kill['pid']))
     except KeyboardInterrupt:
         event.set()
         return
