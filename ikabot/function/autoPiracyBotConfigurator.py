@@ -107,7 +107,7 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
     print('YAAAAAR!')
 
     session.setProcessObjective(
-        action='Pirating',
+        action='Auto Pirating',
         objective=objective
     )
 

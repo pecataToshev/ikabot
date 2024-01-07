@@ -47,7 +47,7 @@ def alertAttacks(session, event, stdin_fd, predetermined_input):
         return
 
     session.setProcessObjective(
-        action='Monitoring Attacks',
+        action='Monitor Attacks',
         objective='Every {} minutes'.format(minutes)
     )
 

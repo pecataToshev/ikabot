@@ -81,8 +81,8 @@ def searchForIslandSpaces(session, event, stdin_fd, predetermined_input):
         return
 
     session.setProcessObjective(
-        action='Monitoring Islands',
-        objective='{} every {} minutes'.format(
+        action='Monitor Islands',
+        objective='{} @{}m'.format(
             '/'.join([i.replace('inform-', '') for i in inform_list]),
             waiting_minutes
         )
