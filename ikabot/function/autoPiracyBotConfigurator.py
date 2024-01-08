@@ -99,7 +99,7 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
         print("Type {} for all available capture points".format(_all))
         print("Type {} for capture points from the executed mission".format(_mission))
         print('Type any number, to convert exact amount')
-        bot_config['convertPoints'] = read(min=1, additionalValues=[_all, _mission])
+        bot_config['convertPoints'] = read(min=1, additionalValues=[_all, _mission], digit=True)
 
     print()
     bot_config['maxBreakTime'] = read(min=0, digit=True, msg="Enter the maximum additional waiting time between consecutive missions in seconds. (min = 0) ")

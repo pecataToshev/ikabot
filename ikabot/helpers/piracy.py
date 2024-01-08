@@ -58,15 +58,15 @@ def convertCapturePoints(session, pirate_city_id, conversion_points):
     :return bool: is successful
     """
     template_data = getPiracyTemplateData(session, pirate_city_id)
-    captured_points = template_data['capturePoints']
+    captured_points = int(template_data['capturePoints'])
 
     if conversion_points == 'all':
         conversion_points = captured_points
     else:
-        conversion_points = min(conversion_points, captured_points)
+        conversion_points = min(int(conversion_points), captured_points)
 
     if template_data['hasOngoingConvertion']:
-        logging.info("Found ongoing conversion. Could will skip this one")
+        logging.info("Found ongoing conversion. Will will skip this one")
         return False
 
     if conversion_points == 0:
