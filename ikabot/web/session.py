@@ -718,9 +718,10 @@ class Session:
                 if fullResponse:
                     return response
                 else:
-                    logging.info("Response content instance ->  content:%s, text:%s",
+                    logging.info("Response content instance ->  content:%s, text:%s, manual?=automatic:%s",
                                  isinstance(response.content, bytes),
-                                 isinstance(html, bytes))
+                                 isinstance(html, bytes),
+                                 response.content.decode('utf-8') == html)
                     return html
             except AssertionError:
                 self.__sessionExpired()
