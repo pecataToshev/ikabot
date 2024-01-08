@@ -56,6 +56,10 @@ class Session:
             Process info for waiting
         max_random : int
             the maximum number of additional seconds to wait for
+
+        Returns
+        -----------
+        actual_sleep_time : int the time we've actually slept
         """
         if seconds <= 0:
             return
@@ -85,6 +89,8 @@ class Session:
             'nextActionDate': None,
             'info': 'After ' + info
         })
+
+        return actual_sleep_time
 
     def setProcessInfo(self, message):
         """

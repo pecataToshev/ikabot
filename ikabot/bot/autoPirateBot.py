@@ -260,16 +260,19 @@ def __execute_piracy_mission(
     if 'function=createCaptcha' not in html \
             and '"showPirateFortressShip":0' in html:
 
-        # execution is successful, go get some sleep
-        session.wait(mission['duration'],
-                     'Executing piracy mission {}. {}'.format(mission['name'],
-                                                              additional_message),
-                     5)
-
+        time_wait_for_conversion_start = 0
+        # Well, it's far more convenient that we're going to execute the conversion right after we've started the new
+        # mission rather that waiting the mission to end
         if convert_points_to_strength is not None:
+            time_wait_for_conversion_start = session.wait(3, 'Simulating user before converting points', max_random=5)
             if convert_points_to_strength == 'mission':
                 convert_points_to_strength = mission['capturePoints']
             convertCapturePoints(session, city_id, convert_points_to_strength)
+
+        # execution is successful, go get some sleep
+        session.wait(mission['duration'] - time_wait_for_conversion_start,
+                     'Executing piracy mission {}. {}'.format(mission['name'], additional_message),
+                     max_random=10)
 
         return
 
