@@ -106,7 +106,8 @@ def getCity(html):
     city['ownerName'] = decodeUnicodeEscape(city.pop('ownerName'))
     city['x'] = int(city.pop('islandXCoord'))
     city['y'] = int(city.pop('islandYCoord'))
-    city['cityName'] = decodeUnicodeEscape(city['name'])
+    # city['cityName'] = decodeUnicodeEscape(city['name'])
+    city['cityName'] = city['name']
 
     i = 0
     for position in city['position']:

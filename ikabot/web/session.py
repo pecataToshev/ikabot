@@ -701,6 +701,7 @@ class Session:
             url = self.urlBase.replace('index.php', '') + url
         else:
             url = self.urlBase + url
+
         while True:
             try:
                 self.requestHistory.append({
@@ -712,17 +713,12 @@ class Session:
                 response = self.s.get(url, params=params, verify=config.do_ssl_verify)
                 self.requestHistory[-1]['response'] = {'status': response.status_code, 'elapsed': response.elapsed.total_seconds(), 'headers': dict(response.headers), 'text': response.text}
                 logging.debug('Received : %s', self.__prepare_last_request_for_logs())
-                html = response.text
+                html = decodeUnicodeEscape(response.text)
                 if ignoreExpire is False:
                     assert self.__isExpired(html) is False
                 if fullResponse:
                     return response
                 else:
-                    logging.info("Response content instance ->  content:%s, text:%s, manual?=automatic:%s, counts of \u0430: %d",
-                                 isinstance(response.content, bytes),
-                                 isinstance(html, bytes),
-                                 response.content.decode('utf-8') == html,
-                                 response.content.decode('utf-8').count('u0430'))
                     return html
             except AssertionError:
                 self.__sessionExpired()
@@ -778,7 +774,7 @@ class Session:
                 response = self.s.post(url, data=payloadPost, params=params, verify=config.do_ssl_verify)
                 self.requestHistory[-1]['response'] = {'status': response.status_code, 'elapsed': response.elapsed.total_seconds(), 'headers': dict(response.headers), 'text': response.text}
                 logging.debug('Received : %s', self.__prepare_last_request_for_logs())
-                resp = response.text
+                resp = decodeUnicodeEscape(response.text)
                 if ignoreExpire is False:
                     assert self.__isExpired(resp) is False
                 if 'TXT_ERROR_WRONG_REQUEST_ID' in resp:

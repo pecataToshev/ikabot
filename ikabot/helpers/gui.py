@@ -212,7 +212,7 @@ def decodeUnicodeEscape(input_string):
     Returns:
     - str: The string with replaced Unicode escape sequences.
     """
-    return re.sub(r'u([0-9a-fA-F]{4})', lambda x: chr(int(x.group(1), 16)), input_string)
+    return re.sub(r'\\u([0-9a-fA-F]{4})', lambda x: chr(int(x.group(1), 16)), input_string)
 
 
 def formatTimestamp(seconds):
