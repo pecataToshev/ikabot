@@ -4,7 +4,6 @@
 import json
 import re
 
-from ikabot.helpers.gui import decodeUnicodeEscape
 from ikabot.helpers.resources import getAvailableResources, getWarehouseCapacity, getWineConsumptionPerHour
 
 
@@ -102,12 +101,8 @@ def getCity(html):
     city = re.search(r'"updateBackgroundData",\s?([\s\S]*?)\],\["updateTemplateData"', html).group(1)
     city = json.loads(city, strict=False)
 
-    city['ownerId'] = city.pop('ownerId')
-    # city['ownerName'] = decodeUnicodeEscape(city.pop('ownerName'))
-    city['ownerName'] = city.pop('ownerName')
     city['x'] = int(city.pop('islandXCoord'))
     city['y'] = int(city.pop('islandYCoord'))
-    # city['cityName'] = decodeUnicodeEscape(city['name'])
     city['cityName'] = city['name']
 
     i = 0
@@ -125,7 +120,6 @@ def getCity(html):
             position['type'] = position['building'].split(' ')[-1]
             position['building'] = 'empty'
 
-        # position['name'] = decodeUnicodeEscape(position['name'])
         position['positionAndName'] = "[#{}] {}".format(position['position'], position['name'])
 
     city['id'] = str(city['id'])

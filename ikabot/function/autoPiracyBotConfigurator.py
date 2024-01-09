@@ -5,8 +5,7 @@ import sys
 from ikabot import config
 from ikabot.bot.autoPirateBot import startAutoPirateBot
 from ikabot.config import isWindows
-from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, decodeUnicodeEscape, enter, \
-    printTable
+from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter, printTable
 from ikabot.helpers.pedirInfo import askUserYesNo, read
 from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
     getPiracyTemplateData
@@ -143,7 +142,7 @@ def __select_piracy_mission(template_data, additional_select_message=''):
     printTable(
         table_config=[
             {'key': 'id', 'title': '#'},
-            {'key': 'name', 'title': 'Mission Name', 'fmt': decodeUnicodeEscape},
+            {'key': 'name', 'title': 'Mission Name'},
             {'key': 'capturePoints', 'title': 'Capture Points', 'fmt': addThousandSeparator},
             {'key': 'gold', 'title': 'Gold', 'fmt': addThousandSeparator},
             {'key': 'duration', 'title': 'Duration', 'fmt': lambda x: daysHoursMinutes(x)},

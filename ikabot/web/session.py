@@ -663,15 +663,14 @@ class Session:
 
     def __prepare_last_request_for_logs(self):
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
-            return decodeUnicodeEscape(
-                str(self.requestHistory[-1])
-                .replace("\n", '')
-                .replace('\\\\', '')
-                .replace("  ", ' ')
-                .replace("  ", ' ')
-                .replace("  ", ' ')
-                .replace("  ", ' ')
-            )
+            return (decodeUnicodeEscape(str(self.requestHistory[-1]))
+                    .replace("\n", '')
+                    .replace('\\\\', '')
+                    .replace("  ", ' ')
+                    .replace("  ", ' ')
+                    .replace("  ", ' ')
+                    .replace("  ", ' ')
+                    )
         return 'only when DEBUG level'
 
     def get(self, url='', params={}, ignoreExpire=False, noIndex=False, fullResponse=False):
@@ -808,25 +807,3 @@ class Session:
         """Gets relevant session data from the .ikabot file
         """
         return self.cipher.getSessionData(self)
-
-
-def normal_get(url, params={}):
-    """Sends a get request to provided url
-    Parameters
-    ----------
-    url : str
-        a string representing the url to which to send the get request
-    params : dict
-        a dictionary containing key-value pairs which represent the parameters of the get request
-
-    Returns
-    -------
-    response : requests.Response
-        a requests.Response object which represents the webservers response. For more information on requests.Response refer to https://requests.readthedocs.io/en/master/api/#requests.Response
-    """
-    try:
-
-        return requests.get(url, params=params)
-
-    except requests.exceptions.ConnectionError:
-        sys.exit('Internet connection failed')

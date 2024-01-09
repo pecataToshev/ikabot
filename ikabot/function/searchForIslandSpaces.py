@@ -9,7 +9,7 @@ from ikabot import config
 from ikabot.config import island_url, materials_names
 from ikabot.helpers.botComm import checkTelegramData, sendToBot
 from ikabot.helpers.getJson import getIsland
-from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
+from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.pedirInfo import askUserYesNo, getIslandsIds, read
 from ikabot.helpers.process import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
@@ -155,7 +155,7 @@ def __extract_cities(island):
     """
     _res = {}
 
-    _island_name = decodeUnicodeEscape(island['name'])
+    _island_name = island['name']
     for city in island['cities']:
         if city['type'] != 'city':
             continue
@@ -165,10 +165,10 @@ def __extract_cities(island):
         city['tradegood'] = island['tradegood']
         city['material'] = materials_names[island['tradegood']]
         city['islandName'] = _island_name
-        city['cityName'] = decodeUnicodeEscape(city['name'])
-        city['ownerName'] = decodeUnicodeEscape(city['Name'])
+        city['cityName'] = city['name']
+        city['ownerName'] = city['Name']
         if city['AllyId'] > 0:
-            city['allianceName'] = decodeUnicodeEscape(city['AllyTag'])
+            city['allianceName'] = city['AllyTag']
             city['hasAlliance'] = True
             city['player'] = "{} [{}]".format(city['ownerName'], city['allianceName'])
         else:

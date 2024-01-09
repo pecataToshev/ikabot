@@ -19,7 +19,7 @@ from ikabot.config import actionRequest, city_url, materials_names, materials_na
     MAXIMUM_CITY_NAME_LENGTH
 from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, decodeUnicodeEscape, enter
+from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, enter
 from ikabot.helpers.pedirInfo import chooseCity, getIdsOfCities, read
 from ikabot.helpers.planRoutes import executeRoutes, getMinimumWaitingTime
 from ikabot.helpers.process import IkabotProcessListManager, set_child_mode
@@ -356,8 +356,8 @@ def chooseResourceProviders(session, cities_ids, cities, city_id, resource, miss
         # ask the user it this city should provide resources
         tradegood_initial = tradegood_initials[int(cities[cityId]['tradegood'])]
         city_name_padded = "{: >{len}}".format(
-            decodeUnicodeEscape(cities[cityId]['name']),
-            len=MAXIMUM_CITY_NAME_LENGTH,
+            # decodeUnicodeEscape(cities[cityId]['name']),
+            cities[cityId]['name'], len=MAXIMUM_CITY_NAME_LENGTH,
         )
         msg = '{} ({}): {} [Y/n]:'.format(city_name_padded, tradegood_initial, addThousandSeparator(available))
         choice = read(msg=msg, values=['Y', 'y', 'N', 'n', ''])

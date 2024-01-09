@@ -8,7 +8,7 @@ from decimal import getcontext
 from ikabot import config
 from ikabot.config import city_url, island_url, MAXIMUM_CITY_NAME_LENGTH, prompt
 from ikabot.helpers.getJson import getCity, getIsland
-from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
+from ikabot.helpers.gui import banner, enter
 
 getcontext().prec = 30
 
@@ -111,7 +111,7 @@ def chooseCity(session, foreign=False):
     global menu_cities
     (ids, cities) = getIdsOfCities(session)
     if menu_cities == '':
-        longest_city_name_length: int = max([len(decodeUnicodeEscape(cities[city_id]['name'])) for city_id in ids])
+        longest_city_name_length: int = max([len(cities[city_id]['name']) for city_id in ids])
 
         def pad(city_name):
             return ' ' * (longest_city_name_length - len(city_name) + 2)
@@ -127,7 +127,7 @@ def chooseCity(session, foreign=False):
             i += 1
             resource_index = str(cities[city_id]['tradegood'])
             resource_abb = resources_abbreviations[resource_index]
-            city_name = decodeUnicodeEscape(cities[city_id]['name'])
+            city_name = cities[city_id]['name']
             menu_cities += '{: >2}: {}{}{}\n'.format(i, city_name, pad(city_name), resource_abb)
         menu_cities = menu_cities[:-1]
     if foreign:
@@ -181,7 +181,7 @@ def chooseForeignCity(session):
         if city['type'] == 'city' and city['state'] == '' and city['ownerName'] != session.username:
             i += 1
             num = ' ' + str(i) if i < 10 else str(i)
-            print('{: >2}: {: >{max_city_name_length}} ({})'.format(num, decodeUnicodeEscape(city['name']), decodeUnicodeEscape(city['Name']), max_city_name_length=MAXIMUM_CITY_NAME_LENGTH))
+            print('{: >2}: {: >{max_city_name_length}} ({})'.format(num, city['name'], city['ownerName'], max_city_name_length=MAXIMUM_CITY_NAME_LENGTH))
             city_options.append(city)
     if i == 0:
         print('There are no cities where to send resources on this island')
@@ -190,7 +190,7 @@ def chooseForeignCity(session):
     selected_city_index = read(min=1, max=i)
     city = city_options[selected_city_index - 1]
     city['islandId'] = island['id']
-    city['cityName'] = decodeUnicodeEscape(city['name'])
+    city['cityName'] = city['name']
     city['isOwnCity'] = False
     return city
 

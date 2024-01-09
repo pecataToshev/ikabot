@@ -1,12 +1,9 @@
 import os
-import os
 import sys
 
 from ikabot import config
-from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, decodeUnicodeEscape, enter, \
-    printTable
-from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
-    getPiracyTemplateData
+from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter, printTable
+from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, getPiracyTemplateData
 
 
 def showPiracyInfo(session, event, stdin_fd, predetermined_input):
@@ -42,7 +39,7 @@ def showPiracyInfo(session, event, stdin_fd, predetermined_input):
             mission = [m for m in template_data['pirateCaptureLevels']
                        if m['buildingLevel'] == template_data['ongoingMissionLevel']][0]
             print()
-            print("Ongoing mission:", decodeUnicodeEscape(mission['name']))
+            print("Ongoing mission:", mission['name'])
             print(" Capture points:", addThousandSeparator(mission['capturePoints']))
             print("           Gold:", addThousandSeparator(mission['gold']))
             print("      Time left:", daysHoursMinutes(template_data['ongoingMissionTimeRemaining']))
@@ -63,7 +60,7 @@ def showPiracyInfo(session, event, stdin_fd, predetermined_input):
         printTable(
             table_config=[
                 {'key': 'place', 'title': '#'},
-                {'key': 'name', 'title': 'Player', 'fmt': decodeUnicodeEscape},
+                {'key': 'name', 'title': 'Player'},
                 {'key': 'capturePoints', 'title': 'Capture Points', 'fmt': addThousandSeparator},
                 {'key': 'distance', 'title': 'Distance'},
             ],
