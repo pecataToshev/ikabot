@@ -103,7 +103,8 @@ def getCity(html):
     city = json.loads(city, strict=False)
 
     city['ownerId'] = city.pop('ownerId')
-    city['ownerName'] = decodeUnicodeEscape(city.pop('ownerName'))
+    # city['ownerName'] = decodeUnicodeEscape(city.pop('ownerName'))
+    city['ownerName'] = city.pop('ownerName')
     city['x'] = int(city.pop('islandXCoord'))
     city['y'] = int(city.pop('islandYCoord'))
     # city['cityName'] = decodeUnicodeEscape(city['name'])
@@ -124,7 +125,7 @@ def getCity(html):
             position['type'] = position['building'].split(' ')[-1]
             position['building'] = 'empty'
 
-        position['name'] = decodeUnicodeEscape(position['name'])
+        # position['name'] = decodeUnicodeEscape(position['name'])
         position['positionAndName'] = "[#{}] {}".format(position['position'], position['name'])
 
     city['id'] = str(city['id'])
