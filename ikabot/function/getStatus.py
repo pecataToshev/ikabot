@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import logging
 import os
 import sys
 from decimal import Decimal, getcontext
@@ -43,6 +44,7 @@ def getStatus(session, event, stdin_fd, predetermined_input):
         for id in ids:
             session.get('view=city&cityId={}'.format(id), noIndex=True)
             data = session.get('view=updateGlobalData&ajax=1', noIndex=True)
+            logging.info(data)
             json_data = json.loads(data, strict=False)
             json_data = json_data[0][1]['headerData']
             if json_data['relatedCity']['owncity'] != 1:
