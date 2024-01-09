@@ -713,6 +713,8 @@ class Session:
                 self.requestHistory[-1]['response'] = {'status': response.status_code, 'elapsed': response.elapsed.total_seconds(), 'headers': dict(response.headers), 'text': response.text}
                 logging.debug('Received : %s', self.__prepare_last_request_for_logs())
                 html = decodeUnicodeEscape(response.text)
+                logging.warning(response.text)
+                logging.warning(html)
                 if ignoreExpire is False:
                     assert self.__isExpired(html) is False
                 if fullResponse:
