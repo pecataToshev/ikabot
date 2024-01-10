@@ -56,12 +56,14 @@ class IkabotProcessListManager:
             try:
                 proc = psutil.Process(pid=process['pid'])
             except psutil.NoSuchProcess:
+                # The process is no longer running
                 continue
 
             # windows doesn't support the status method
-            is_alive = True if isWindows else proc.status() != 'zombie'
+            if not isWindows and proc.status() == 'zombie' and process.get('status', '') != 'zombie':
+                process['status'] = 'zombie'
 
-            if is_alive and proc.name() == ika_process:
+            if proc.name() == ika_process:
                 running_ikabot_processes.append(process)
 
         return {p['pid']: p for p in running_ikabot_processes}
