@@ -63,21 +63,21 @@ def donationBot(session, event, stdin_fd, predetermined_input):
                 donation_type = None
                 percentage = None
 
-            if donation_type is not None and donate_method is 1:
+            if donation_type is not None and donate_method == 1:
                 print('What is the maximum percentage of your storage capacity that you wish to keep occupied? (the resources that exceed it, will be donated) (default: 80%)')
                 percentage = read(min=0, max=100, empty=True)
                 if percentage == '':
                     percentage = 80
                 elif percentage == 100:  # if the user is ok with the storage beeing totally full, don't donate at all
                     donation_type = None
-            elif donation_type is not None and donate_method is 2:
+            elif donation_type is not None and donate_method == 2:
                 print('What is the percentage of your production that you wish to donate? (enter 0 to disable donation for the town) (default: 50%)')
                 percentage = read(min=0, max=100, empty=True) # max_random_waiting_time increases inaccuracy
                 if percentage == '':
                     percentage = 50
                 elif percentage == 0:
                     donation_type = None
-            elif donation_type is not None and donate_method is 3:
+            elif donation_type is not None and donate_method == 3:
                 print('What is the amount would you like to donate? (enter 0 to disable donation for the town) (default: 10000)')
                 percentage = read(min=0, max=1000000, empty=True) # no point changing the variable's name everywhere just for this
                 if percentage == '':
@@ -140,7 +140,7 @@ def do_it(session, cities_ids, cities_dict, waiting_time, max_random_waiting_tim
             storageCapacity = city['storageCapacity']
 
             # get the percentage
-            if donate_method is 1:
+            if donate_method == 1:
                 percentage = cities_dict[cityId]['percentage']
                 percentage /= 100
 
@@ -153,7 +153,7 @@ def do_it(session, cities_ids, cities_dict, waiting_time, max_random_waiting_tim
                 if to_donate <= 0:
                     continue
                     
-            elif donate_method is 2:
+            elif donate_method == 2:
                 # get current production rate if changed since starting the bot
                 (wood_prod, good_prod, typeGood) = getProductionPerSecond(session, cityId)
                 percentage = cities_dict[cityId]['percentage']
@@ -164,7 +164,7 @@ def do_it(session, cities_ids, cities_dict, waiting_time, max_random_waiting_tim
                 if to_donate <= 0:
                     continue
                     
-            elif donate_method is 3:
+            elif donate_method == 3:
                 percentage = cities_dict[cityId]['percentage']
                 # make sure the donation amount is never lower than resources available
                 max_wood = wood - percentage
@@ -177,7 +177,7 @@ def do_it(session, cities_ids, cities_dict, waiting_time, max_random_waiting_tim
             island_id = cities_dict[cityId]['island']
 
             # donate
-            if donation_type is 'both':
+            if donation_type == 'both':
                 forrest = int(to_donate / 2)
                 trade = int(to_donate / 2)
                 session.post(params={'islandId': island_id, 'type': 'resource', 'action': 'IslandScreen', 'function': 'donate', 'donation': forrest, 'backgroundView': 'island', 'templateView': donation_type, 'actionRequest': actionRequest, 'ajax': '1'})
