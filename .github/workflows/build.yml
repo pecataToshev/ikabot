@@ -39,4 +39,5 @@ jobs:
     - name: Just run ikabot
       run: |
         printf "\n\n" | python -m ikabot &> log.log || cat log.log
+        cat log.log
         grep "Failed to log in..." log.log && exit 0 || exit 1
