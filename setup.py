@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="ikabot",
-    version='2024.0111.dev232445',
+    version='2024.0111.dev233008',
     author="Petar Toshev",
     author_email="pecata.toshev+ikabot@gmail.com",
     license='MIT',
@@ -18,7 +18,7 @@ setuptools.setup(
         'yoyo-migrations',
     ],
     entry_points={
-        'console_scripts': ['ikabot=ikabot.__main__:'],
+        'console_scripts': ['ikabot=ikabot.__main__:main'],
     },
     classifiers=[
         "Programming Language :: Python :: 3",

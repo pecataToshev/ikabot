@@ -213,7 +213,7 @@ def start():
         session.logout()
 
 
-def main(fromWhere='I dont know'):
+def start_command_line(fromWhere='I dont know'):
     print("i'm coming from", fromWhere)
     setup_logging()
     manager = multiprocessing.Manager()
@@ -223,11 +223,3 @@ def main(fromWhere='I dont know'):
         start()
     except KeyboardInterrupt:
         clear()
-
-
-if __name__ == '__main__':
-    print('Here in the command_line main if')
-    # On Windows calling this function is necessary.
-    if sys.platform.startswith('win'):
-        multiprocessing.freeze_support()
-    main('command_line IF')
