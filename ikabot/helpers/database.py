@@ -85,7 +85,7 @@ class Database:
             {'storageKey': key}
         )
         if len(data) == 0:
-            return {}
+            return None
         return json.loads(data[0]['data'])
 
     def store_value(self, key, data):

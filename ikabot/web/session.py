@@ -39,8 +39,6 @@ class Session:
         self.requestHistory = deque(maxlen=5) #keep last 5 requests in history
         # disable ssl verification warning
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-        self.db = Database(self.account_name)
-        self.update_process_list_lock = multiprocessing.Lock()
         self.__process_manager = IkabotProcessListManager(self)
         self.__login()
 
@@ -174,21 +172,29 @@ class Session:
             banner()
 
             self.account_name = read(msg='Please provide the unique identifier for your account in the ikabot system')
-            self.db.close_db_conn()
             self.db = Database(self.account_name)
 
-            self.mail = read(msg='Mail:')
+            credentials = self.db.get_stored_value('credentials')
+            if credentials is None:
+                self.mail = read(msg='Mail:')
 
-            if len(config.predetermined_input) != 0:
-                self.password = config.predetermined_input.pop(0)
+                if len(config.predetermined_input) != 0:
+                    self.password = config.predetermined_input.pop(0)
+                else:
+                    self.password = getpass.getpass('Password:')
+                self.db.store_value(credentials, {'mail': self.mail, 'password': self.password})
             else:
-                self.password = getpass.getpass('Password:')
+                self.mail = credentials['mail']
+                self.password = credentials['password']
 
             banner()
+        else:
+            self.db = Database(self.account_name)
 
         self.s = requests.Session()
         logging.info("Trying to log in. {loggedIn: %s, retries: %d}",
                      self.logged, retries)
+
 
         # test to see if the lobby cookie in the session file is valid
         # this will save time on login and will reduce use of blackbox token
