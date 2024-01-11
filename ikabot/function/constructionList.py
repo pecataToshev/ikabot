@@ -186,8 +186,7 @@ def getResourcesNeeded(session, city, building, current_level, final_level):
     html_costs = building_costs[1][1][1]
 
     # if the user has all the resource saving studies, we save that in the session data (one less request)
-    sessionData = session.getSessionData()
-    if 'reduccion_inv_max' in sessionData:
+    if session.db.get_stored_value('maxReductionCost'):
         costs_reduction = 14
     else:
         # get the studies
@@ -213,8 +212,7 @@ def getResourcesNeeded(session, city, building, current_level, final_level):
 
         # if the user has all the resource saving studies, save that in the session data
         if costs_reduction == 14:
-            sessionData['reduccion_inv_max'] = True
-            session.setSessionData(sessionData)
+            session.db.store_value('maxReductionCost', True)
 
     # calculate cost reductions
     costs_reduction /= 100

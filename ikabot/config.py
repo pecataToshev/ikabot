@@ -26,6 +26,7 @@ has_params = False
 infoUser = ''
 
 ikaFile = '.ikabot'
+DB_FILE = os.path.join(os.path.expanduser("~"), '.ikabot.db')
 
 city_url = 'view=city&cityId='
 island_url = 'view=island&islandId='

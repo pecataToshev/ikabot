@@ -33,23 +33,22 @@ def decaptchaConf(session, event, stdin_fd, predetermined_input):
     config.predetermined_input = predetermined_input
     banner()
     try:
-        session_data = session.getSessionData()
+        decaptcha_config = session.db.get_stored_value('decaptcha')
+        if decaptcha_config is None:
+            decaptcha_config = {'name': 'default', 'endpoint': 'default', 'relevant_data': {}}
+            session.db.store_value('decaptcha', decaptcha_config)
 
-        if 'decaptcha' not in session_data:
-            session_data['decaptcha'] = {'name': 'default', 'endpoint': 'default', 'relevant_data': {}}
-            session.setSessionData(session_data)
-
-        if session_data['decaptcha']['name'] == 'default':
+        if decaptcha_config['name'] == 'default':
             print('You are currently using the default decaptcha service')
-        elif session_data['decaptcha']['name'] == 'custom':
+        elif decaptcha_config['name'] == 'custom':
             print('You are currently using your custom decaptcha service')
-            print('Endpoint : {}'.format(session_data['decaptcha']['endpoint']))
-        elif session_data['decaptcha']['name'] == '9kw.eu':
+            print('Endpoint : {}'.format(decaptcha_config['endpoint']))
+        elif decaptcha_config['name'] == '9kw.eu':
             print('You are currently using 9kw.eu as your decaptcha service')
-            print("API key : {}".format(session_data['decaptcha']['relevant_data']['apiKey']))
-        elif session_data['decaptcha']['name'] == 'telegram':
+            print("API key : {}".format(decaptcha_config['relevant_data']['apiKey']))
+        elif decaptcha_config['name'] == 'telegram':
             print('You are currently using Telegram as your decaptcha service')
-            print("Telegram ID : {}".format(session_data['shared']['telegram']['chatId']))
+            print("Telegram ID : {}".format(session.db.get_stored_value('telegram')['chatId']))
         print()
         print('(0) Exit')
         print('(1) Default')
@@ -65,8 +64,11 @@ def decaptchaConf(session, event, stdin_fd, predetermined_input):
 
         elif action == 1:
             banner()
-            session_data['decaptcha'] = {'name': 'default', 'endpoint': 'default', 'relevant_data': {}}
-            session.setSessionData(session_data)
+            session.db.store_value('decaptcha', {
+                'name': 'default',
+                'endpoint': 'default',
+                'relevant_data': {}
+            })
             print('Default decaptcha service set as decaptcha service!')
             enter()
             event.set()
@@ -81,18 +83,19 @@ def decaptchaConf(session, event, stdin_fd, predetermined_input):
                     enter()
                     event.set()
                     return
-                session_data['decaptcha']['name'] = 'custom'
-                session_data['decaptcha']['endpoint'] = endpoint
+                session.db.store_value('decaptcha', {
+                    'name': 'custom',
+                    'endpoint': endpoint
+                })
+
                 print('Endpoint {} set! Remember, the picture will be sent via a POST request under the `upload_file` parameter'.format(endpoint))
                 print('Do you want to test this newly-set custom endpoint?(y|n)')
                 test_bool = read(values=['y', 'Y', 'n', 'N'])
                 if (test_bool.lower() == 'n'):
-                    session.setSessionData(session_data)
                     event.set()
                     return
                 for test in decaptcha_test_pictures:
                     if testCustomDecaptcha(test['ground_truth'], base64.b64decode(test['picture']), endpoint):
-                        session.setSessionData(session_data)
                         print('Custom decaptcha passed at least one test, good enough!')
                         enter()
                         event.set()
@@ -115,12 +118,16 @@ def decaptchaConf(session, event, stdin_fd, predetermined_input):
                 event.set()
                 return
             else:
-                session_data['decaptcha']['name'] = '9kw.eu'
-                session_data['decaptcha']['endpoint'] = 'https://www.9kw.eu/index.cgi'
-                session_data['decaptcha']['relevant_data'] = {'apiKey': apiKey_9kw}
+                session.db.store_value('decaptcha', {
+                    'name': '9kw.eu',
+                    'endpoint': 'https://www.9kw.eu/index.cgi',
+                    'relevant_data': {
+                        'apiKey': apiKey_9kw
+                    }
+                })
+
                 print("{}Success!{} You currently have {} credits".format(bcolors.GREEN, bcolors.ENDC, response))
                 enter()
-                session.setSessionData(session_data)
                 event.set()
                 return
 
@@ -131,7 +138,11 @@ def decaptchaConf(session, event, stdin_fd, predetermined_input):
                 enter()
                 event.set()
                 return
-            session_data['decaptcha']['name'] = 'telegram'
+
+            session.db.store_value('decaptcha', {
+                'name': 'telegram',
+            })
+
             print('Do you wish to do a test?(y|n)')
             test = read(values=['y', 'Y', 'n', 'N'])
             if test.lower() == 'y':
@@ -154,7 +165,6 @@ def decaptchaConf(session, event, stdin_fd, predetermined_input):
                 if captcha.lower() == decaptcha_test_pictures[0]['ground_truth'].lower():
                     print('{}Success!{} Captcha is correct!'.format(bcolors.GREEN, bcolors.ENDC))
                     enter()
-                    session.setSessionData(session_data)
                     event.set()
                     return
                 else:
@@ -164,7 +174,6 @@ def decaptchaConf(session, event, stdin_fd, predetermined_input):
                     return
             else:
                 print('You will now recieve the piracy captcha over Telegram!')
-                session.setSessionData(session_data)
                 enter()
                 event.set()
                 return

@@ -34,8 +34,7 @@ def sendToBot(session, msg, Token=False, Photo=None):
     if Token is False:
         msg = 'pid:{}\n{}\n{}'.format(os.getpid(), config.infoUser, msg)
 
-    sessionData = session.getSessionData()
-    telegram_data = sessionData['shared']['telegram']
+    telegram_data = session.db.get_stored_value('telegram')
     if Photo is None:
         requests.get('https://api.telegram.org/bot{}/sendMessage'.format(telegram_data['botToken']), params={'chat_id': telegram_data['chatId'], 'text': msg})
     else:
@@ -59,9 +58,11 @@ def telegramDataIsValid(session):
         a boolean indicating whether or not there is any Telegram data stored in the .ikabot file
 
     """
-    sessionData = session.getSessionData()
+    telegram_data = session.db.get_stored_value('telegram')
     try:
-        return len(sessionData['shared']['telegram']['botToken']) > 0 and len(sessionData['shared']['telegram']['chatId']) > 0
+        return (telegram_data is not None
+                and 'botToken' in telegram_data and len(telegram_data['botToken']) > 0
+                and 'chatId' in telegram_data and len(telegram_data['chatId']) > 0)
     except KeyError:
         return False
 
@@ -83,8 +84,7 @@ def getUserResponse(session, fullResponse=False):
     if checkTelegramData(session) is False:
         return []
 
-    sessionData = session.getSessionData()
-    telegram_data = sessionData['shared']['telegram']
+    telegram_data = session.db.get_stored_value('telegram')
 
     try:
         updates = requests.get('https://api.telegram.org/bot{}/getUpdates'.format(telegram_data['botToken'])).text
@@ -201,11 +201,10 @@ def updateTelegramData(session, event=None, stdin_fd=None, predetermined_input=[
         else:
             chat_id = users[resp - 1]['id']
 
-    telegram_data = {}
-    telegram_data['telegram'] = {}
-    telegram_data['telegram']['botToken'] = botToken.replace(' ', '')
-    telegram_data['telegram']['chatId'] = str(chat_id)
-    session.setSessionData(telegram_data, shared=True)
+    session.db.stored_value('telegram', {
+        'botToken': botToken.replace(' ', ''),
+        'chatId': str(chat_id),
+    })
 
     rand = str(random.randint(0, 9999)).zfill(4)
     msg = 'The token is:{}'.format(rand)
@@ -224,9 +223,7 @@ def updateTelegramData(session, event=None, stdin_fd=None, predetermined_input=[
             valid = True
 
     if valid is False:
-        telegram_data['telegram']['botToken'] = ''
-        telegram_data['telegram']['chatId'] = ''
-        session.setSessionData(telegram_data, shared=True)
+        session.db.stored_value('telegram', None)
         print('Check the credentials and re-supply them.')
     else:
         print('The data was saved.')

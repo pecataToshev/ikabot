@@ -114,7 +114,7 @@ def do_it(session, waiting_time, start_id, shallow):
     """
 
     shared_data[2] = time.time()
-    world = {'name': 's' + str(session.mundo) + '-' + str(session.servidor),
+    world = {'name': 's' + str(session.server_number) + '-' + str(session.server),
              'self_name': session.username,
              'dump_start_date': time.time(),
              'dump_end_date': 0,
@@ -164,7 +164,7 @@ def do_it(session, waiting_time, start_id, shallow):
 # "0"           // blue 11
 # ]
     
-    dump_path = os.getenv(home) + '/ikabot_world_dumps/s' + str(session.mundo) + '-' + str(session.servidor) + '/'
+    dump_path = os.getenv(home) + '/ikabot_world_dumps/s' + str(session.server_number) + '-' + str(session.server) + '/'
     dump_path = dump_path.replace('\\','/')
     dump_name = getDateTime() + '.json.gz'
 

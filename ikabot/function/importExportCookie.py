@@ -47,7 +47,7 @@ def importCookie(session):
     newcookie = read()
     newcookie = newcookie.strip()
     newcookie = newcookie.replace('ikariam=', '')
-    cookies = session.getSessionData()['cookies']
+    cookies = session.db.get_stored_value('cookies')
     cookies['ikariam'] = newcookie
     if session.host in session.s.cookies._cookies:
         session.s.cookies.set('ikariam', newcookie, domain=session.host, path='/')
@@ -61,9 +61,9 @@ def importCookie(session):
         enter()
     else:
         print('{}Success!{} This ikabot session will now use the cookie you provided'.format(bcolors.GREEN, bcolors.ENDC))
-        sessionData = session.getSessionData()
-        sessionData['cookies']['ikariam'] = newcookie
-        session.setSessionData(sessionData)
+        cookies = session.db.get_stored_value('cookies')
+        cookies['ikariam'] = newcookie
+        session.db.store_value('cookies', cookies)
         enter()
     session.get()
 
@@ -71,7 +71,7 @@ def importCookie(session):
 def exportCookie(session):
     banner()
     session.get()  # get valid cookie in case user has logged the bot out before running this feature
-    ikariam = session.getSessionData()['cookies']['ikariam']
+    ikariam = session.db.get_stored_value('cookies')['ikariam']
     print('Use this cookie to synchronise two ikabot instances on 2 different machines\n\n')
     print('ikariam='+ikariam+'\n\n')
 

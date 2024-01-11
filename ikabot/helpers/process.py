@@ -41,13 +41,12 @@ class IkabotProcessListManager:
         """
         self.__session = session
 
-    def __get_processes(self, session_data):
+    def __get_processes(self):
         """
         Reads all process from session_data.
-        :param session_data: sessionData
         :return: dict[dict[]] -> dict of processes
         """
-        process_list = session_data.get(self.__process_list_key, [])
+        process_list = self.__session.db.get_processes()
 
         # check it's still running
         running_ikabot_processes = []
@@ -66,24 +65,13 @@ class IkabotProcessListManager:
 
         return {p['pid']: p for p in running_ikabot_processes}
 
-    def __update_processes(self, session_data, processes):
-        """
-        Writes processes into session.
-        :param session_data: sessionData
-        :param processes: dict[dict[]] -> process dict
-        :return: None
-        """
-        session_data[self.__process_list_key] = [p for p in processes.values()]
-        self.__session.setSessionData(session_data)
-
     def get_process_list(self, filtering=None):
         """
         Returns processes as list with the applied filter
         :param filtering: lambda x: bool -> filter of the processes to return
         :return: list[dict[]]
         """
-        return [p for p in self.__get_processes(self.__session.getSessionData()).values()
-                if filtering is None or filtering(p)]
+        return [p for p in self.__get_processes().values() if filtering is None or filtering(p)]
 
     def upsert_process(self, process):
         """
@@ -92,14 +80,16 @@ class IkabotProcessListManager:
         :return:
         """
         with self.__session.update_process_list_lock:
-            _session_data = self.__session.getSessionData()
-            _processes = self.__get_processes(_session_data)
+            _processes = self.__get_processes()
             _pid = process.get('pid', os.getpid())
 
             # Merge with old data
             _new_process = dict(_processes.get(_pid, {}))
             _new_process.update(process)
             _new_process['date'] = time.time()
+
+            # Save
+            self.__session.db.set_process(_new_process)
 
             # Print process
             _log_process = dict(_new_process)
@@ -108,10 +98,6 @@ class IkabotProcessListManager:
             if _log_process.get('nextActionDate', None) is not None:
                 _log_process['nextActionDate'] = formatTimestamp(_log_process['nextActionDate'])
             logging.info("Upsert process: %s", _log_process)
-
-            # Write to session
-            _processes[_pid] = _new_process
-            self.__update_processes(_session_data, _processes)
 
     def print_proces_table(self, process_list=None, add_process_numbers=False):
         """

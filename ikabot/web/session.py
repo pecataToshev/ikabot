@@ -17,8 +17,8 @@ from urllib3.exceptions import InsecureRequestWarning
 
 from ikabot import config
 from ikabot.config import actionRequest, ConnectionError_wait, user_agent
-from ikabot.helpers.aesCipher import AESCipher
 from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
 from ikabot.helpers.pedirInfo import read
@@ -39,6 +39,7 @@ class Session:
         self.requestHistory = deque(maxlen=5) #keep last 5 requests in history
         # disable ssl verification warning
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+        self.db = Database(self.account_name)
         self.update_process_list_lock = multiprocessing.Lock()
         self.__process_manager = IkabotProcessListManager(self)
         self.__login()
@@ -145,20 +146,13 @@ class Session:
         return self.__isExpired(html)
 
     def __saveNewCookies(self):
-        sessionData = self.getSessionData()
+        self.db.store_value('cookies', dict(self.s.cookies.items()))
 
-        cookie_dict = dict(self.s.cookies.items())
-        sessionData['cookies'] = cookie_dict
-        
-        self.setSessionData(sessionData)
-
-    def __getCookie(self, sessionData=None):
-        if sessionData is None:
-            sessionData = self.getSessionData()
+    def __getCookie(self):
         try:
-            cookie_dict = sessionData['cookies']
+            cookie_dict = self.db.get_stored_value('cookies')
             self.s = requests.Session()
-            self.__update_proxy(sessionData=sessionData)
+            self.__update_proxy()
             self.s.headers.clear()
             self.s.headers.update(self.headers)
             requests.cookies.cookiejar_from_dict(cookie_dict, cookiejar=self.s.cookies, overwrite=True)
@@ -179,6 +173,10 @@ class Session:
         if not self.logged:
             banner()
 
+            self.account_name = read(msg='Please provide the unique identifier for your account in the ikabot system')
+            self.db.close_db_conn()
+            self.db = Database(self.account_name)
+
             self.mail = read(msg='Mail:')
 
             if len(config.predetermined_input) != 0:
@@ -189,18 +187,18 @@ class Session:
             banner()
 
         self.s = requests.Session()
-        self.cipher = AESCipher(self.mail, self.password)
         logging.info("Trying to log in. {loggedIn: %s, retries: %d}",
                      self.logged, retries)
 
         # test to see if the lobby cookie in the session file is valid
         # this will save time on login and will reduce use of blackbox token
-        sessionData = self.getSessionData()
-        if 'shared' in sessionData and 'lobby' in sessionData['shared']:
+
+        cookies = self.db.get_stored_value('cookies')
+        if 'gf-token-production' in cookies:
             cookie_obj = requests.cookies.create_cookie(
                 domain='.gameforge.com',
                 name='gf-token-production',
-                value=sessionData['shared']['lobby']['gf-token-production']
+                value=cookies['gf-token-production']
             )
             self.s.cookies.set_cookie(cookie_obj)
 
@@ -376,12 +374,7 @@ class Session:
                 cookie_obj = requests.cookies.create_cookie(domain='.gameforge.com', name='gf-token-production', value=auth_token)
                 self.s.cookies.set_cookie(cookie_obj)
 
-            # set the lobby cookie in shared for all world server accounts
-            
-            lobby_data = dict()
-            lobby_data['lobby'] = dict()
-            lobby_data['lobby']['gf-token-production'] = auth_token
-            self.setSessionData(lobby_data, shared = True)
+            self.db.store_value('lobby', {'gf-token-production': auth_token})
         else:
             logging.info('Using old lobby cookie')
 
@@ -409,10 +402,7 @@ class Session:
                 max_name = max([len(account['name']) for account in accounts if account['blocked'] is False])
                 i = 0
                 for account in [account for account in accounts if account['blocked'] is False]:
-                    server = account['server']['language']
-                    mundo = account['server']['number']
                     account_group = account['accountGroup']
-                    server_lang = None
                     world, server_lang = [(srv['name'], srv['language']) for srv in servers if srv['accountGroup'] == account_group][0]
 
                     i += 1
@@ -420,37 +410,48 @@ class Session:
                     print('({:d}) {}{} [{} - {}]'.format(i, account['name'], pad, server_lang, world))
                 num = read(min=1, max=i)
                 self.account = [account for account in accounts if account['blocked'] is False][num - 1]
+
             self.username = self.account['name']
-            self.login_servidor = self.account['server']['language']
+            self.server_language = self.account['server']['language']
             self.account_group = self.account['accountGroup']
-            self.mundo = str(self.account['server']['number'])
+            self.server_number = str(self.account['server']['number'])
             
-            self.word, self.servidor = [(srv['name'], srv['language']) for srv in servers if srv['accountGroup'] == self.account_group][0]
-            
-            config.infoUser = 'Server:{}'.format(self.servidor)
+            self.word, self.server = [(srv['name'], srv['language']) for srv in servers if srv['accountGroup'] == self.account_group][0]
+
+            data = {
+                'email': self.mail,
+                'password': self.password,
+                'username': self.username,
+                'serverLanguage': self.server_language,
+                'server': self.server,
+                'world': self.word,
+                'serverNumber': elf.server_number,
+            }
+            self.db.store_value('accountData', data)
+
+            config.infoUser = 'Server:{}'.format(self.server)
             config.infoUser += ', World:{}'.format(self.word)
             config.infoUser += ', Player:{}'.format(self.username)
             banner()
 
-        self.host = 's{}-{}.ikariam.gameforge.com'.format(self.mundo, self.servidor)
+        self.host = 's{}-{}.ikariam.gameforge.com'.format(self.server_number, self.server)
         self.urlBase = 'https://{}/index.php?'.format(self.host)
 
         self.headers = {'Host': self.host, 'User-Agent': user_agent, 'Accept': '*/*', 'Accept-Language': 'en-US,en;q=0.5', 'Accept-Encoding': 'gzip, deflate, br', 'Referer': 'https://{}'.format(self.host), 'X-Requested-With': 'XMLHttpRequest', 'Origin': 'https://{}'.format(self.host), 'DNT': '1', 'Connection': 'keep-alive', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache'}
 
-        sessionData = self.getSessionData()
+        cookies = self.db.get_stored_value('cookies')
 
         used_old_cookies = False
         # if there are cookies stored, try to use them
-        if 'cookies' in sessionData and self.logged is False:
+        if cookies is not None and self.logged is False:
             # create a new temporary session object
             old_s = requests.Session()
             # set the headers
             old_s.headers.clear()
             old_s.headers.update(self.headers)
             # set the cookies to test
-            cookie_dict = sessionData['cookies']
-            requests.cookies.cookiejar_from_dict(cookie_dict, cookiejar=old_s.cookies, overwrite=True)
-            self.__update_proxy(obj=old_s, sessionData=sessionData)
+            requests.cookies.cookiejar_from_dict(cookies, cookiejar=old_s.cookies, overwrite=True)
+            self.__update_proxy(obj=old_s)
             try:
                 # make a request to check the connection
                 html = old_s.get(self.urlBase, verify=config.do_ssl_verify).text
@@ -464,7 +465,7 @@ class Session:
                 # assign the old cookies to the session object
                 requests.cookies.cookiejar_from_dict(cookie_dict, cookiejar=self.s.cookies, overwrite=True)
                 # set the proxy
-                self.__update_proxy(sessionData=sessionData)
+                self.__update_proxy()
                 # set the headers
                 self.s.headers.clear()
                 self.s.headers.update(self.headers)
@@ -489,8 +490,8 @@ class Session:
             self.blackbox = 'tra:' + random.choice(blackbox_tokens)
             data = {
                     "server": {
-                        "language": self.login_servidor,
-                        "number": self.mundo
+                        "language": self.server_language,
+                        "number": self.server_number
                     },
                     "clickedButton": "account_list",
                     "id": self.account['id'],
@@ -549,7 +550,7 @@ class Session:
                 self.s.headers.update(self.headers)
 
                 # set the proxy
-                self.__update_proxy(sessionData=sessionData)
+                self.__update_proxy()
 
                 # use the new cookies instead, invalidate the old ones
                 try:
@@ -586,12 +587,11 @@ class Session:
     def __sessionExpired(self):
         logging.info('__sessionExpired()')
         self.__backoff()
-
-        sessionData = self.getSessionData()
+        cookies = self.db.get_stored_value('cookies')
 
         try:
-            if self.s.cookies['PHPSESSID'] != sessionData['cookies']['PHPSESSID']:
-                self.__getCookie(sessionData)
+            if self.s.cookies['PHPSESSID'] != cookies['PHPSESSID']:
+                self.__getCookie()
             else:
                 try:
                     self.__login(3)
@@ -604,8 +604,9 @@ class Session:
                 self.__sessionExpired()
 
     def __proxy_error(self):
-        sessionData = self.getSessionData()
-        if 'proxy' not in sessionData or sessionData['proxy']['set'] is False:
+        proxy_conf = self.db.get_stored_value('proxy')
+
+        if proxy_conf is None or proxy_conf['set'] is False:
             sys.exit('network error')
         elif self.padre is True:
             print('There seems to be a problem connecting to ikariam.')
@@ -614,8 +615,8 @@ class Session:
             if rta.lower() == 'n':
                 sys.exit()
             else:
-                sessionData['proxy']['set'] = False
-                self.setSessionData(sessionData)
+                proxy_conf['set'] = False
+                self.db.store_value('proxy', proxy_conf)
                 print('Proxy disabled, try again.')
                 enter()
                 sys.exit()
@@ -624,24 +625,23 @@ class Session:
             sendToBot(self, msg)
             sys.exit()
 
-    def __update_proxy(self, *, obj=None, sessionData=None):
+    def __update_proxy(self, *, obj=None):
         # set the proxy
         if obj is None:
             obj = self.s
-        if sessionData is None:
-            sessionData = self.getSessionData()
-        if 'proxy' in sessionData and sessionData['proxy']['set'] is True:
-            obj.proxies.update(sessionData['proxy']['conf'])
+        proxy_data = self.db.get_stored_value('proxy')
+        if proxy_data is not None and proxy_data['set'] is True:
+            obj.proxies.update(proxy_data['proxy']['conf'])
         else:
             obj.proxies.update({})
 
     def __checkCookie(self):
         logging.debug('__checkCookie()')
-        sessionData = self.getSessionData()
+        cookies = self.db.get_stored_value('cookies')
 
         try:
-            if self.s.cookies['PHPSESSID'] != sessionData['cookies']['PHPSESSID']:
-                self.__getCookie(sessionData)
+            if self.s.cookies['PHPSESSID'] != cookies['PHPSESSID']:
+                self.__getCookie()
         except KeyError:
             try:
                 self.__login(3)
@@ -791,41 +791,3 @@ class Session:
         logging.info('logout()')
         if self.padre is False:
             os._exit(0)
-
-    def setSessionData(self, sessionData, shared=False):
-        """Encrypts relevant session data and writes it to the .ikabot file
-        Parameters
-        ----------
-        sessionData : dict
-            dictionary containing relevant session data, data is written to file using AESCipher.setSessionData
-        shared : bool
-            Indicates if the new data should be shared among all accounts asociated with the user-password
-        """
-        self.cipher.setSessionData(self, sessionData, shared=shared)
-
-    def getSessionData(self):
-        """Gets relevant session data from the .ikabot file
-        """
-        return self.cipher.getSessionData(self)
-
-
-def normal_get(url, params={}):
-    """Sends a get request to provided url
-    Parameters
-    ----------
-    url : str
-        a string representing the url to which to send the get request
-    params : dict
-        a dictionary containing key-value pairs which represent the parameters of the get request
-
-    Returns
-    -------
-    response : requests.Response
-        a requests.Response object which represents the webservers response. For more information on requests.Response refer to https://requests.readthedocs.io/en/master/api/#requests.Response
-    """
-    try:
-
-        return requests.get(url, params=params)
-
-    except requests.exceptions.ConnectionError:
-        sys.exit('Internet connection failed')

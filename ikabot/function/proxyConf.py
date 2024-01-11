@@ -12,13 +12,13 @@ from ikabot.helpers.pedirInfo import read
 
 
 def show_proxy(session):
-    session_data = session.getSessionData()
+    proxy_data = session.db.get_stored_value('proxy')
     msg = 'using proxy:'
-    if 'proxy' in session_data and session_data['proxy']['set'] is True:
-        curr_proxy = session_data['proxy']['conf']['https']
-        if test_proxy(session_data['proxy']['conf']) is False:
-            session_data['proxy']['set'] = False
-            session.setSessionData(session_data)
+    if proxy_data is not None and proxy_data['set'] is True:
+        curr_proxy = proxy_data['conf']['https']
+        if test_proxy(proxy_data['conf']) is False:
+            proxy_data['set'] = False
+            session.db.stored_value('proxy', proxy_data)
             sys.exit('the {} proxy does not work, it has been removed'.format(curr_proxy))
         if msg not in config.update_msg:
             # add proxy message
@@ -69,18 +69,19 @@ def proxyConf(session, event, stdin_fd, predetermined_input):
         banner()
         print('Warning: The proxy does not apply to the requests sent to the lobby!\n')
 
-        session_data = session.getSessionData()
-        if 'proxy' not in session_data or session_data['proxy']['set'] is False:
+        proxy_data = session.db.get_stored_value('proxy')
+        if proxy_data is None or proxy_data['set'] is False:
             print('Right now, there is no proxy configured.')
             proxy_dict = read_proxy()
             if proxy_dict is None:
                 event.set()
                 return
-            session_data['proxy'] = {}
-            session_data['proxy']['conf'] = proxy_dict
-            session_data['proxy']['set'] = True
+            proxy_data = {
+                'conf': proxy_dict,
+                'set': True,
+            }
         else:
-            curr_proxy = session_data['proxy']['conf']['https']
+            curr_proxy = proxy_data['conf']['https']
             print('Current proxy: {}'.format(curr_proxy))
             print('What do you want to do?')
             print('0) Exit')
@@ -96,14 +97,14 @@ def proxyConf(session, event, stdin_fd, predetermined_input):
                 if proxy_dict is None:
                     event.set()
                     return
-                session_data['proxy']['conf'] = proxy_dict
-                session_data['proxy']['set'] = True
+                proxy_data['conf'] = proxy_dict
+                proxy_data['set'] = True
             if rta == 2:
-                session_data['proxy']['set'] = False
+                proxy_data['set'] = False
                 print('The proxy has been removed.')
                 enter()
 
-        session.setSessionData(session_data)
+        session.db.stored_value('proxy', proxy_data)
         event.set()
     except KeyboardInterrupt:
         event.set()
