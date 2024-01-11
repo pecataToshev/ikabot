@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="ikabot",
-    version='2024.0111.dev230519',
+    version='2024.0111.dev230738',
     author="Petar Toshev",
     author_email="pecata.toshev+ikabot@gmail.com",
     license='MIT',
@@ -13,7 +13,6 @@ setuptools.setup(
     install_requires=[
         'requests',
         'requests[socks]',
-        'sqlite3',
         'psutil',
         'beautifulsoup4',
         'yoyo-migrations',
