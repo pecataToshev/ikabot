@@ -172,8 +172,8 @@ class Session:
         if not self.logged:
             banner()
 
-            self.account_name = read(msg='Please provide the unique identifier for your account in the ikabot system: ')
-            self.db = Database(self.account_name)
+            self.bot_name = read(msg='Please provide the unique bot identifier for this account: ')
+            self.db = Database(self.bot_name)
 
             credentials = self.db.get_stored_value('credentials')
             if credentials is None:
@@ -190,7 +190,7 @@ class Session:
 
             banner()
         else:
-            self.db = Database(self.account_name)
+            self.db = Database(self.bot_name)
 
         self.s = requests.Session()
         logging.info("Trying to log in. {loggedIn: %s, retries: %d}",
