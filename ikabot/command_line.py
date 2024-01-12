@@ -164,21 +164,23 @@ def menu(session):
                 # we just need to refresh the menu
                 continue
 
+            def handle_comon_target_logic(target, _s, _e, _fd, _in):
+                process_list_manager.upsert_process({
+                    'pid': os.getpid(),
+                    'action': target.__name__,
+                    'status': 'started'
+                })
+                target(_s, _e, _fd, _in)
+
             # we've selected a function, let's execute it
             event = multiprocessing.Event()  # creates a new event
             config.has_params = len(config.predetermined_input) > 0
             process = multiprocessing.Process(
-                target=selected,
-                args=(session, event, sys.stdin.fileno(), config.predetermined_input),
+                target=handle_comon_target_logic,
+                args=(selected, session, event, sys.stdin.fileno(), config.predetermined_input),
                 name=selected.__name__
             )
-
             process.start()
-            process_list_manager.upsert_process({
-                'pid': process.pid,
-                'action': selected.__name__,
-                'status': 'started'
-            })
 
             # waits for the process to fire the event that's been given to it.
             # When it does  this process gets back control of the command line
