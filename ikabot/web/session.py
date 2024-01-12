@@ -469,7 +469,7 @@ class Session:
                 logging.info('using old cookies')
                 used_old_cookies = True
                 # assign the old cookies to the session object
-                requests.cookies.cookiejar_from_dict(cookie_dict, cookiejar=self.s.cookies, overwrite=True)
+                requests.cookies.cookiejar_from_dict(cookies, cookiejar=self.s.cookies, overwrite=True)
                 # set the proxy
                 self.__update_proxy()
                 # set the headers
