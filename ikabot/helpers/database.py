@@ -50,13 +50,13 @@ class Database:
         Inserts data into table
         :param table: str
         :param columns: list[str]
-        :param data: list[dict]
+        :param data: dict
         :return: void
         """
         data = [self.__add_account_name_arg(d) for d in data]
         columns = [self.__account_name_str] + [c for c in columns if c in data]
         sql = f"INSERT OR REPLACE INTO {table} ({', '.join(columns)}) VALUES(:{', :'.join(columns)})"
-        self.__cursor.executemany(sql, data)
+        self.__cursor.execute(sql, data)
         self.__conn.commit()
 
     def get_processes(self):
@@ -75,7 +75,7 @@ class Database:
                 "objective",
                 "info"
             ],
-            [process]
+            process
         )
 
     def get_stored_value(self,  key):
@@ -92,5 +92,5 @@ class Database:
         self.__insert(
             'storage',
             ['storageKey', 'data'],
-            [{'storageKey': key, 'data': json.dumps(data)}]
+            {'storageKey': key, 'data': json.dumps(data)}
         )
