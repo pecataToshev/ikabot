@@ -152,13 +152,7 @@ def menu(session):
 
             if selected == __function_exit:
                 # Perform exit of the app
-                    if isWindows:
-                        # in unix, you can exit ikabot and close the terminal and the processes will continue to execute
-                        # in windows, you can exit ikabot but if you close the terminal, the processes will die
-                        print('Closing this console will kill the processes.')
-                        enter()
-                    clear()
-                    os._exit(0)  # kills the process which executes this statement, but it does not kill it's child processes
+                break
 
             if selected == __function_refresh:
                 # we just need to refresh the menu
@@ -187,7 +181,9 @@ def menu(session):
             # and asks user for more input
             event.wait()
         except KeyboardInterrupt:
+            # we're going to refresh the menu
             pass
+
 
 def init():
     home = 'USERPROFILE' if isWindows else 'HOME'
