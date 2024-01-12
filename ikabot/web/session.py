@@ -431,7 +431,7 @@ class Session:
                 'serverLanguage': self.server_language,
                 'server': self.server,
                 'world': self.word,
-                'serverNumber': elf.server_number,
+                'serverNumber': self.server_number,
             }
             self.db.store_value('accountData', data)
 
