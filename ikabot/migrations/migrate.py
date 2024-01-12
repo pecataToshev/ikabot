@@ -6,6 +6,7 @@ from ikabot import config
 
 
 def apply_migrations():
+    print('Applying db migrations')
     db_uri = f'sqlite:///{config.DB_FILE}'
     migrations_dir = os.path.dirname(__file__)
 
@@ -14,3 +15,5 @@ def apply_migrations():
 
     with backend.lock():
         backend.apply_migrations(backend.to_apply(migrations))
+
+    print('DB migrations applied')

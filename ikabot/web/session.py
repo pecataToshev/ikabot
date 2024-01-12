@@ -148,7 +148,7 @@ class Session:
 
     def __getCookie(self):
         try:
-            cookie_dict = self.db.get_stored_value('cookies')
+            cookie_dict = self.db.get_stored_value('cookies') or {}
             self.s = requests.Session()
             self.__update_proxy()
             self.s.headers.clear()
@@ -171,7 +171,7 @@ class Session:
         if not self.logged:
             banner()
 
-            self.account_name = read(msg='Please provide the unique identifier for your account in the ikabot system')
+            self.account_name = read(msg='Please provide the unique identifier for your account in the ikabot system: ')
             self.db = Database(self.account_name)
 
             credentials = self.db.get_stored_value('credentials')
@@ -182,7 +182,7 @@ class Session:
                     self.password = config.predetermined_input.pop(0)
                 else:
                     self.password = getpass.getpass('Password:')
-                self.db.store_value(credentials, {'mail': self.mail, 'password': self.password})
+                self.db.store_value('credentials', {'mail': self.mail, 'password': self.password})
             else:
                 self.mail = credentials['mail']
                 self.password = credentials['password']
@@ -200,7 +200,7 @@ class Session:
         # this will save time on login and will reduce use of blackbox token
 
         cookies = self.db.get_stored_value('cookies')
-        if 'gf-token-production' in cookies:
+        if cookies is not None and 'gf-token-production' in cookies:
             cookie_obj = requests.cookies.create_cookie(
                 domain='.gameforge.com',
                 name='gf-token-production',
@@ -596,7 +596,7 @@ class Session:
         cookies = self.db.get_stored_value('cookies')
 
         try:
-            if self.s.cookies['PHPSESSID'] != cookies['PHPSESSID']:
+            if cookies is None or self.s.cookies['PHPSESSID'] != cookies['PHPSESSID']:
                 self.__getCookie()
             else:
                 try:
@@ -646,7 +646,7 @@ class Session:
         cookies = self.db.get_stored_value('cookies')
 
         try:
-            if self.s.cookies['PHPSESSID'] != cookies['PHPSESSID']:
+            if cookies is None or self.s.cookies['PHPSESSID'] != cookies['PHPSESSID']:
                 self.__getCookie()
         except KeyError:
             try:

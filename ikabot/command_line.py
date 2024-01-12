@@ -190,9 +190,9 @@ def menu(session):
 def init():
     home = 'USERPROFILE' if isWindows else 'HOME'
     os.chdir(os.getenv(home))
-    if not os.path.isfile(config.ikaFile):
-        open(config.ikaFile, 'w')
-        os.chmod(config.ikaFile, 0o600)
+    # if not os.path.isfile(config.ikaFile):
+    #     open(config.ikaFile, 'w')
+    #     os.chmod(config.ikaFile, 0o600)
 
 
 def start():
@@ -205,6 +205,7 @@ def start():
             config.predetermined_input.append(arg)
     config.predetermined_input.pop(0)
 
+    print("Starting session")
     session = Session()
     try:
         menu(session)
@@ -213,8 +214,7 @@ def start():
         session.logout()
 
 
-def start_command_line(fromWhere='I dont know'):
-    print("i'm coming from", fromWhere)
+def start_command_line():
     setup_logging()
     manager = multiprocessing.Manager()
     predetermined_input = manager.list()
