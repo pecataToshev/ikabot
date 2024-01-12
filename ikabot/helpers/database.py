@@ -59,8 +59,28 @@ class Database:
         self.__cursor.execute(sql, data)
         self.__conn.commit()
 
-    def get_processes(self):
-        return self.__select('processes')
+    def __delete(self, table, args):
+        """
+        Deletes data from table
+        :param table: str
+        :param args: dict
+        :return: void
+        """
+        args = self.__add_account_name_arg(args)
+        where = " AND ".join(['{} = :{}'.format(c, c) for c in args])
+        sql = f"DELETE FROM {table} WHERE {where}"
+        self.__cursor.execute(sql, args)
+        self.__conn.commit()
+
+    def get_processes(self, filters=None):
+        """
+        Retrieve processes from the database
+        :param filters: list[[column, relation, value]]
+        :return:
+        """
+        where = ['{} {} :{}'.format(f[0], f[1], f[0]) for f in (filters or [])]
+        args = {f[0]: f[2] for f in (filters or [])}
+        return self.__select('processes', where, args)
 
     def set_process(self, process):
         self.__insert(
@@ -77,6 +97,9 @@ class Database:
             ],
             process
         )
+
+    def delete_process(self, pid):
+        self.__delete('processes', {'pid': pid})
 
     def get_stored_value(self,  key):
         data = self.__select(

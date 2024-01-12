@@ -498,9 +498,7 @@ def checkhash(url):
 
 def __print_related_processes(session, city_name):
     process_manager = IkabotProcessListManager(session)
-    related_processes = process_manager.get_process_list(
-        filtering=lambda p: p.get('targetCity', '') == city_name
-    )
+    related_processes = process_manager.get_process_list(filters=[['targetCity', '==', city_name]])
     if len(related_processes) <= 0:
         return
 

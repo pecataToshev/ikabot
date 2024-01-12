@@ -27,9 +27,7 @@ def killTasks(session, event, stdin_fd, predetermined_input):
         while True:
             banner()
 
-            process_list = process_list_manager.get_process_list(
-                filtering=lambda p: p['action'] != 'killTasks'
-            )
+            process_list = process_list_manager.get_process_list(filters=[['action', '!=', 'killTasks']])
 
             if len(process_list) == 0:
                 print('There are no tasks running')

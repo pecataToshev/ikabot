@@ -32,8 +32,6 @@ def run(command):
 
 
 class IkabotProcessListManager:
-    __process_list_key = 'processList'
-
     def __init__(self, session):
         """
         Init processes -> reads and updates the file
@@ -41,12 +39,13 @@ class IkabotProcessListManager:
         """
         self.__session = session
 
-    def __get_processes(self):
+    def __get_processes(self, filters=None):
         """
         Reads all process from session_data.
-        :return: dict[dict[]] -> dict of processes
+        :param filters: list[column, relation, value]
+        :return: list[dict[]] -> list of processes
         """
-        process_list = self.__session.db.get_processes()
+        process_list = self.__session.db.get_processes(filters)
 
         # check it's still running
         running_ikabot_processes = []
@@ -55,23 +54,38 @@ class IkabotProcessListManager:
             try:
                 proc = psutil.Process(pid=process['pid'])
             except psutil.NoSuchProcess:
+                # The process is no-longer running
+                logging.info('Process is no-longer running. Deleting %s', process)
+                self.__session.db.delete_process(process['pid'])
                 continue
 
             # windows doesn't support the status method
             is_alive = True if isWindows else proc.status() != 'zombie'
 
-            if is_alive and proc.name() == ika_process:
-                running_ikabot_processes.append(process)
+            if is_alive:
+                if proc.name() != ika_process:
+                    # not the same name, so probably restarted the system
+                    logging.info('Process has different name. Deleting %s', process)
+                    self.__session.db.delete_process(process['pid'])
+                    continue
+            else:
+                # the process is zombie
+                if process['status'] != 'zombie':
+                    logging.info('Found process zombie. Setting to zombie %s', process)
+                    process['status'] = 'zombie'
+                    self.__session.db.set_process(process)
 
-        return {p['pid']: p for p in running_ikabot_processes}
+            running_ikabot_processes.append(process)
 
-    def get_process_list(self, filtering=None):
+        return running_ikabot_processes
+
+    def get_process_list(self, filters=None):
         """
         Returns processes as list with the applied filter
-        :param filtering: lambda x: bool -> filter of the processes to return
+        :param filters: list[column, relation, value]
         :return: list[dict[]]
         """
-        return [p for p in self.__get_processes().values() if filtering is None or filtering(p)]
+        return self.__get_processes(filters)
 
     def upsert_process(self, process):
         """
@@ -79,29 +93,30 @@ class IkabotProcessListManager:
         :param process: dict[] -> process to update
         :return:
         """
-        _processes = self.__get_processes()
-        _pid = process.get('pid', os.getpid())
+        with self.__session.update_process_list_lock:
+            _pid = os.getpid()
 
-        print("_pid", _pid)
-        print("_processes.get(_pid, {})", _processes.get(_pid, {}))
-        print("process", process)
+            _stored_process = self.__get_processes(filters=[['pid', '==', _pid]])
+            if len(_stored_process) > 0:
+                _stored_process = _stored_process[0]
+            else:
+                _stored_process = {
+                    'pid': _pid
+                }
 
-        # Merge with old data
-        _new_process = dict(_processes.get(_pid, {}))
-        _new_process.update(process)
-        _new_process['date'] = time.time()
-        _new_process['pid'] = _pid
+            # Merge with old data
+            _stored_process.update(process)
+            _stored_process['date'] = time.time()
 
-        # Save
-        self.__session.db.set_process(_new_process)
+            # Save
+            self.__session.db.set_process(_stored_process)
 
-        # Print process
-        _log_process = dict(_new_process)
-        _log_process.pop('pid')
-        _log_process.pop('date')
-        if _log_process.get('nextActionDate', None) is not None:
-            _log_process['nextActionDate'] = formatTimestamp(_log_process['nextActionDate'])
-        logging.info("Upsert process: %s", _log_process)
+            # Print process
+            _stored_process.pop('pid')
+            _stored_process.pop('date')
+            if _stored_process.get('nextActionDate', None) is not None:
+                _stored_process['nextActionDate'] = formatTimestamp(_stored_process['nextActionDate'])
+            logging.info("Upsert process: %s", _stored_process)
 
     def print_proces_table(self, process_list=None, add_process_numbers=False):
         """
