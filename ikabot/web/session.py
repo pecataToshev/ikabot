@@ -78,7 +78,7 @@ class Session:
 
         self.__process_manager.upsert_process({
             'status': 'sleeping',
-            'nextActionDate': time.time() + actual_sleep_time,
+            'nextAction': time.time() + actual_sleep_time,
             'info': info
         })
 
@@ -86,7 +86,7 @@ class Session:
 
         self.__process_manager.upsert_process({
             'status': 'running',
-            'nextActionDate': None,
+            'nextAction': None,
             'info': 'After ' + info
         })
 
@@ -103,7 +103,7 @@ class Session:
         """
         self.__process_manager.upsert_process({
             'info': message,
-            'nextActionDate': None
+            'nextAction': None
         })
 
     def setProcessObjective(self, action, objective, target_city_name=None):
