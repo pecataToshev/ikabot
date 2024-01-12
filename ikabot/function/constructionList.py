@@ -287,6 +287,7 @@ def sendResourcesNeeded(session, destination_city_id, city_origins, missing_reso
     missing_resources : dict[int, int]
     """
 
+    session.initDatabase()
     info = '\nTransport resources to upload building\n'
 
     try:
