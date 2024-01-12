@@ -92,6 +92,13 @@ class Session:
 
         return actual_sleep_time
 
+    def initDatabase(self):
+        """
+        Creates a db connection.
+        :return: void
+        """
+        self.db = Database(self.bot_name)
+
     def setProcessInfo(self, message):
         """
         This function will modify the current task info message that
@@ -173,7 +180,7 @@ class Session:
             banner()
 
             self.bot_name = read(msg='Please provide the unique bot identifier for this account: ')
-            self.db = Database(self.bot_name)
+            self.initDatabase()
 
             credentials = self.db.get_stored_value('credentials')
             if credentials is None:
@@ -190,7 +197,7 @@ class Session:
 
             banner()
         else:
-            self.db = Database(self.bot_name)
+            self.initDatabase()
 
         self.s = requests.Session()
         logging.info("Trying to log in. {loggedIn: %s, retries: %d}",
