@@ -53,7 +53,7 @@ class Database:
         :param data: dict
         :return: void
         """
-        data = [self.__add_account_name_arg(d) for d in data]
+        data = self.__add_account_name_arg(data)
         columns = [self.__account_name_str] + [c for c in columns if c in data]
         sql = f"INSERT OR REPLACE INTO {table} ({', '.join(columns)}) VALUES(:{', :'.join(columns)})"
         self.__cursor.execute(sql, data)
