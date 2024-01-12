@@ -201,7 +201,7 @@ def updateTelegramData(session, event=None, stdin_fd=None, predetermined_input=[
         else:
             chat_id = users[resp - 1]['id']
 
-    session.db.stored_value('telegram', {
+    session.db.store_value('telegram', {
         'botToken': botToken.replace(' ', ''),
         'chatId': str(chat_id),
     })
@@ -223,7 +223,7 @@ def updateTelegramData(session, event=None, stdin_fd=None, predetermined_input=[
             valid = True
 
     if valid is False:
-        session.db.stored_value('telegram', None)
+        session.db.store_value('telegram', None)
         print('Check the credentials and re-supply them.')
     else:
         print('The data was saved.')

@@ -18,7 +18,7 @@ def show_proxy(session):
         curr_proxy = proxy_data['conf']['https']
         if test_proxy(proxy_data['conf']) is False:
             proxy_data['set'] = False
-            session.db.stored_value('proxy', proxy_data)
+            session.db.store_value('proxy', proxy_data)
             sys.exit('the {} proxy does not work, it has been removed'.format(curr_proxy))
         if msg not in config.update_msg:
             # add proxy message
@@ -104,7 +104,7 @@ def proxyConf(session, event, stdin_fd, predetermined_input):
                 print('The proxy has been removed.')
                 enter()
 
-        session.db.stored_value('proxy', proxy_data)
+        session.db.store_value('proxy', proxy_data)
         event.set()
     except KeyboardInterrupt:
         event.set()
