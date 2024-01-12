@@ -38,5 +38,5 @@ jobs:
         pytest tests -vvvvvvvvvv
     - name: Just run ikabot
       run: |
-        python -m ikabot systemAccountName mail password &> log.log || cat log.log
+        printf "\n\n\n" | python -m ikabot &> log.log || cat log.log
         grep "Failed to log in..." log.log && exit 0 || exit 1
