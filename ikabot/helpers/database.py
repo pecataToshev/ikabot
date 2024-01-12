@@ -56,7 +56,7 @@ class Database:
         data = [self.__add_account_name_arg(d) for d in data]
         columns = [self.__account_name_str] + columns
         sql = f"INSERT OR REPLACE INTO {table} ({', '.join(columns)}) VALUES(:{', :'.join(columns)})"
-        self.__cursor.execute(sql, data)
+        self.__cursor.executemany(sql, data)
         self.__conn.commit()
 
     def get_processes(self):
