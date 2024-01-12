@@ -82,6 +82,10 @@ class IkabotProcessListManager:
         _processes = self.__get_processes()
         _pid = process.get('pid', os.getpid())
 
+        print("_pid", _pid)
+        print("_processes.get(_pid, {})", _processes.get(_pid, {}))
+        print("process", process)
+
         # Merge with old data
         _new_process = dict(_processes.get(_pid, {}))
         _new_process.update(process)
