@@ -78,7 +78,7 @@ class Session:
 
         self.__process_manager.upsert_process({
             'status': 'sleeping',
-            'nextAction': time.time() + actual_sleep_time,
+            'nextActionTime': time.time() + actual_sleep_time,
             'info': info
         })
 
@@ -86,7 +86,7 @@ class Session:
 
         self.__process_manager.upsert_process({
             'status': 'running',
-            'nextAction': None,
+            'nextActionTime': None,
             'info': 'After ' + info
         })
 

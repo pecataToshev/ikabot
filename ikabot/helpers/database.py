@@ -5,11 +5,11 @@ from ikabot import config
 
 
 class Database:
-    __account_name_str = 'accountName'
-    __account_name_where = "{} = :{}".format(__account_name_str, __account_name_str)
+    __bot_name_str = 'botName'
+    __bot_name_where = "{} = :{}".format(__bot_name_str, __bot_name_str)
 
-    def __init__(self, account_name):
-        self.__account_name = account_name
+    def __init__(self, bot_name):
+        self.__bot_name = bot_name
         self.__conn = sqlite3.connect(config.DB_FILE)
         self.__cursor = self.__conn.cursor()
 
@@ -17,14 +17,14 @@ class Database:
         self.__cursor.close()
         self.__conn.close()
 
-    def __add_account_name_arg(self, args):
+    def __add_bot_name_to_args(self, args):
         """
         Add account name to the args
         :param args: dict[]
         :return: dict[]
         """
         args = dict(args or {})
-        args[self.__account_name_str] = self.__account_name
+        args[self.__bot_name_str] = self.__bot_name
         return args
 
     def __select(self, table, where=None, args=None):
@@ -35,8 +35,8 @@ class Database:
         :param args: dict
         :return:
         """
-        where = " AND ".join([self.__account_name_where] + (where or []))
-        args = self.__add_account_name_arg(args)
+        where = " AND ".join([self.__bot_name_where] + (where or []))
+        args = self.__add_bot_name_to_args(args)
         self.__cursor.execute(f'SELECT * FROM {table} WHERE {where}', args)
 
         # Get column names from the cursor description
@@ -53,8 +53,8 @@ class Database:
         :param data: dict
         :return: void
         """
-        data = self.__add_account_name_arg(data)
-        columns = [self.__account_name_str] + [c for c in columns if c in data]
+        data = self.__add_bot_name_to_args(data)
+        columns = [self.__bot_name_str] + [c for c in columns if c in data]
         sql = f"INSERT OR REPLACE INTO {table} ({', '.join(columns)}) VALUES(:{', :'.join(columns)})"
         self.__cursor.execute(sql, data)
         self.__conn.commit()
@@ -66,7 +66,7 @@ class Database:
         :param args: dict
         :return: void
         """
-        args = self.__add_account_name_arg(args)
+        args = self.__add_bot_name_to_args(args)
         where = " AND ".join(['{} = :{}'.format(c, c) for c in args])
         sql = f"DELETE FROM {table} WHERE {where}"
         self.__cursor.execute(sql, args)
@@ -89,8 +89,8 @@ class Database:
                 "pid",
                 "action",
                 "status",
-                "lastAction",
-                "nextAction",
+                "lastActionTime",
+                "nextActionTime",
                 "targetCity",
                 "objective",
                 "info"

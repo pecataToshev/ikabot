@@ -167,7 +167,6 @@ def menu(session):
             def handle_comon_target_logic(target, _s, _e, _fd, _in):
                 process_list_manager.upsert_process({
                     'action': target.__name__,
-                    'lastAction': time.time(),
                     'status': 'started'
                 })
                 target(_s, _e, _fd, _in)

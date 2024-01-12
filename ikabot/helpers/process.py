@@ -106,16 +106,16 @@ class IkabotProcessListManager:
 
             # Merge with old data
             _stored_process.update(process)
-            _stored_process['lastAction'] = time.time()
+            _stored_process['lastActionTime'] = time.time()
 
             # Save
             self.__session.db.set_process(_stored_process)
 
             # Print process
             _stored_process.pop('pid')
-            _stored_process.pop('lastAction')
-            if _stored_process.get('nextAction', None) is not None:
-                _stored_process['nextAction'] = formatTimestamp(_stored_process['nextAction'])
+            _stored_process.pop('lastActionTime')
+            if _stored_process.get('nextActionTime', None) is not None:
+                _stored_process['nextActionTime'] = formatTimestamp(_stored_process['nextActionTime'])
             logging.info("Upsert process: %s", _stored_process)
 
     def print_proces_table(self, process_list=None, add_process_numbers=False):
@@ -150,8 +150,8 @@ class IkabotProcessListManager:
                 {'key': 'pid', 'title': 'pid'},
                 {'key': 'action', 'title': 'Action'},
                 {'key': 'status', 'title': 'Status'},
-                {'key': 'lastAction', 'title': 'Last Action', 'fmt': formatTimestamp},
-                {'key': 'nextAction', 'title': 'Next Action', 'fmt': __fmt_next_action},
+                {'key': 'lastActionTime', 'title': 'Last Action', 'fmt': formatTimestamp},
+                {'key': 'nextActionTime', 'title': 'Next Action', 'fmt': __fmt_next_action},
                 {'key': 'targetCity', 'title': 'Target City'},
                 {'key': 'objective', 'title': 'Objective'},
                 {'key': 'info', 'title': 'Info'},
