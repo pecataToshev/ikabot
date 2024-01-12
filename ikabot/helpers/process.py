@@ -86,6 +86,7 @@ class IkabotProcessListManager:
         _new_process = dict(_processes.get(_pid, {}))
         _new_process.update(process)
         _new_process['date'] = time.time()
+        _new_process['pid'] = _pid
 
         # Save
         self.__session.db.set_process(_new_process)
