@@ -3,7 +3,7 @@ import re
 import sys
 
 from ikabot import config
-from ikabot.bot.autoPirateBot import startAutoPirateBot
+from ikabot.bot.autoPirateBot import AutoPirateBot
 from ikabot.config import isWindows
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, decodeUnicodeEscape, enter, \
     printTable
@@ -114,7 +114,7 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
     enter()
     event.set()
 
-    startAutoPirateBot(session, bot_config)
+    AutoPirateBot(session, bot_config).start()
 
 
 def __select_piracy_mission(template_data, additional_select_message=''):
