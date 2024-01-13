@@ -8,7 +8,7 @@ from ikabot import config
 from ikabot.config import actionRequest
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, clear, enter
-from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.pedirInfo import askUserYesNo, read
 
 
 def activateVacationMode(session):
@@ -20,8 +20,17 @@ def activateVacationMode(session):
     html = session.get()
     city = getCity(html)
 
-    data = {'action': 'Options', 'function': 'activateVacationMode', 'actionRequest': actionRequest, 'backgroundView': 'city', 'currentCityId': city['id'], 'templateView': 'options_umod_confirm'}
-    session.post(params=data, ignoreExpire=True)
+    session.post(
+        params={
+            'action': 'Options',
+            'function': 'activateVacationMode',
+            'actionRequest': actionRequest,
+            'backgroundView': 'city',
+            'currentCityId': city['id'],
+            'templateView': 'options_umod_confirm'
+        },
+        ignoreExpire=True
+    )
 
 
 def vacationMode(session, event, stdin_fd, predetermined_input):
@@ -37,19 +46,18 @@ def vacationMode(session, event, stdin_fd, predetermined_input):
     config.predetermined_input = predetermined_input
     try:
         banner()
-        print('Activate vacation mode? [Y/n]')
-        rta = read(values=['y', 'Y', 'n', 'N', ''])
-        if rta.lower() == 'n':
+        if not askUserYesNo('Activate vacation mode'):
             event.set()
             return
 
         activateVacationMode(session)
-
         print('Vacation mode has been activated.')
         enter()
+
         event.set()
         clear()
         sys.exit()
+
     except KeyboardInterrupt:
         event.set()
         return
