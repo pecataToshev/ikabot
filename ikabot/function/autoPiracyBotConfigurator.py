@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import sys
+import traceback
 
 from ikabot import config
 from ikabot.bot.autoPirateBot import AutoPirateBot
@@ -115,10 +116,13 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
     enter()
     event.set()
 
-    logging.info("Bot config %s", bot_config)
-    bot = AutoPirateBot(session, bot_config)
-    logging.info("before start %s", bot.__class__.__name__)
-    bot.start()
+    try:
+        logging.info("Bot config %s", bot_config)
+        bot = AutoPirateBot(session, bot_config)
+        logging.info("before start %s", bot.__class__.__name__)
+        bot.start()
+    except Exception:
+        logging.error("Failed somehow , %s", traceback.format_exc())
 
 
 def __select_piracy_mission(template_data, additional_select_message=''):
