@@ -13,6 +13,7 @@ class AutoPirateBot(Bot):
 
     def __init__(self, session, bot_config):
         super().__init__(session, bot_config)
+        logging.info("Hi From AutoPirate")
         self.bot_type = bot_config['type']
         self.city_id = bot_config['cityId']
         self.convert_points = bot_config.get('convertPoints', None)

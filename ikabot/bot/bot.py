@@ -17,10 +17,12 @@ class Bot(ABC):
         raise NotImplementedError('Implement me in the current bot class')
 
     def __init__(self, session, bot_config):
+        logging.info("Hi from Bot")
         self.session = session
         self.bot_config = bot_config
 
     def start(self):
+        logging.info("Hi From Start")
         set_child_mode(self.session)
         logging.info("Starting %s with config: %s", self.__class__.__name__, self.bot_config)
         setInfoSignal(self.session, self.__get_process_info())
