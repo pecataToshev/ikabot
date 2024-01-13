@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import sys
@@ -114,7 +115,10 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
     enter()
     event.set()
 
-    AutoPirateBot(session, bot_config).start()
+    logging.info("Bot config %s", bot_config)
+    bot = AutoPirateBot(session, bot_config)
+    logging.info("before start %s", bot.__class__.__name__)
+    bot.start()
 
 
 def __select_piracy_mission(template_data, additional_select_message=''):
