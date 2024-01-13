@@ -9,11 +9,11 @@ from ikabot.helpers.signals import setInfoSignal
 
 class Bot(ABC):
     @abstractmethod
-    def __get_process_info(self) -> str:
+    def _get_process_info(self) -> str:
         raise NotImplementedError('Implement me in the current bot class')
 
     @abstractmethod
-    def __start(self) -> None:
+    def _start(self) -> None:
         raise NotImplementedError('Implement me in the current bot class')
 
     def __init__(self, session, bot_config):
@@ -25,13 +25,13 @@ class Bot(ABC):
         logging.info("Hi From Start")
         set_child_mode(self.session)
         logging.info("Starting %s with config: %s", self.__class__.__name__, self.bot_config)
-        setInfoSignal(self.session, self.__get_process_info())
+        setInfoSignal(self.session, self._get_process_info())
 
         try:
-            self.__start()
+            self._start()
 
         except Exception:
-            msg = 'Error in:\n{}\nCause:\n{}'.format(self.__get_process_info(), traceback.format_exc())
+            msg = 'Error in:\n{}\nCause:\n{}'.format(self._get_process_info(), traceback.format_exc())
             sendToBot(self.session, msg)
         finally:
             self.session.logout()

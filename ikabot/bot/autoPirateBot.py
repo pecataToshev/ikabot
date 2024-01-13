@@ -19,10 +19,10 @@ class AutoPirateBot(Bot):
         self.convert_points = bot_config.get('convertPoints', None)
         self.max_break_time = bot_config['maxBreakTime']
 
-    def __get_process_info(self):
+    def _get_process_info(self):
         return '\nI execute {} piracy missions\n'.format(self.bot_config['type'])
 
-    def __start(self):
+    def _start(self):
         if self.bot_type == 'daily':
             self.__execute_piracy_daily_missions()
         else:
