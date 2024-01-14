@@ -120,7 +120,7 @@ class Bot(ABC):
 
         return actual_sleep_time
 
-    def _set_process_info(self, message):
+    def _set_process_info(self, message, target_city=None):
         """
         This function will modify the current task info message that
         appears in the table on the main menu
@@ -128,8 +128,12 @@ class Bot(ABC):
         Parameters
         ----------
         message : Message to be displayed in the table in main menu
+        target_city: str/None if there is a change in the target city
         """
-        self.__process_manager.upsert_process({
+        status_update = {
             'info': message,
             'nextAction': None
-        })
+        }
+        if target_city is not None:
+            status_update['targetCity'] = target_city
+        self.__process_manager.upsert_process(status_update)

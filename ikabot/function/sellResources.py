@@ -15,7 +15,7 @@ from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.market import getCommercialCities, onSellInMarket, storageCapacityOfMarket
 from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.planRoutes import waitForArrival
+from ikabot.helpers.planRoutes import waitForAvailableShips
 from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
@@ -265,7 +265,7 @@ def do_it1(session, left_to_sell, offers, resource_type, city_to_buy_from):
         amount_to_buy = int(amount_to_buy)
         while True:
             amount_to_sell = min(amount_to_buy, left_to_sell)
-            ships_available = waitForArrival(session)
+            ships_available = waitForAvailableShips(session)
             ships_needed = math.ceil((Decimal(amount_to_sell) / Decimal(500)))
             ships_used = min(ships_available, ships_needed)
             if ships_needed > ships_used:

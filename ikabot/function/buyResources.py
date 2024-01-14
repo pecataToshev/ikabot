@@ -15,7 +15,7 @@ from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.market import getCommercialCities, getGold, getMarketHtml
 from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.planRoutes import waitForArrival
+from ikabot.helpers.planRoutes import waitForAvailableShips
 from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
@@ -308,7 +308,7 @@ def do_it(session, city, offers, amount_to_buy):
             if offer['amountAvailable'] == 0:
                 continue
 
-            ships_available = waitForArrival(session)
+            ships_available = waitForAvailableShips(session)
             storageCapacity = ships_available * 500
             buy_amount = min(amount_to_buy, storageCapacity, offer['amountAvailable'])
 

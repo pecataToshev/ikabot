@@ -17,7 +17,7 @@ from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import addThousandSeparator, banner, enter, getCurrentCityId
 from ikabot.helpers.naval import getTotalShips
 from ikabot.helpers.pedirInfo import chooseCity, getIslandsIds, read
-from ikabot.helpers.planRoutes import waitForArrival
+from ikabot.helpers.planRoutes import waitForAvailableShips
 from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
@@ -485,7 +485,7 @@ def loot(session, island, city, units_data, loot_round):
         attack_data = {'action': 'transportOperations', 'function': 'attackBarbarianVillage', 'actionRequest': actionRequest, 'islandId': island['id'], 'destinationCityId': 0, 'cargo_army_304_upkeep': 3, 'cargo_army_304': 0, 'cargo_army_315_upkeep': 1, 'cargo_army_315': 0, 'cargo_army_302_upkeep': 4, 'cargo_army_302': 0, 'cargo_army_303_upkeep': 3, 'cargo_army_303': 0, 'cargo_army_312_upkeep': 15, 'cargo_army_312': 0, 'cargo_army_309_upkeep': 45, 'cargo_army_309': 0, 'cargo_army_307_upkeep': 15, 'cargo_army_307': 0, 'cargo_army_306_upkeep': 25, 'cargo_army_306': 0, 'cargo_army_305_upkeep': 30, 'cargo_army_305': 0, 'cargo_army_311_upkeep': 20, 'cargo_army_311': 0, 'cargo_army_310_upkeep': 10, 'cargo_army_310': 0, 'transporter': 0, 'barbarianVillage': 1, 'backgroundView': 'island', 'currentIslandId': island['id'], 'templateView': 'plunder', 'ajax': 1}
 
         # make sure we have ships on the port
-        ships_available = waitForArrival(session)
+        ships_available = waitForAvailableShips(session)
 
         # if the barbarians are active again or all the resources were stolen, return
         html = session.get(island_url + island['id'])
@@ -539,9 +539,9 @@ def do_it(session, island, city, babarians_info, plan):
             # battle ended before expected
             break
 
-        ships_available = waitForArrival(session)
+        ships_available = waitForAvailableShips(session)
         while ships_available < ships_needed:
-            ships_available = waitForArrival(session)
+            ships_available = waitForAvailableShips(session)
         ships_available -= ships_needed
 
         # if the number of available troops changed, the POST request might not work as intended

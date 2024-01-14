@@ -2,144 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import json
-import math
 import random
 import re
-import time
-from datetime import time
-from decimal import Decimal
 
-from ikabot.config import actionRequest, city_url
-from ikabot.helpers.getJson import getCity
+from ikabot.config import actionRequest
 from ikabot.helpers.naval import getAvailableShips
-
-
-def sendGoods(session, originCityId, destinationCityId, islandId, ships, send):
-    """This function will execute one route
-    Parameters
-    ----------
-    session : ikabot.web.ikariamService.IkariamService
-        Session object
-    originCityId : int
-        integer representing the ID of the origin city
-    destinationCityId : int
-        integer representing the ID of the destination city
-    islandId : int
-        integer representing the ID of the destination city's island
-    ships : int
-        integer representing the amount of ships needed to execute the route
-    send : list
-        array of resources to send
-    """
-
-    # this can fail if a random request is made in between this two posts
-    while True:
-        html = session.get()
-        current_city = getCity(html)  # the city the bot is right now
-        city = getCity(session.get(city_url + originCityId))  # the origin city
-        currId = current_city['id']
-
-        # Change from the city the bot is sitting right now to the city we want to load resources from
-        data = {
-            'action': 'header',
-            'function': 'changeCurrentCity',
-            'actionRequest': actionRequest,
-            'oldView': 'city',
-            'cityId': originCityId,
-            'backgroundView': 'city',
-            'currentCityId': currId,
-            'ajax': '1'
-        }
-
-        session.post(params=data)
-
-        # Request to send the resources from the origin to the target
-        data = {
-            'action': 'transportOperations',
-            'function': 'loadTransportersWithFreight',
-            'destinationCityId': destinationCityId,
-            'islandId': islandId,
-            'oldView': '',
-            'position': '',
-            'avatar2Name': '',
-            'city2Name': '',
-            'type': '',
-            'activeTab': '',
-            'transportDisplayPrice': '0',
-            'premiumTransporter': '0',
-            'transporters': ships,
-            'capacity': '5',
-            'max_capacity': '5',
-            'jetPropulsion': '0',
-            'backgroundView': 'city',
-            'currentCityId': originCityId,
-            'templateView': 'transport',
-            'currentTab': 'tabSendTransporter',
-            'actionRequest': actionRequest,
-            'ajax': '1'
-        }
-
-        # add amounts of resources to send
-        for i in range(len(send)):
-            if city['availableResources'][i] > 0:
-                key = 'cargo_resource' if i == 0 else 'cargo_tradegood{:d}'.format(i)
-                data[key] = send[i]
-
-        resp = session.post(params=data)
-        resp = json.loads(resp, strict=False)
-        if resp[3][1][0]['type'] == 10:
-            break
-        elif resp[3][1][0]['type'] == 11:
-            session.wait(getMinimumWaitingTime(session), 'Waiting in the if')
-        time.sleep(5)
-
-
-def executeRoutes(session, routes):
-    """This function will execute all the routes passed to it, regardless if there are enough ships available to do so
-    Parameters
-    ----------
-    session : ikabot.web.ikariamService.IkariamService
-        Session object
-    routes : list
-        a list of tuples, each of which represent a route. A route is defined like so : (originCity,destinationCity,islandId,wood,wine,marble,crystal,sulfur). originCity and destintionCity should be passed as City objects
-    """
-    for route in routes:
-        (origin_city, destination_city, island_id, *toSend) = route
-        destination_city_id = destination_city['id']
-
-        while sum(toSend) > 0:
-            session.setProcessInfo(f'Sending {toSend[0]}W, {toSend[1]}V, {toSend[2]}M, {toSend[3]}C, {toSend[4]}S ---> {destination_city["name"]}')
-            ships_available = waitForArrival(session)
-            storageCapacityInShips = ships_available * 500
-
-            html = session.get(city_url + str(origin_city['id']))
-            origin_city = getCity(html)
-            html = session.get(city_url + str(destination_city_id))
-            destination_city = getCity(html)
-            foreign = str(destination_city['id']) != str(destination_city_id)
-            if foreign is False:
-                storageCapacityInCity = destination_city['freeSpaceForResources']
-
-            send = []
-            for i in range(len(toSend)):
-                if foreign is False:
-                    min_val = min(origin_city['availableResources'][i], toSend[i], storageCapacityInShips,
-                                  storageCapacityInCity[i])
-                else:
-                    min_val = min(origin_city['availableResources'][i], toSend[i], storageCapacityInShips)
-                send.append(min_val)
-                storageCapacityInShips -= send[i]
-                toSend[i] -= send[i]
-
-            resources_to_send = sum(send)
-            if resources_to_send == 0:
-                # no space available
-                # wait an hour and try again
-                session.wait(60 * 60, 'No space available. Will retry')
-                continue
-
-            available_ships = int(math.ceil((Decimal(resources_to_send) / Decimal(500))))
-            sendGoods(session, origin_city['id'], destination_city_id, island_id, available_ships, send)
 
 
 def get_random_wait_time():
@@ -179,21 +46,22 @@ def getMinimumWaitingTime(session):
         return 0
 
 
-def waitForArrival(session):
+def waitForAvailableShips(session, wait):
     """This function will return the number of available ships, and if there aren't any, it will wait for the closest fleet to arrive and then return the number of available ships
     Parameters
     ----------
     session : ikabot.web.ikariamService.IkariamService
         Session object
+    wait : wait function
 
     Returns
     -------
     ships : int
         number of available ships
     """
-    available_ships = getAvailableShips(session)
-    while available_ships == 0:
-        minimum_waiting_time_for_ship = getMinimumWaitingTime(session)
-        session.wait(minimum_waiting_time_for_ship, 'Waiting for arrival')
+    while True:
         available_ships = getAvailableShips(session)
-    return available_ships
+        if available_ships > 0:
+            return available_ships
+        minimum_waiting_time_for_ship = getMinimumWaitingTime(session)
+        wait(minimum_waiting_time_for_ship, 'Waiting some ships to get available')
