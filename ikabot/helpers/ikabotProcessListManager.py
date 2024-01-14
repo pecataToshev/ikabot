@@ -17,7 +17,7 @@ def set_child_mode(session):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     """
     session.padre = False
     deactivate_sigint()
@@ -32,20 +32,20 @@ def run(command):
 
 
 class IkabotProcessListManager:
-    def __init__(self, session):
+    def __init__(self, db):
         """
         Init processes -> reads and updates the file
-        :param session: ikabot.web.session.Session
+        :param db: ikabot.helpers.database.Database
         """
-        self.__session = session
+        self.__db = db
 
     def __get_processes(self, filters=None):
         """
-        Reads all process from session_data.
+        Reads all process from database.
         :param filters: list[column, relation, value]
         :return: list[dict[]] -> list of processes
         """
-        process_list = self.__session.db.get_processes(filters)
+        process_list = self.__db.get_processes(filters)
 
         # check it's still running
         running_ikabot_processes = []
@@ -56,7 +56,7 @@ class IkabotProcessListManager:
             except psutil.NoSuchProcess:
                 # The process is no-longer running
                 logging.info('Process is no-longer running. Deleting %s', process)
-                self.__session.db.delete_process(process['pid'])
+                self.__db.delete_process(process['pid'])
                 continue
 
             # windows doesn't support the status method
@@ -66,14 +66,14 @@ class IkabotProcessListManager:
                 if proc.name() != ika_process:
                     # not the same name, so probably restarted the system
                     logging.info('Process has different name. Deleting %s', process)
-                    self.__session.db.delete_process(process['pid'])
+                    self.__db.delete_process(process['pid'])
                     continue
             else:
                 # the process is zombie
                 if process['status'] != 'zombie':
                     logging.info('Found process zombie. Setting to zombie %s', process)
                     process['status'] = 'zombie'
-                    self.__session.db.set_process(process)
+                    self.__db.set_process(process)
 
             running_ikabot_processes.append(process)
 
@@ -93,30 +93,29 @@ class IkabotProcessListManager:
         :param process: dict[] -> process to update
         :return:
         """
-        with self.__session.update_process_list_lock:
-            _pid = os.getpid()
+        _pid = os.getpid()
 
-            _stored_process = self.__get_processes(filters=[['pid', '==', _pid]])
-            if len(_stored_process) > 0:
-                _stored_process = _stored_process[0]
-            else:
-                _stored_process = {
-                    'pid': _pid
-                }
+        _stored_process = self.__get_processes(filters=[['pid', '==', _pid]])
+        if len(_stored_process) > 0:
+            _stored_process = _stored_process[0]
+        else:
+            _stored_process = {
+                'pid': _pid
+            }
 
-            # Merge with old data
-            _stored_process.update(process)
-            _stored_process['lastActionTime'] = time.time()
+        # Merge with old data
+        _stored_process.update(process)
+        _stored_process['lastActionTime'] = time.time()
 
-            # Save
-            self.__session.db.set_process(_stored_process)
+        # Save
+        self.__db.set_process(_stored_process)
 
-            # Print process
-            _stored_process.pop('pid')
-            _stored_process.pop('lastActionTime')
-            if _stored_process.get('nextActionTime', None) is not None:
-                _stored_process['nextActionTime'] = formatTimestamp(_stored_process['nextActionTime'])
-            logging.info("Upsert process: %s", _stored_process)
+        # Print process
+        _stored_process.pop('pid')
+        _stored_process.pop('lastActionTime')
+        if _stored_process.get('nextActionTime', None) is not None:
+            _stored_process['nextActionTime'] = formatTimestamp(_stored_process['nextActionTime'])
+        logging.info("Upsert process: %s", _stored_process)
 
     def print_proces_table(self, process_list=None, add_process_numbers=False):
         """
