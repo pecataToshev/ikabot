@@ -11,7 +11,7 @@ from ikabot.helpers.botComm import checkTelegramData, sendToBot
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
 from ikabot.helpers.pedirInfo import askUserYesNo, getIslandsIds, read
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 __inform_fights = 'inform-fights'
@@ -24,7 +24,7 @@ def searchForIslandSpaces(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list
@@ -105,7 +105,7 @@ def __execute_monitoring(session, specified_island_ids, waiting_minutes, inform_
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
     specified_island_ids : list[dict]
         A list containing island objects which should be searched, if an empty list is passed, all the user's colonised islands are searched
@@ -184,7 +184,7 @@ def __compare_island_cities(session, cities_before, cities_now, inform_list):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
     cities_before : dict[dict]
         A dict of cities on the island on the previous check

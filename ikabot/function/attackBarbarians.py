@@ -18,7 +18,7 @@ from ikabot.helpers.gui import addThousandSeparator, banner, enter, getCurrentCi
 from ikabot.helpers.naval import getTotalShips
 from ikabot.helpers.pedirInfo import chooseCity, getIslandsIds, read
 from ikabot.helpers.planRoutes import waitForArrival
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 getcontext().prec = 30
@@ -211,7 +211,7 @@ def attackBarbarians(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list

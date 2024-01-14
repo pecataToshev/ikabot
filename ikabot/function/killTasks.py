@@ -7,14 +7,14 @@ from ikabot import config
 from ikabot.config import isWindows
 from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.process import IkabotProcessListManager, run
+from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager, run
 
 
 def killTasks(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list

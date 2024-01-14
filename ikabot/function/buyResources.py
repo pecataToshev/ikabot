@@ -16,7 +16,7 @@ from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.market import getCommercialCities, getGold, getMarketHtml
 from ikabot.helpers.pedirInfo import read
 from ikabot.helpers.planRoutes import waitForArrival
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 
@@ -24,7 +24,7 @@ def chooseResource(session, city):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
     """
     print('Which resource do you want to buy?')
@@ -60,7 +60,7 @@ def getOffers(session, city):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
     Returns
     -------
@@ -143,7 +143,7 @@ def buyResources(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list
@@ -241,7 +241,7 @@ def buy(session, city, offer, amount_to_buy, ships_available):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
     offer : dict
     amount_to_buy : int
@@ -296,7 +296,7 @@ def do_it(session, city, offers, amount_to_buy):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
     offers : list[dict]
     amount_to_buy : int

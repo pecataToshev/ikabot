@@ -182,7 +182,7 @@ def getCurrentCityId(session):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     """
     html = session.get()
     return re.search(r'currentCityId:\s(\d+),', html).group(1)

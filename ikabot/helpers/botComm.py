@@ -17,7 +17,7 @@ def sendToBot(session, msg, Token=False, Photo=None):
     """This function will send the ``msg`` argument passed to it as a message to the user on Telegram
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
     msg : str
         a string representing the message to send to the user on Telegram
@@ -49,7 +49,7 @@ def telegramDataIsValid(session):
     """This function checks whether or not there is any Telegram data stored in the .ikabot file
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
 
     Returns
@@ -71,7 +71,7 @@ def getUserResponse(session, fullResponse=False):
     """This function will retrieve a list of messages the user sent to the bot on Telegram.
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
 
     Returns
@@ -105,7 +105,7 @@ def checkTelegramData(session):
     """This function doesn't actually check any data itself, that is done by the ``telegramDataIsValid`` function. This function returns ``True`` if there is any Telegram data in the .ikabot file, and if there is none, it will ask the user to input it.
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
 
     Returns
@@ -131,7 +131,7 @@ def updateTelegramData(session, event=None, stdin_fd=None, predetermined_input=[
     """This function asks the user to input the Telegram bot's token and the user's own Telegram chat id. After the user has inputted the neccessary data, this function will generate a random 4 digit number, send it to the user as a Telegram message using the token the user provided. It will then ask the user to input that number as validation.
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
     event : multiprocessing.Event
         an event which, when fired, gives back control of the terminal to the main process

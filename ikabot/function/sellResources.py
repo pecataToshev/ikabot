@@ -16,7 +16,7 @@ from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.market import getCommercialCities, onSellInMarket, storageCapacityOfMarket
 from ikabot.helpers.pedirInfo import read
 from ikabot.helpers.planRoutes import waitForArrival
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 
@@ -41,7 +41,7 @@ def getMarketInfo(session, city):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
 
     Returns
@@ -57,7 +57,7 @@ def getOffers(session, my_market_city, resource_type):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     my_market_city : dict
     resource_type : int
 
@@ -79,7 +79,7 @@ def sellToOffers(session, city_to_buy_from, resource_type, event):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city_to_buy_from : dict
     resource_type : int
     event : multiprocessing.Event
@@ -162,7 +162,7 @@ def createOffer(session, my_offering_market_city, resource_type, event):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     my_offering_market_city : dict
     resource_type : int
     event : multiprocessing.Event
@@ -210,7 +210,7 @@ def sellResources(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list
@@ -252,7 +252,7 @@ def do_it1(session, left_to_sell, offers, resource_type, city_to_buy_from):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     left_to_sell : int
     offers : list[dict]
     resource_type : int
@@ -294,7 +294,7 @@ def do_it2(session, amount_to_sell, price, resource_type, sell_market_capacity, 
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     amount_to_sell : int
     price : int
     resource_type : int

@@ -17,7 +17,7 @@ from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import banner, bcolors, enter, getDateTime
 from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 LINE_UP = '\033[1A'
@@ -34,7 +34,7 @@ def dumpWorld(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list
@@ -99,7 +99,7 @@ def do_it(session, waiting_time, start_id, shallow):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
     waiting_time : int
         Time to wait between each network request (to prevent getting rate limited)

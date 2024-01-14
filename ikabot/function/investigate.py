@@ -13,7 +13,7 @@ from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.pedirInfo import chooseCity, read
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 
 
 def get_studies(session):
@@ -64,7 +64,7 @@ def investigate(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list

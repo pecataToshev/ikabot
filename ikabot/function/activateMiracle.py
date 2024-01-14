@@ -13,7 +13,7 @@ from ikabot.helpers.getJson import (
     getCity, getIsland)
 from ikabot.helpers.gui import banner, daysHoursMinutes, enter
 from ikabot.helpers.pedirInfo import askUserYesNo, getIdsOfCities, getIslandsIds, read
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 
@@ -21,7 +21,7 @@ def obtainMiraclesAvailable(session):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
 
     Returns
     -------
@@ -86,7 +86,7 @@ def activateMiracleHttpCall(session, island):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     island : dict
 
     Returns
@@ -131,7 +131,7 @@ def activateMiracle(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list
@@ -261,7 +261,7 @@ def wait_for_miracle(session, island):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     island : dict
     """
     logging.info('Waiting for miracle')
@@ -293,7 +293,7 @@ def do_it(session, island, iterations):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     island : dict
     iterations : int
     """

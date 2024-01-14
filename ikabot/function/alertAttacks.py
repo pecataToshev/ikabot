@@ -14,7 +14,7 @@ from ikabot.function.vacationMode import activateVacationMode
 from ikabot.helpers.botComm import checkTelegramData, getUserResponse, sendToBot
 from ikabot.helpers.gui import banner, daysHoursMinutes, enter
 from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 
@@ -22,7 +22,7 @@ def alertAttacks(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list
@@ -69,7 +69,7 @@ def respondToAttack(session):
     """
     Parameters
     ---------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     """
 
     # this allows the user to respond to an attack via telegram
@@ -102,7 +102,7 @@ def do_it(session, minutes):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     minutes : int
     """
 

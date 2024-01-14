@@ -52,7 +52,7 @@ def convertCapturePoints(session, pirate_city_id, conversion_points):
     """Converts capture points into crew strength
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     pirate_city_id: int -> city id with a pirate fortress
     conversion_points: int/'all' -> how many points to convert
     :return bool: is successful

@@ -22,18 +22,32 @@ from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, decodeUnicodeEscape, enter
 from ikabot.helpers.pedirInfo import chooseCity, getIdsOfCities, read
 from ikabot.helpers.planRoutes import executeRoutes, getMinimumWaitingTime
-from ikabot.helpers.process import IkabotProcessListManager, set_child_mode
+from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager, set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 sendResources = True
 expand = True
 thread = None
 
+# TODO: There is a big problem with threading and sharing a sqlite connection between threads
+# Because of this, this module should be rewritten in a way to exclude the additional thread.
+# This being said, we will have to implement some sort of actions. Based on shared timer meaning
+# that we will have to check if we need to send the resources, and then if we can to start an upgrade
+# to the building. If then we have to wait the minimum time, between coming ships and can start
+# upgrade in the building. Of course, if the time fow the building is 0, but don't have enough resources
+# we will have to wait for the resources
+
+# # PS:
+# I see that replying to an attack by the user is also done in a threading. We will have to figure out a way to
+# be not-dependant of the threading. We can start a separate process, which will enable us to wait for user
+# interactions from telegram
+
+
 def waitForConstruction(session, city_id):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city_id : int
 
     Returns
@@ -69,7 +83,7 @@ def expandBuilding(session, cityId, building, waitForResources):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     cityId : int
     building : dict
     waitForResources : bool
@@ -160,7 +174,7 @@ def getResourcesNeeded(session, city, building, current_level, final_level):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
     building : dict
     current_level : int
@@ -281,12 +295,13 @@ def sendResourcesNeeded(session, destination_city_id, city_origins, missing_reso
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     destination_city_id : int
     city_origins : dict
     missing_resources : dict[int, int]
     """
 
+    print("sendResourcesNeeded.pid", os.getpid())
     session.initDatabase()
     info = '\nTransport resources to upload building\n'
 
@@ -311,6 +326,7 @@ def sendResourcesNeeded(session, destination_city_id, city_origins, missing_reso
                 toSend[i] = send
                 route = (cityOrigin, cityD, cityD['islandId'], *toSend)
                 routes.append(route)
+
         executeRoutes(session, routes)
     except Exception as e:
         msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
@@ -322,7 +338,7 @@ def chooseResourceProviders(session, cities_ids, cities, city_id, resource, miss
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     cities_ids : list[int]
     cities : dict[int, dict]
     city_id : int
@@ -391,7 +407,7 @@ def sendResourcesMenu(session, city_id, missing):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city_id : int
     missing : list[int, int]
     """
@@ -512,7 +528,7 @@ def constructionList(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list

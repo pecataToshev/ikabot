@@ -4,7 +4,7 @@
 import re
 
 import ikabot.config as config
-from ikabot.helpers.process import run
+from ikabot.helpers.ikabotProcessListManager import run
 
 
 def checkForUpdate():

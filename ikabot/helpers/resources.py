@@ -59,7 +59,7 @@ def getProductionPerSecond(session, city_id):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city_id : int
 
     Returns

@@ -42,8 +42,8 @@ from ikabot.helpers.botComm import updateTelegramData
 from ikabot.helpers.gui import banner, enter, clear, formatTimestamp
 from ikabot.helpers.logs import setup_logging
 from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.process import IkabotProcessListManager
-from ikabot.web.session import Session
+from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
+from ikabot.web.ikariamService import IkariamService
 
 __function_refresh = 'refresh'
 __function_exit = 'exit'
@@ -135,7 +135,7 @@ def menu(session):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     """
     checkForUpdate()
     show_proxy(session)
@@ -204,7 +204,7 @@ def start():
     config.predetermined_input.pop(0)
 
     print("Starting session")
-    session = Session()
+    session = IkariamService()
     try:
         menu(session)
     finally:

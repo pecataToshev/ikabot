@@ -15,7 +15,7 @@ from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, daysHoursMinutes, enter
 from ikabot.helpers.pedirInfo import chooseCity, getIdsOfCities, read
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 
@@ -23,7 +23,7 @@ def getBuildingInfo(session, city, trainTroops):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
     trainTroops : bool
 
@@ -41,7 +41,7 @@ def train(session, city, trainings, trainTroops):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
     trainings : list[dict]
     trainTroops : bool
@@ -58,7 +58,7 @@ def waitForTraining(session, city, trainTroops):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
     trainTroops : bool
     """
@@ -75,7 +75,7 @@ def planTrainings(session, city, trainings, trainTroops):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
     trainings : list[list[dict]]
     trainTroops : bool
@@ -161,7 +161,7 @@ def trainArmy(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list

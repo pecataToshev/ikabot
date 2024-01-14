@@ -98,7 +98,7 @@ def chooseCity(session, foreign=False):
     """Prompts the user to chose a city
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
     foreign : bool
         lets the user choose a foreign city
@@ -149,7 +149,7 @@ def chooseForeignCity(session):
     """Prompts the user to select an island, and a city on that island (is only used in chooseCity)
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
 
     Returns
@@ -223,7 +223,7 @@ def getIdsOfCities(session, all=False):
     """Gets the user's cities
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
     all : bool
         boolean indicating whether all cities should be returned, or only those that belong to the current user
@@ -261,7 +261,7 @@ def getIslandsIds(session):
     """Gets the IDs of islands the user has cities on
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
 
     Returns

@@ -3,7 +3,7 @@ import time
 import requests
 
 from ikabot.helpers.botComm import getUserResponse, sendToBot
-from ikabot.helpers.process import run
+from ikabot.helpers.ikabotProcessListManager import run
 
 
 def resolveCaptcha(session, picture):

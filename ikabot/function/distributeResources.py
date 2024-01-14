@@ -12,7 +12,7 @@ from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.pedirInfo import getIdsOfCities, read
 from ikabot.helpers.planRoutes import executeRoutes
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 
@@ -20,7 +20,7 @@ def distributeResources(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list
@@ -100,7 +100,7 @@ def distribute_evenly(session, resource_type):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     resource_type : int
     """
     resourceTotal = 0
@@ -184,7 +184,7 @@ def distribute_unevenly(session, resource_type):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     resource_type : int
     """
     total_available_resources_from_all_cities = 0

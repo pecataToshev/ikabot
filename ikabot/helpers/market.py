@@ -14,7 +14,7 @@ def getCommercialCities(session):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
 
     Returns
     -------
@@ -40,7 +40,7 @@ def getMarketHtml(session, city):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
     """
     url = 'view=branchOffice&cityId={}&position={:d}&currentCityId={}&backgroundView=city&actionRequest={}&ajax=1'.format(city['id'], city['pos'], city['id'], actionRequest)
@@ -79,7 +79,7 @@ def getGold(session, city_id):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city_id : int
     Returns
     -------

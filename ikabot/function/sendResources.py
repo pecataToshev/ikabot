@@ -11,7 +11,7 @@ from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.gui import addThousandSeparator, banner
 from ikabot.helpers.pedirInfo import askForValue, chooseCity, read
 from ikabot.helpers.planRoutes import executeRoutes
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 
@@ -19,7 +19,7 @@ def sendResources(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list

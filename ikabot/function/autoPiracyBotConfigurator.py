@@ -8,17 +8,17 @@ from ikabot.bot.autoPirateBot import AutoPirateBot
 from ikabot.config import isWindows
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, decodeUnicodeEscape, enter, \
     printTable
+from ikabot.helpers.ikabotProcessListManager import run
 from ikabot.helpers.pedirInfo import askUserYesNo, read
 from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
     getPiracyTemplateData
-from ikabot.helpers.process import run
 
 
 def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list

@@ -9,6 +9,9 @@ from ikabot.helpers.piracy import convertCapturePoints, getPiracyTemplateData
 
 
 class AutoPirateBot(Bot):
+    """
+    Executes piracy missions automatically.
+    """
     __MAXIMUM_PIRATE_MISSION_START_ATTEMPTS = 20
 
     def __init__(self, session, bot_config):

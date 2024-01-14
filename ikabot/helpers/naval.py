@@ -8,7 +8,7 @@ def getAvailableShips(session):
     """Function that returns the total number of free (available) ships
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
 
     Returns
@@ -24,7 +24,7 @@ def getTotalShips(session):
     """Function that returns the total number of ships, regardless of if they're available or not
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
 
     Returns

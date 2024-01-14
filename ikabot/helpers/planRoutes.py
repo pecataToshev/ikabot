@@ -18,7 +18,7 @@ def sendGoods(session, originCityId, destinationCityId, islandId, ships, send):
     """This function will execute one route
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
     originCityId : int
         integer representing the ID of the origin city
@@ -98,7 +98,7 @@ def executeRoutes(session, routes):
     """This function will execute all the routes passed to it, regardless if there are enough ships available to do so
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
     routes : list
         a list of tuples, each of which represent a route. A route is defined like so : (originCity,destinationCity,islandId,wood,wine,marble,crystal,sulfur). originCity and destintionCity should be passed as City objects
@@ -147,10 +147,13 @@ def get_random_wait_time():
 
 
 def getMinimumWaitingTime(session):
-    """This function returns the time needed to wait for the closest fleet to arrive. If all ships are unavailable, this represents the minimum time needed to wait for any ships to become available. A random waiting time between 0 and 10 seconds is added to the waiting time to avoid race conditions between multiple concurrently running processes.
+    """This function returns the time needed to wait for the closest fleet to arrive. If all ships are unavailable,
+    this represents the minimum time needed to wait for any ships to become available.
+    A random waiting time between 0 and 10 seconds is added to the waiting time to avoid race conditions between
+    multiple concurrently running processes.
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
 
     Returns
@@ -180,7 +183,7 @@ def waitForArrival(session):
     """This function will return the number of available ships, and if there aren't any, it will wait for the closest fleet to arrive and then return the number of available ships
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
         Session object
 
     Returns

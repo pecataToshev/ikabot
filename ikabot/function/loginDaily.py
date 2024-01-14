@@ -11,7 +11,7 @@ from ikabot.config import actionRequest, city_url
 from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.gui import banner, enter, getDateTime
 from ikabot.helpers.pedirInfo import getIdsOfCities
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
 
 
@@ -19,7 +19,7 @@ def loginDaily(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list
@@ -52,7 +52,7 @@ def do_it(session):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     """
     while True:
         (ids, cities) = getIdsOfCities(session)

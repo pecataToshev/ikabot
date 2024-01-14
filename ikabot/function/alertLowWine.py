@@ -12,7 +12,7 @@ from ikabot.helpers.botComm import checkTelegramData, sendToBot
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, daysHoursMinutes, enter
 from ikabot.helpers.pedirInfo import getIdsOfCities, read
-from ikabot.helpers.process import set_child_mode
+from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.resources import getProductionPerSecond
 from ikabot.helpers.signals import setInfoSignal
 
@@ -23,7 +23,7 @@ def alertLowWine(session, event, stdin_fd, predetermined_input):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     event : multiprocessing.Event
     stdin_fd: int
     predetermined_input : multiprocessing.managers.SyncManager.list
@@ -66,7 +66,7 @@ def do_it(session, hours):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     hours : int
     """
 
