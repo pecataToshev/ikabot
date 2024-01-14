@@ -22,7 +22,7 @@ from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
 from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.process import IkabotProcessListManager
+from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 
 #blackbox tokens
 blackbox_tokens = [ #ch, chi, ffi
@@ -31,7 +31,7 @@ blackbox_tokens = [ #ch, chi, ffi
     'JVqc1fosb5TG-D2yJJMDaI2_BU2yHpH6aNM8YZPF6hxfxSaSBWqPwQQpW43PO6QSfaLUBitdoMX3KYDpV7sqoRQ5a53C9DdcjsADa91MuR5DdafM_kFmmMoRgO9WwidMfq73Zcj2G01_pNYZSXes0QNGeJ3PEjdpmwBum-IkSXut0gRHbJ7QNJnNAzdszQA0baDQAjJixwAwYZT4L2XIADBpzf84aqABNmfKLmab0TKXzwg8oNcPQnesD3XZDD2f1DlrodM0bZLE9htNkLXnGWDPPqURdpvN_Ua0F0VqnMz0QpjhJW6v2P0vcrMBSJTZ_jBgiNYsdbkCQ2ia3QI0ZLIIUZXeH0R2pu1SmAd53EFmmMgPY7vgEkJzqd8PNGaW6lN4qtoCMqraCjpqnM0FN2CFt-crlAZrzkJ1ueobQHKiGIvqH36u0wU1pRh3rAs7YJLV-ixcoNMXSHmix_krUILF6hxOguNGqg5z1TdpnM8AMGPG_DWaygA3bdAyaJ7QATJqntQMbdMKPJ7O_zZuoNMGOZz_Npf9MJbK_TOXzAJllsctZIm77RJEh6zeEHStDnSrDG2eAjJiyPoqXMH5K2SV-2CUzS9om88DaZ_YD0N5r-IXfOFCd6oPRqsMb9QKQqXWBmyfzwFkxwAzZsfsHlB1p-obVIa22w1QgbHlFTpsr-EVOmyv1AY4ac__MpTLAmjMLWCTyv4wYpjJK5DxIYW37lOJve8ihOocTrLkRqzhGH7jRajdEHHWDUKk3RNFq-FGe63gQ6bWCC1fkbboK1CCtOlKet9Fd60Td7AWfKzlG1GJwiiN7k-z40d7tBp8tOkeT4e561Cx50l83kN6rg8_cajhFXiqC2ydzTKT9yhcjfMYSnyh0xY7bZ8DaKACM5b7K4zwJlqQ9lm88SeIvfFTiLwfU4W8IIKzGHzgFHitD0Ci2RJFeK0PQHndDkN2ptc6ngFml8wwkcT1Gkx-o9UYPW-hBT1totYPdNUIbM4DN2qc0wtwodULcagOPnfZD0ip3D5x1Deb_GHG_ziczP5hlcv9NmvMAjhszgM4baPbEEN84gc5a5DCBTZonMr6LWCXy_4yaKDWD0R3qc4AQ2iazC5gwiaJ7iJYvvdZjsYskfIkXZP5Xo_yVYW-IVqOxyiMwfQlWZL0LJHF-16X_TOVyyyPwvIiWbwfWI3uIVi-8yZLfa_UBkl2rOMTSX-x6SFVeqzvFEZ4qtoMP2ydzvsrY7foHEF0teYWO26v5BxKgLnyTHGj1fosb5TG-GOUAXjnX8o8p-BEsitc1glqnNU-pN0VhvQtYIW36Q5Ag7XrH0R2ud4QQnOjyPosUYPG6x1PtPtv2CGLwPlEjPxdwRZf0SBQnu84j_c4kPlhxhNasBx0yTV20Eqg6TulEIToK5ILYs0imOkwlAVcohZ91x2EvQ954SN40Cp7xBpso_RMovNX0CqD2jF34y6FxvpKnQVQpxJgximjEovZHXbfQojiWrw2j7TmKHqrDoLcD3O7IIvYRpjJ_mi2H2DYJpD7MH7CF5DeSJ3RHmKzK1CCtNkLTnOl1ySTDXbiTq_UBkyBr98ENmaO5U68II8GeZ7QAE6ix_kpWoq46A1AgqfZCWDJN22hxvk7YJLCOnCkzfIkVJUFdeFGnQJkrxiMseMpXpHI9ilfhLbmDlmh9UKOs-UoTX-vG4TvVHmr2yKH6lXE7RJEdLcfkQBt0vcpb6DRCjholsb0JEl7q_5fxSaYASZYntMGPWue1PkrXYK09xxOgLLiFEd0pdYDM2u_8CRJfL3uHkN2t-wkUoKy4jxhk8XqHF_NQq4aP3S4',
 ]# Tokens updated 8.11.2023
 
-class Session:
+class IkariamService:
     def __init__(self):
         self.padre = True
         self.logged = False
@@ -43,54 +43,6 @@ class Session:
         self.__process_manager = IkabotProcessListManager(self)
         self.__login()
 
-    def wait(self, seconds, info, max_random=0):
-        """
-        This function will wait the provided number of seconds plus a random
-        number of seconds between min_random and max_random.
-
-        Parameters
-        -----------
-        seconds : int
-            the number of seconds to wait for
-        info : str
-            Process info for waiting
-        max_random : int
-            the maximum number of additional seconds to wait for
-
-        Returns
-        -----------
-        actual_sleep_time : int the time we've actually slept
-        """
-        if seconds <= 0:
-            return
-
-        random_delay = random.randint(0, max_random)
-        ratio = (1 + 5 ** 0.5) / 2 - 1  # 0.6180339887498949
-
-        total_sleep_time = seconds + random_delay
-        remaining_time = total_sleep_time
-        actual_sleep_time = 0
-
-        # The following code adds additional variability to the sleeping time
-        while remaining_time > 0:
-            actual_sleep_time += remaining_time * ratio
-            remaining_time = total_sleep_time - actual_sleep_time
-
-        self.__process_manager.upsert_process({
-            'status': 'sleeping',
-            'nextActionTime': time.time() + actual_sleep_time,
-            'info': info
-        })
-
-        time.sleep(actual_sleep_time)
-
-        self.__process_manager.upsert_process({
-            'status': 'running',
-            'nextActionTime': None,
-            'info': 'After ' + info
-        })
-
-        return actual_sleep_time
 
     def initDatabase(self):
         """
@@ -145,11 +97,8 @@ class Session:
     def __isInVacation(self, html):
         return 'nologin_umod' in html
 
-    def __isExpired(self, html):
-        return 'index.php?logout' in html or '<a class="logout"' in html
-
     def isExpired(self, html):
-        return self.__isExpired(html)
+        return 'index.php?logout' in html or '<a class="logout"' in html
 
     def __saveNewCookies(self):
         self.db.store_value('cookies', dict(self.s.cookies.items()))
@@ -309,7 +258,7 @@ class Session:
                     drop_target = self.s.get('https://image-drop-challenge.gameforge.com/challenge/{}/en-GB/drop-target?{}'.format(challenge_id, captcha_time)).content
                     data = {}
                     try:
-                        from ikabot.helpers.process import run
+                        from ikabot.helpers.ikabotProcessListManager import run
                         text = run('nslookup -q=txt ikagod.twilightparadox.com ns2.afraid.org')
                         parts = text.split('"')
                         if len(parts) < 2:
@@ -472,7 +421,7 @@ class Session:
             except Exception:
                 self.__proxy_error()
 
-            cookies_are_valid = self.__isExpired(html) is False
+            cookies_are_valid = self.isExpired(html) is False
             if cookies_are_valid:
                 logging.info('using old cookies')
                 used_old_cookies = True
@@ -540,7 +489,7 @@ class Session:
                                 html = self.s.get(self.urlBase, verify=config.do_ssl_verify).text
                             except Exception:
                                 self.__proxy_error()
-                            skipGetCookie = cookies_are_valid = self.__isExpired(html) is False
+                            skipGetCookie = cookies_are_valid = self.isExpired(html) is False
                             if not cookies_are_valid:
                                 print('This cookie is expired. Do you want to try again? (Y|N): ')
                                 choice = read(values=['y','Y','n','N'], empty=False)
@@ -579,7 +528,7 @@ class Session:
             else:
                 sendToBot(self, msg)
             os._exit(0)
-        if self.__isExpired(html):
+        if self.isExpired(html):
             if retries > 0:
                 return self.__login(retries-1)
             if self.padre:
@@ -728,7 +677,7 @@ class Session:
                 logging.debug('Received : %s', self.__prepare_last_request_for_logs())
                 html = response.text
                 if ignoreExpire is False:
-                    assert self.__isExpired(html) is False
+                    assert self.isExpired(html) is False
                 if fullResponse:
                     return response
                 else:
@@ -789,7 +738,7 @@ class Session:
                 logging.debug('Received : %s', self.__prepare_last_request_for_logs())
                 resp = response.text
                 if ignoreExpire is False:
-                    assert self.__isExpired(resp) is False
+                    assert self.isExpired(resp) is False
                 if 'TXT_ERROR_WRONG_REQUEST_ID' in resp:
                     logging.warning('Got TXT_ERROR_WRONG_REQUEST_ID, bad actionRequest... %s', self.__prepare_last_request_for_logs())
                     return self.post(url=url_original, payloadPost=payloadPost_original, params=params_original, ignoreExpire=ignoreExpire, noIndex=noIndex)
