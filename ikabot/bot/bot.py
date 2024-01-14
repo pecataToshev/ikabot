@@ -58,14 +58,14 @@ class Bot(ABC):
         :param action: str -> what the process is doing
         :param objective: str -> what's the end goal of the process
         :param target_city: str/None -> what is the action's beneficent
-        :return: int -> pid of the started process
+        :return: process -> the started process
         """
         process = multiprocessing.Process(
             target=self.__prepare_and_start_process,
             args=(action, objective, target_city)
         )
         process.start()
-        return process.pid
+        return process
 
     def __setup_process_signals(self):
         signal.signal(signal.SIGINT, lambda signal_num, frame: None)
