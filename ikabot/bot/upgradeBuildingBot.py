@@ -143,12 +143,22 @@ class BuildingUpgradeBot(Bot):
 
         if self.transport_resources_pid is not None:
             _process = self.db.get_processes({'pid': self.transport_resources_pid})
-            next_action_time = _process.get('nextActionTime', None)
-            if next_action_time is not None:
-                waiting_times.append([
-                    next_action_time - time.time(),
-                    'Waiting next action of transporting resources (pid: {})'.format(self.transport_resources_pid)
-                ])
+            if len(_process) == 0:
+                # we no-longer have this process running
+                self.transport_resources_pid = None
+            else:
+                next_action_time = _process[0].get('nextActionTime', None)
+                if next_action_time is not None:
+                    waiting_times.append([
+                        next_action_time - time.time(),
+                        'Waiting next action of transporting resources (pid: {})'.format(self.transport_resources_pid)
+                    ])
+                else:
+                    waiting_times.append([
+                        30,
+                        "We're in race condition with the process for"
+                        " transporting resources (pid: {})".format(self.transport_resources_pid)
+                    ])
 
         building_upgrade_time_left = self.__get_waiting_time_to_finish_building(building_in_construction)
         if building_upgrade_time_left > 0:
