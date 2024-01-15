@@ -2,44 +2,19 @@
 # -*- coding: utf-8 -*-
 
 import json
-import os
-import sys
 
-from ikabot import config
 from ikabot.helpers.gui import banner, bcolors, enter
 from ikabot.helpers.pedirInfo import read
 
 
-def importExportCookie(session, event, stdin_fd, predetermined_input):
+def importCookie(ikariam_service, db, telegram):
     """
     Parameters
     ----------
-    session : ikabot.web.ikariamService.IkariamService
-    event : multiprocessing.Event
-    stdin_fd: int
-    predetermined_input : multiprocessing.managers.SyncManager.list
+    ikariam_service : ikabot.web.ikariamService.IkariamService
+    db: ikabot.helpers.database.Database
+    telegram: ikabot.helpers.telegram.Telegram
     """
-    sys.stdin = os.fdopen(stdin_fd)
-    config.predetermined_input = predetermined_input
-    banner()
-    try:
-        print('Do you want to import or export the cookie?')
-        print('(0) Exit')
-        print('(1) Import')
-        print('(2) Export')
-        action = read(min=0, max=2)
-        if action == 1:
-            importCookie(session)
-        elif action == 2:
-            exportCookie(session)
-
-        event.set()
-    except KeyboardInterrupt:
-        event.set()
-        return
-
-
-def importCookie(session):
     banner()
     print('{}⚠️ INSERTING AN INVALID COOKIE WILL LOG YOU OUT OF YOUR OTHER SESSIONS ⚠️{}\n\n'.format(bcolors.WARNING, bcolors.ENDC))
     print('Go ahead and export the cookie from another ikabot instance now and then')
@@ -47,31 +22,38 @@ def importCookie(session):
     newcookie = read()
     newcookie = newcookie.strip()
     newcookie = newcookie.replace('ikariam=', '')
-    cookies = session.db.get_stored_value('cookies') or {}
+    cookies = db.get_stored_value('cookies') or {}
     cookies['ikariam'] = newcookie
-    if session.host in session.s.cookies._cookies:
-        session.s.cookies.set('ikariam', newcookie, domain=session.host, path='/')
+    if ikariam_service.host in ikariam_service.s.cookies._cookies:
+        ikariam_service.s.cookies.set('ikariam', newcookie, domain=ikariam_service.host, path='/')
     else:
-        session.s.cookies.set('ikariam', newcookie, domain='', path='/')
+        ikariam_service.s.cookies.set('ikariam', newcookie, domain='', path='/')
 
-    html = session.s.get(session.urlBase).text
+    html = ikariam_service.s.get(ikariam_service.urlBase).text
 
-    if session.isExpired(html):
+    if ikariam_service.isExpired(html):
         print('{}Failure!{} All your other sessions have just been invalidated!'.format(bcolors.RED, bcolors.ENDC))
         enter()
     else:
         print('{}Success!{} This ikabot session will now use the cookie you provided'.format(bcolors.GREEN, bcolors.ENDC))
-        cookies = session.db.get_stored_value('cookies') or {}
+        cookies = db.get_stored_value('cookies') or {}
         cookies['ikariam'] = newcookie
-        session.db.store_value('cookies', cookies)
+        db.store_value('cookies', cookies)
         enter()
-    session.get()
+    ikariam_service.get()
 
 
-def exportCookie(session):
+def exportCookie(ikariam_service, db, telegram):
+    """
+    Parameters
+    ----------
+    ikariam_service : ikabot.web.ikariamService.IkariamService
+    db: ikabot.helpers.database.Database
+    telegram: ikabot.helpers.telegram.Telegram
+    """
     banner()
-    session.get()  # get valid cookie in case user has logged the bot out before running this feature
-    ikariam = (session.db.get_stored_value('cookies') or {}).get('ikariam')
+    ikariam_service.get()  # get valid cookie in case user has logged the bot out before running this feature
+    ikariam = (db.get_stored_value('cookies') or {}).get('ikariam')
     print('Use this cookie to synchronise two ikabot instances on 2 different machines\n\n')
     print('ikariam='+ikariam+'\n\n')
 
