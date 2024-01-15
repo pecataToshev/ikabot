@@ -4,7 +4,6 @@ import base64
 import getpass
 import json
 import logging
-import multiprocessing
 import os
 import random
 import re
@@ -17,12 +16,9 @@ from urllib3.exceptions import InsecureRequestWarning
 
 from ikabot import config
 from ikabot.config import actionRequest, ConnectionError_wait, user_agent
-from ikabot.helpers.botComm import sendToBot
-from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
 from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 
 #blackbox tokens
 blackbox_tokens = [ #ch, chi, ffi
@@ -32,54 +28,19 @@ blackbox_tokens = [ #ch, chi, ffi
 ]# Tokens updated 8.11.2023
 
 class IkariamService:
-    def __init__(self):
+    def __init__(self, db, telegram):
         self.padre = True
         self.logged = False
         self.blackbox = 'tra:' + random.choice(blackbox_tokens)
         self.requestHistory = deque(maxlen=5) #keep last 5 requests in history
         # disable ssl verification warning
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-        self.update_process_list_lock = multiprocessing.Lock()
-        self.__process_manager = IkabotProcessListManager(self)
+        self.reset_db_telegram(db, telegram)
         self.__login()
 
-
-    def initDatabase(self):
-        """
-        Creates a db connection.
-        :return: void
-        """
-        self.db = Database(self.bot_name)
-
-    def setProcessInfo(self, message):
-        """
-        This function will modify the current task info message that
-        appears in the table on the main menu
-
-        Parameters
-        ----------
-        message : Message to be displayed in the table in main menu
-        """
-        self.__process_manager.upsert_process({
-            'info': message,
-            'nextAction': None
-        })
-
-    def setProcessObjective(self, action, objective, target_city_name=None):
-        """
-        This function will modify the current task target city and objective
-
-        Parameters
-        ----------
-        action : str -> What is the action that process is doing
-        objective : str -> Objective of the process
-        target_city_name : str -> name of the city which will fulfil the objective
-        """
-        self.__process_manager.upsert_process({
-            'action': action,
-            'objective': objective,
-            'targetCity': target_city_name
-        })
+    def reset_db_telegram(self, db, telegram):
+        self.db = db
+        self.telegram = telegram
 
     def __genRand(self):
         return hex(random.randint(0, 65535))[2:]
@@ -128,9 +89,6 @@ class IkariamService:
         if not self.logged:
             banner()
 
-            self.bot_name = read(msg='Please provide the unique bot identifier for this account: ')
-            self.initDatabase()
-
             credentials = self.db.get_stored_value('credentials')
             if credentials is None:
                 self.mail = read(msg='Mail:')
@@ -145,8 +103,6 @@ class IkariamService:
                 self.password = credentials['password']
 
             banner()
-        else:
-            self.initDatabase()
 
         self.s = requests.Session()
         logging.info("Trying to log in. {loggedIn: %s, retries: %d}",
@@ -278,14 +234,15 @@ class IkariamService:
                         answer = read(values=['y', 'Y', 'n', 'N'], default='y')
                         if answer.lower() == 'n':
                             sys.exit('Captcha error! (Interactive)')
-                        
-                        sendToBot(self, '', Photo=text_image)
-                        sendToBot(self, 'Please send the number of the correct image (1, 2, 3 or 4)', Photo=drag_icons)
+
+                        self.telegram.send_message('', Photo=text_image)
+                        self.telegram.send_message('Please send the number of the correct image (1, 2, 3 or 4)',
+                                                   Photo=drag_icons)
                         print('Check your Telegram and do it fast. The captcha expires quickly')
                         captcha_time = time.time()
                         while True:
-                            response = getUserResponse(self, fullResponse=True)
-                            if response == []:
+                            response = self.telegram.get_user_responses(full_response=True)
+                            if response is None or response == []:
                                 time.sleep(5)
                                 continue
                             response = response[-1]
@@ -526,7 +483,7 @@ class IkariamService:
             if self.padre:
                 print(msg)
             else:
-                sendToBot(self, msg)
+                self.telegram.send_message(msg)
             os._exit(0)
         if self.isExpired(html):
             if retries > 0:
@@ -585,7 +542,7 @@ class IkariamService:
                 sys.exit()
         else:
             msg = 'Network error. Consider disabling the proxy.'
-            sendToBot(self, msg)
+            self.telegram.send_message(msg)
             sys.exit()
 
     def __update_proxy(self, *, obj=None):
