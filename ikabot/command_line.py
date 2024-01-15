@@ -21,8 +21,8 @@ from ikabot.function.getStatusImproved import getStatusForAllCities
 from ikabot.function.importExportCookie import importCookie, exportCookie
 from ikabot.function.studies import study
 from ikabot.function.islandWorkplaces import islandWorkplaces
-from ikabot.function.killTasks import killTasks
-from ikabot.function.loginDaily import loginDaily
+from ikabot.function.killTasks import kill_tasks
+from ikabot.function.loginDailyBotConfigurator import login_daily_bot_configurator
 from ikabot.function.proxyConf import proxyConf, show_proxy
 from ikabot.function.searchForIslandSpaces import searchForIslandSpaces
 from ikabot.function.sellResources import sellResources
@@ -95,7 +95,7 @@ _global_menu = [
     ]],
     ['Game Account Functions', [
         __command_back,
-        ['Login daily', loginDaily],
+        ['Login daily', login_daily_bot_configurator],
         ['Activate vacation mode', vacationMode],
         ['Dump / View world', dumpWorld],
     ]],
@@ -107,7 +107,7 @@ _global_menu = [
             ['Change bot data', updateTelegramData],
             ['Test message the bot', testTelegramBot],
         ]],
-        ['Kill tasks', killTasks],
+        ['Kill tasks', kill_tasks],
         ['Configure captcha resolver', decaptchaConf],
         ['Cookies', [
             __command_back,
