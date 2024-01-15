@@ -1,63 +1,51 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
 import sys
 
-from ikabot import config
 from ikabot.config import actionRequest
-from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import banner, clear, enter
-from ikabot.helpers.pedirInfo import askUserYesNo, read
+from ikabot.helpers.gui import banner, clear, enter, getCurrentCityId
+from ikabot.helpers.pedirInfo import askUserYesNo
 
 
-def activateVacationMode(session):
+def activateVacationMode(ikariam_service, db, telegram):
     """
     Parameters
     ----------
-    session : ikabot.web.ikariamService.IkariamService
+    ikariam_service : ikabot.web.ikariamService.IkariamService
+    db: ikabot.helpers.database.Database
+    telegram: ikabot.helpers.telegram.Telegram
     """
-    html = session.get()
-    city = getCity(html)
+    current_city_id = getCurrentCityId(ikariam_service)
 
-    session.post(
+    ikariam_service.post(
         params={
             'action': 'Options',
             'function': 'activateVacationMode',
             'actionRequest': actionRequest,
             'backgroundView': 'city',
-            'currentCityId': city['id'],
+            'currentCityId': current_city_id,
             'templateView': 'options_umod_confirm'
         },
         ignoreExpire=True
     )
 
 
-def vacationMode(session, event, stdin_fd, predetermined_input):
+def vacationMode(ikariam_service, db, telegram):
     """
     Parameters
     ----------
-    session : ikabot.web.ikariamService.IkariamService
-    event : multiprocessing.Event
-    stdin_fd: int
-    predetermined_input : multiprocessing.managers.SyncManager.list
+    ikariam_service : ikabot.web.ikariamService.IkariamService
+    db: ikabot.helpers.database.Database
+    telegram: ikabot.helpers.telegram.Telegram
     """
-    sys.stdin = os.fdopen(stdin_fd)
-    config.predetermined_input = predetermined_input
-    try:
-        banner()
-        if not askUserYesNo('Activate vacation mode'):
-            event.set()
-            return
-
-        activateVacationMode(session)
-        print('Vacation mode has been activated.')
-        enter()
-
-        event.set()
-        clear()
-        sys.exit()
-
-    except KeyboardInterrupt:
-        event.set()
+    banner()
+    if not askUserYesNo('Activate vacation mode'):
         return
+
+    activateVacationMode(ikariam_service)
+    print('Vacation mode has been activated.')
+    enter()
+
+    clear()
+    sys.exit()

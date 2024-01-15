@@ -12,7 +12,7 @@ from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.pedirInfo import chooseCity, read
 
 
-def constructBuilding(session, event, stdin_fd, predetermined_input):
+def constructBuilding(ikariam_service, db, telegram):
     """
     Parameters
     ----------

@@ -1,31 +1,20 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-
-from ikabot import config
-from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.gui import enter
 from ikabot.helpers.pedirInfo import read
 
 
-def testTelegramBot(session, event, stdin_fd, predetermined_input):
+def testTelegramBot(ikariam_service, db, telegram):
     """
     Parameters
     ----------
-    session : ikabot.web.ikariamService.IkariamService
-    event : multiprocessing.Event
-    stdin_fd: int
-    predetermined_input : multiprocessing.managers.SyncManager.list
+    ikariam_service : ikabot.web.ikariamService.IkariamService
+    db: ikabot.helpers.database.Database
+    telegram: ikabot.helpers.telegram.Telegram
     """
-    sys.stdin = os.fdopen(stdin_fd)
-    config.predetermined_input = predetermined_input
-    try :
-        input = read(msg='Enter the massage you wish to see: ')
-        msg = "Test message: {}".format(input)
-        sendToBot(session, msg)
-        enter()
-        event.set()
-    except KeyboardInterrupt:
-        event.set()
+    input = read(msg='Enter the massage you wish to see: ')
+    telegram.send_message(input)
+
+    print('Sent message:', input)
+    enter()

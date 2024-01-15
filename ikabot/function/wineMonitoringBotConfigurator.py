@@ -6,7 +6,7 @@ from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.pedirInfo import read
 
 
-def alertLowWine(ikariam_service, db, telegram):
+def configure_wine_monitoring_bot(ikariam_service, db, telegram):
     """
     Parameters
     ----------

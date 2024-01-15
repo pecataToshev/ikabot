@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
 import sys
 
 import requests
@@ -11,14 +10,14 @@ from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.pedirInfo import read
 
 
-def show_proxy(session):
-    proxy_data = session.db.get_stored_value('proxy')
+def show_proxy(db):
+    proxy_data = db.get_stored_value('proxy')
     msg = 'using proxy:'
     if proxy_data is not None and proxy_data['set'] is True:
         curr_proxy = proxy_data['conf']['https']
         if test_proxy(proxy_data['conf']) is False:
             proxy_data['set'] = False
-            session.db.store_value('proxy', proxy_data)
+            db.store_value('proxy', proxy_data)
             sys.exit('the {} proxy does not work, it has been removed'.format(curr_proxy))
         if msg not in config.update_msg:
             # add proxy message
@@ -54,58 +53,49 @@ def read_proxy():
     return proxy_dict
 
 
-def proxyConf(session, event, stdin_fd, predetermined_input):
+def proxyConf(ikariam_service, db, telegram):
     """
     Parameters
     ----------
-    session : ikabot.web.ikariamService.IkariamService
-    event : multiprocessing.Event
-    stdin_fd: int
-    predetermined_input : multiprocessing.managers.SyncManager.list
+    ikariam_service : ikabot.web.ikariamService.IkariamService
+    db: ikabot.helpers.database.Database
+    telegram: ikabot.helpers.telegram.Telegram
     """
-    sys.stdin = os.fdopen(stdin_fd)
-    config.predetermined_input = predetermined_input
-    try:
-        banner()
-        print('Warning: The proxy does not apply to the requests sent to the lobby!\n')
+    banner()
+    print('Warning: The proxy does not apply to the requests sent to the lobby!\n')
 
-        proxy_data = session.db.get_stored_value('proxy')
-        if proxy_data is None or proxy_data['set'] is False:
-            print('Right now, there is no proxy configured.')
+    proxy_data = db.get_stored_value('proxy')
+    if proxy_data is None or proxy_data['set'] is False:
+        print('Right now, there is no proxy configured.')
+        proxy_dict = read_proxy()
+        if proxy_dict is None:
+            return
+
+        proxy_data = {
+            'conf': proxy_dict,
+            'set': True,
+        }
+
+    else:
+        curr_proxy = proxy_data['conf']['https']
+        print('Current proxy: {}'.format(curr_proxy))
+        print('What do you want to do?')
+        print('0) Exit')
+        print('1) Set a new proxy')
+        print('2) Remove the current proxy')
+        rta = read(min=0, max=2)
+
+        if rta == 0:
+            return
+        if rta == 1:
             proxy_dict = read_proxy()
             if proxy_dict is None:
-                event.set()
                 return
-            proxy_data = {
-                'conf': proxy_dict,
-                'set': True,
-            }
-        else:
-            curr_proxy = proxy_data['conf']['https']
-            print('Current proxy: {}'.format(curr_proxy))
-            print('What do you want to do?')
-            print('0) Exit')
-            print('1) Set a new proxy')
-            print('2) Remove the current proxy')
-            rta = read(min=0, max=2)
+            proxy_data['conf'] = proxy_dict
+            proxy_data['set'] = True
+        if rta == 2:
+            proxy_data['set'] = False
+            print('The proxy has been removed.')
+            enter()
 
-            if rta == 0:
-                event.set()
-                return
-            if rta == 1:
-                proxy_dict = read_proxy()
-                if proxy_dict is None:
-                    event.set()
-                    return
-                proxy_data['conf'] = proxy_dict
-                proxy_data['set'] = True
-            if rta == 2:
-                proxy_data['set'] = False
-                print('The proxy has been removed.')
-                enter()
-
-        session.db.store_value('proxy', proxy_data)
-        event.set()
-    except KeyboardInterrupt:
-        event.set()
-        return
+    db.store_value('proxy', proxy_data)
