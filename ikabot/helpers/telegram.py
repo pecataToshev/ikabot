@@ -59,14 +59,14 @@ class Telegram:
                 bot_token = read(msg="Bot's token: ")
                 bot_token = bot_token.replace(' ', '')
 
-            updates = requests.get(self.__get_telegram_url(bot_token, 'getUpdates')).json()
-            if 'ok' not in updates or updates['ok'] is False:
+            messages = self.get_user_responses(True)
+            if messages is None:
                 require_bot_token = True
                 if not askUserYesNo('Invalid telegram bot. Do you want to try again'):
                     return None
                 continue  # restart the process
 
-            chat_id = self.__get_chat_id(updates)
+            chat_id = self.__get_chat_id(messages)
             if chat_id is None:
                 require_bot_token = False
                 print('No messages found.')
@@ -91,27 +91,53 @@ class Telegram:
 
             require_bot_token = True
 
+    def get_user_responses(self, full_response: bool, skip_update_data_request=False):
+        """
+        Retrieve the messages user sent to the bot on telegram.
+        :param full_response: bool -> return the whole messages
+        :param skip_update_data_request: bool -> should I skip the update of the data
+        :return:
+        """
+        telegram_data = self.__get_telegram_data(skip_update_data_request)
+        if telegram_data is None:
+            return None
+
+        updates = requests.get(self.__get_telegram_url(telegram_data[self.__BOT_TOKEN], 'getUpdates')).json()
+        if 'ok' not in updates or updates['ok'] is False:
+            return None
+
+        responses = [update['message'] for update in updates if 'message' in update
+                     and update['message']['chat']['id'] == int(telegram_data['chatId'])]
+
+        if not full_response:
+            responses = [r['text'] for r in responses]
+
+        return responses
+
     def has_valid_data(self):
         return self.__get_telegram_data() is not None
 
-    def __get_telegram_data(self):
+    def __get_telegram_data(self, skip_update_data_request=False):
         """
         This function returns stored Telegram data and checks if there is any.
         If there is no data - trying to update the data
         If there is data - returns the data
+        :param skip_update_data_request: bool -> should I skip the update of the data
         :return: dict[]/None
         """
         telegram_data = self.__db.get_stored_value(self.__DB_KEY)
         if self.__is_data_valid(telegram_data):
             return telegram_data
 
+        if skip_update_data_request:
+            return None
+
         return self.update_data()
 
     @staticmethod
-    def __get_chat_id(bot_updates_response):
-        for update in bot_updates_response['result']:
-            if 'message' in update:
-                return update['message']['chat']['id']
+    def __get_chat_id(messages):
+        for message in messages['result']:
+            return message['message']['chat']['id']
         return None
 
     @staticmethod
