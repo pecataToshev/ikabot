@@ -26,7 +26,7 @@ from ikabot.function.loginDaily import loginDaily
 from ikabot.function.proxyConf import proxyConf, show_proxy
 from ikabot.function.searchForIslandSpaces import searchForIslandSpaces
 from ikabot.function.sellResources import sellResources
-from ikabot.function.sendResources import sendResources
+from ikabot.function.transportGoodsBotConfigurator import transport_goods_bot_configurator
 from ikabot.function.shipMovements import shipMovements
 from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.function.stationArmy import stationArmy
@@ -54,7 +54,7 @@ _global_menu = [
     ]],
     ['Resources & Donations', [
         __command_back,
-        ['Send resources', sendResources],
+        ['Send resources', transport_goods_bot_configurator],
         ['Distribute resources', distributeResources],
         ['Donate once', islandWorkplaces],
         ['Donate automatically', donationBot],
