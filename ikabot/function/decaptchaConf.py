@@ -5,7 +5,6 @@ import time
 
 import requests
 
-from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.gui import banner, bcolors, enter
 from ikabot.helpers.pedirInfo import askUserYesNo, read
 

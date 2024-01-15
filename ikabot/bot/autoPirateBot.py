@@ -3,7 +3,6 @@ import logging
 
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest
-from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.catpcha import resolveCaptcha
 from ikabot.helpers.piracy import convertCapturePoints, getPiracyTemplateData
 
@@ -121,7 +120,7 @@ class AutoPirateBot(Bot):
                      total_missions)
 
         if self.bot_config['notifyWhenFinished']:
-            sendToBot(self.ikariam_service, "I'm done with pirating")
+            self.telegram.send_message("I'm done with pirating")
 
     def __is_config_active(self, given_time, schedule_config):
         """
@@ -217,11 +216,14 @@ class AutoPirateBot(Bot):
                 and '"showPirateFortressShip":0' in html:
 
             time_wait_for_conversion_start = 0
-            # Well, it's far more convenient that we're going to execute the conversion right after we've started the new
-            # mission rather that waiting the mission to end
+            # Well, it's far more convenient that we're going to execute the conversion right after we've started the
+            # new mission rather that waiting the mission to end
             if self.convert_points is not None:
-                time_wait_for_conversion_start = self.ikariam_service.wait(3, 'Simulating user before converting points',
-                                                                           max_random=5)
+                time_wait_for_conversion_start = self.ikariam_service.wait(
+                    seconds=3,
+                    info='Simulating user before converting points',
+                    max_random=5
+                )
                 if self.convert_points == 'mission':
                     convert_points_to_strength = mission['capturePoints']
                 else:
@@ -254,7 +256,7 @@ class AutoPirateBot(Bot):
 
             picture = self.ikariam_service.get('action=Options&function=createCaptcha',
                                                fullResponse=True).content
-            captcha = resolveCaptcha(self.ikariam_service, picture)
+            captcha = resolveCaptcha(self.db, self.telegram, picture)
 
             logging.info("Resolved captcha to %s", captcha)
 

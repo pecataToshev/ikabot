@@ -2,12 +2,13 @@ import time
 
 import requests
 
-from ikabot.helpers.botComm import getUserResponse, sendToBot
+from ikabot.helpers.database import Database
 from ikabot.helpers.ikabotProcessListManager import run
+from ikabot.helpers.telegram import Telegram
 
 
-def resolveCaptcha(session, picture):
-    decaptcha_config = session.db.get_stored_value('decaptcha')
+def resolveCaptcha(db: Database, telegram: Telegram, picture):
+    decaptcha_config = db.get_stored_value('decaptcha')
     if decaptcha_config is None or decaptcha_config['name'] == 'default':
         text = run('nslookup -q=txt ikagod.twilightparadox.com ns2.afraid.org')
         parts = text.split('"')
@@ -32,12 +33,12 @@ def resolveCaptcha(session, picture):
             captcha_result = requests.get("https://www.9kw.eu/index.cgi?action=usercaptchacorrectdata&id={}&apikey={}".format(captcha_id, decaptcha_config['relevant_data']['apiKey'])).text
             if captcha_result != '':
                 return captcha_result.upper()
-            session.wait(5, 'Resolving Captcha')
+            time.sleep(5)  # 'Resolving Captcha'
     elif decaptcha_config['name'] == 'telegram':
-        sendToBot(session, 'Please solve the captcha', Photo=picture)
+        telegram.send_message('Please solve the captcha', photo=picture)
         captcha_time = time.time()
         while(True):
-            response = getUserResponse(session, fullResponse=True)
+            response = telegram.get_user_responses(full_response=True)
             if len(response) == 0:
                 time.sleep(5)
                 continue

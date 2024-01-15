@@ -30,11 +30,10 @@ from ikabot.function.transportGoodsBotConfigurator import transport_goods_bot_co
 from ikabot.function.shipMovements import shipMovements
 from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.function.stationArmy import stationArmy
-from ikabot.function.testTelegramBot import testTelegramBot
+from ikabot.function.telegramFunctions import test_telegram_bot, update_telegram_bot
 from ikabot.function.trainArmy import trainArmy
 from ikabot.function.update import update
 from ikabot.function.vacationMode import vacationMode
-from ikabot.helpers.botComm import updateTelegramData
 from ikabot.helpers.gui import banner, formatTimestamp
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.pedirInfo import read
@@ -104,8 +103,8 @@ _global_menu = [
         ['Configure Proxy', proxyConf],
         ['Telegram Bot', [
             __command_back,
-            ['Change bot data', updateTelegramData],
-            ['Test message the bot', testTelegramBot],
+            ['Change bot data', update_telegram_bot],
+            ['Test message the bot', test_telegram_bot],
         ]],
         ['Kill tasks', kill_tasks],
         ['Configure captcha resolver', decaptchaConf],
