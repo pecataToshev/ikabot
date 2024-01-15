@@ -2,18 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from ikabot.bot.wineMonitoringBot import WineMonitoringBot
+from ikabot.helpers.database import Database
 from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.telegram import Telegram
+from ikabot.web.ikariamService import IkariamService
 
 
-def configure_wine_monitoring_bot(ikariam_service, db, telegram):
-    """
-    Parameters
-    ----------
-    ikariam_service : ikabot.web.ikariamService.IkariamService
-    db: ikabot.helpers.database.Database
-    telegram: ikabot.helpers.telegram.Telegram
-    """
+def configure_wine_monitoring_bot(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     banner()
 
     if not telegram.has_valid_data():
