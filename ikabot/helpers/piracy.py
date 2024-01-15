@@ -29,17 +29,17 @@ def getPiracyTemplateData(session, city_id):
     return json.loads(_template_data, strict=False)
 
 
-def findCityWithTheBiggestPiracyFortress(session):
+def findCityWithTheBiggestPiracyFortress(ikariam_service):
     """
     Finds and returns the id of the city with the biggest pirate fortress.
-    :param session: ikabot.web.session.Session
+    :param ikariam_service: ikabot.web.session.Session
     :return: int
     """
-    [cities_ids, _] = getIdsOfCities(session)
+    [cities_ids, _] = getIdsOfCities(ikariam_service)
     pirate_city = None
     max_level = 0
     for city_id in cities_ids:
-        city = getCity(session.get(city_url + city_id))
+        city = getCity(ikariam_service.get(city_url + city_id))
         for building in city['position']:
             if building['building'] == 'pirateFortress' and building['level'] > max_level:
                 pirate_city = city_id

@@ -7,8 +7,6 @@ from decimal import Decimal, getcontext
 
 from ikabot.config import actionRequest
 
-getcontext().prec = 30
-
 
 def getAvailableResources(html, num=False):
     """

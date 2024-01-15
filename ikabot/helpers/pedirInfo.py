@@ -9,8 +9,7 @@ from ikabot import config
 from ikabot.config import city_url, island_url, MAXIMUM_CITY_NAME_LENGTH, prompt
 from ikabot.helpers.getJson import getCity, getIsland
 from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
-
-getcontext().prec = 30
+from ikabot.web.ikariamService import IkariamService
 
 menu_cities = ''
 ids_cache = None
@@ -94,11 +93,11 @@ def askUserYesNo(question):
     ).lower() == 'y'
 
 
-def chooseCity(session, foreign=False):
+def chooseCity(ikariam_service: IkariamService, foreign=False):
     """Prompts the user to chose a city
     Parameters
     ----------
-    session : ikabot.web.ikariamService.IkariamService
+    ikariam_service : ikabot.web.ikariamService.IkariamService
         Session object
     foreign : bool
         lets the user choose a foreign city
@@ -109,7 +108,7 @@ def chooseCity(session, foreign=False):
         a city object representing the chosen city
     """
     global menu_cities
-    (ids, cities) = getIdsOfCities(session)
+    (ids, cities) = getIdsOfCities(ikariam_service)
     if menu_cities == '':
         longest_city_name_length: int = max([len(decodeUnicodeEscape(cities[city_id]['name'])) for city_id in ids])
 
@@ -139,9 +138,9 @@ def chooseCity(session, foreign=False):
     else:
         selected_city_index = read(min=1, max=len(ids))
     if selected_city_index == 0:
-        return chooseForeignCity(session)
+        return chooseForeignCity(ikariam_service)
     else:
-        html = session.get(city_url + ids[selected_city_index - 1])
+        html = ikariam_service.get(city_url + ids[selected_city_index - 1])
         return getCity(html)
 
 
@@ -219,11 +218,11 @@ def askForValue(text, max_val):
     return var
 
 
-def getIdsOfCities(session, all=False):
+def getIdsOfCities(ikariam_service, all=False):
     """Gets the user's cities
     Parameters
     ----------
-    session : ikabot.web.ikariamService.IkariamService
+    ikariam_service : ikabot.web.ikariamService.IkariamService
         Session object
     all : bool
         boolean indicating whether all cities should be returned, or only those that belong to the current user
@@ -231,12 +230,12 @@ def getIdsOfCities(session, all=False):
     Returns
     -------
     (ids, cities) : tuple
-        a tuple containing the a list of city IDs and a list of city objects
+        a tuple containing the list of city IDs and a list of city objects
     """
     global cities_cache
     global ids_cache
-    if ids_cache is None or cities_cache is None or session.padre is False:
-        html = session.get()
+    if ids_cache is None or cities_cache is None or ikariam_service.padre is False:
+        html = ikariam_service.get()
         cities_cache = re.search(r'relatedCityData:\sJSON\.parse\(\'(.+?),\\"additionalInfo', html).group(1) + '}'
         cities_cache = cities_cache.replace('\\', '')
         cities_cache = cities_cache.replace('city_', '')
