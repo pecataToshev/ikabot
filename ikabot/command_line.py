@@ -1,19 +1,15 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-import multiprocessing
-import os
-import sys
 import time
 
-import ikabot.config as config
-from ikabot.config import isWindows
 from ikabot.function.activateMiracle import activateMiracle
-from ikabot.function.alertAttacks import alertAttacks
-from ikabot.function.alertLowWine import alertLowWine
+from ikabot.function.attacksMonitoringBotConfigurator import configure_alert_attacks_monitoring_bot
+from ikabot.function.wineMonitoringBotConfigurator import configure_wine_monitoring_bot
 from ikabot.function.attackBarbarians import attackBarbarians
 from ikabot.function.autoPiracyBotConfigurator import autoPiracyBotConfigurator
 from ikabot.function.buyResources import buyResources
-from ikabot.function.checkForUpdate import checkForUpdate
+from ikabot.function.conductExperimentBotConfigurator import configure_conduct_experiment_bot
+from ikabot.helpers.checkForUpdate import checkForUpdate
 from ikabot.function.constructBuilding import constructBuilding
 from ikabot.function.constructionList import constructionList
 from ikabot.function.decaptchaConf import decaptchaConf
@@ -22,8 +18,8 @@ from ikabot.function.donationBot import donationBot
 from ikabot.function.dumpWorld import dumpWorld
 from ikabot.function.getStatus import getStatus
 from ikabot.function.getStatusImproved import getStatusForAllCities
-from ikabot.function.importExportCookie import importExportCookie
-from ikabot.function.investigate import investigate
+from ikabot.function.importExportCookie import importCookie, exportCookie
+from ikabot.function.studies import study
 from ikabot.function.islandWorkplaces import islandWorkplaces
 from ikabot.function.killTasks import killTasks
 from ikabot.function.loginDaily import loginDaily
@@ -39,11 +35,9 @@ from ikabot.function.trainArmy import trainArmy
 from ikabot.function.update import update
 from ikabot.function.vacationMode import vacationMode
 from ikabot.helpers.botComm import updateTelegramData
-from ikabot.helpers.gui import banner, enter, clear, formatTimestamp
-from ikabot.helpers.logs import setup_logging
-from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.gui import banner, formatTimestamp
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
-from ikabot.web.ikariamService import IkariamService
+from ikabot.helpers.pedirInfo import read
 
 __function_refresh = 'refresh'
 __function_exit = 'exit'
@@ -72,8 +66,8 @@ _global_menu = [
     ]],
     ['Alerts / Monitoring', [
         __command_back,
-        ['Alert attacks', alertAttacks],
-        ['Alert wine running out', alertLowWine],
+        ['Alert attacks', configure_alert_attacks_monitoring_bot],
+        ['Alert wine running out', configure_wine_monitoring_bot],
         ['Monitor islands', searchForIslandSpaces],
     ]],
     ['Marketplace', [
@@ -94,7 +88,11 @@ _global_menu = [
         ['Show Piracy Stats', showPiracyInfo],
         ['Configure Auto-Pirate Bot', autoPiracyBotConfigurator],
     ]],
-    ['Academy & Studies', investigate],
+    ['Academy', [
+        __command_back,
+        ['Study', study],
+        ['Conduct Experiments', configure_conduct_experiment_bot],
+    ]],
     ['Game Account Functions', [
         __command_back,
         ['Login daily', loginDaily],
@@ -111,7 +109,11 @@ _global_menu = [
         ]],
         ['Kill tasks', killTasks],
         ['Configure captcha resolver', decaptchaConf],
-        ['Import / Export cookie', importExportCookie],
+        ['Cookies', [
+            __command_back,
+            ['Import', importCookie],
+            ['Export', exportCookie],
+        ]],
         ['Update Ikabot', update],
     ]],
 ]
@@ -131,15 +133,17 @@ def choose_from_menu(menu_options, prefix=''):
     return fn
 
 
-def menu(session):
+def menu(ikariam_service, db, telegram):
     """
     Parameters
     ----------
-    session : ikabot.web.ikariamService.IkariamService
+    ikariam_service : ikabot.web.ikariamService.IkariamService
+    db: ikabot.helpers.database.Database
+    telegram: ikabot.helpers.telegram.Telegram
     """
     checkForUpdate()
-    show_proxy(session)
-    process_list_manager = IkabotProcessListManager(session)
+    show_proxy(db)
+    process_list_manager = IkabotProcessListManager(db)
 
     while True:
         banner()
@@ -158,66 +162,8 @@ def menu(session):
                 # we just need to refresh the menu
                 continue
 
-            def handle_comon_target_logic(target, _s, _e, _fd, _in):
-                _s.initDatabase()
-                process_list_manager.upsert_process({
-                    'action': target.__name__,
-                    'status': 'started'
-                })
-                target(_s, _e, _fd, _in)
-
             # we've selected a function, let's execute it
-            event = multiprocessing.Event()  # creates a new event
-            config.has_params = len(config.predetermined_input) > 0
-            process = multiprocessing.Process(
-                target=handle_comon_target_logic,
-                args=(selected, session, event, sys.stdin.fileno(), config.predetermined_input),
-                name=selected.__name__
-            )
-            process.start()
-
-            # waits for the process to fire the event that's been given to it.
-            # When it does  this process gets back control of the command line
-            # and asks user for more input
-            event.wait()
+            selected(ikariam_service, db, telegram)
         except KeyboardInterrupt:
             # we're going to refresh the menu
             pass
-
-
-def init():
-    home = 'USERPROFILE' if isWindows else 'HOME'
-    os.chdir(os.getenv(home))
-    # if not os.path.isfile(config.ikaFile):
-    #     open(config.ikaFile, 'w')
-    #     os.chmod(config.ikaFile, 0o600)
-
-
-def start():
-    init()
-    config.has_params = len(sys.argv) > 1
-    for arg in sys.argv:
-        try:
-            config.predetermined_input.append(int(arg))
-        except ValueError:
-            config.predetermined_input.append(arg)
-    config.predetermined_input.pop(0)
-
-    print("Starting session")
-    session = IkariamService()
-    try:
-        menu(session)
-    finally:
-        clear()
-        session.logout()
-
-
-def start_command_line():
-    setup_logging()
-    manager = multiprocessing.Manager()
-    predetermined_input = manager.list()
-    config.predetermined_input = predetermined_input
-    try:
-        start()
-    except KeyboardInterrupt:
-        clear()
