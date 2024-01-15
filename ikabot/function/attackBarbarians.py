@@ -15,13 +15,11 @@ from ikabot.config import actionRequest, island_url, materials_names
 from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import addThousandSeparator, banner, enter, getCurrentCityId
-from ikabot.helpers.naval import getTotalShips
+from ikabot.helpers.naval import get_military_and_see_movements, getTotalShips
 from ikabot.helpers.pedirInfo import chooseCity, getIslandsIds, read
 from ikabot.helpers.planRoutes import waitForAvailableShips
 from ikabot.helpers.ikabotProcessListManager import set_child_mode
 from ikabot.helpers.signals import setInfoSignal
-
-getcontext().prec = 30
 
 
 def choose_island(session):
@@ -346,30 +344,9 @@ def wait_until_can_attack(session, city, island, travel_time=0):
         wait_until_can_attack(session, city, island, travel_time)
 
 
-def get_movements(session, city_id=None):
-    if city_id is None:
-        city_id = getCurrentCityId(session)
-    query = {
-        'view': 'militaryAdvisor',
-        'oldView': 'updateGlobalData',
-        'cityId': city_id,
-        'backgroundView': 'city',
-        'currentCityId': city_id,
-        'templateView': 'militaryAdvisor',
-        'actionRequest': actionRequest,
-        'ajax': 1
-    }
-
-    resp = session.post(params=query)
-    resp = json.loads(resp, strict=False)
-    movements = resp[1][1][2]['viewScriptParams']['militaryAndFleetMovements']
-
-    return movements
-
-
 def get_current_attacks(session, city_id, island_id):
 
-    movements = get_movements(session, city_id)
+    movements = get_military_and_see_movements(session, city_id)
     curr_attacks = []
 
     for movement in movements:

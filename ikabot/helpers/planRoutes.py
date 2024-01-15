@@ -1,26 +1,24 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import json
 import random
-import re
+import time
 
-from ikabot.config import actionRequest
-from ikabot.helpers.naval import getAvailableShips
+from ikabot.helpers.naval import get_military_and_see_movements, getAvailableShips
 
 
 def get_random_wait_time():
     return random.randint(0, 20) * 3
 
 
-def getMinimumWaitingTime(session):
+def getMinimumWaitingTime(ikariam_service):
     """This function returns the time needed to wait for the closest fleet to arrive. If all ships are unavailable,
     this represents the minimum time needed to wait for any ships to become available.
     A random waiting time between 0 and 10 seconds is added to the waiting time to avoid race conditions between
     multiple concurrently running processes.
     Parameters
     ----------
-    session : ikabot.web.ikariamService.IkariamService
+    ikariam_service : ikabot.web.ikariamService.IkariamService
         Session object
 
     Returns
@@ -28,17 +26,11 @@ def getMinimumWaitingTime(session):
     timeToWait : int
         the minimum waiting time for the closest fleet to arrive
     """
-    html = session.get()
-    idCiudad = re.search(r'currentCityId:\s(\d+),', html).group(1)
-    url = 'view=militaryAdvisor&oldView=city&oldBackgroundView=city&backgroundView=city&currentCityId={}&actionRequest={}&ajax=1'.format(
-        idCiudad, actionRequest)
-    posted = session.post(url)
-    postdata = json.loads(posted, strict=False)
-    militaryMovements = postdata[1][1][2]['viewScriptParams']['militaryAndFleetMovements']
-    current_time = int(postdata[0][1]['time'])
+    military_movements = get_military_and_see_movements(ikariam_service)
+    current_time = time.time()
     delivered_times = []
-    for militaryMovement in [mv for mv in militaryMovements if mv['isOwnArmyOrFleet']]:
-        remaining_time = int(militaryMovement['eventTime']) - current_time
+    for military_movement in [mv for mv in military_movements if mv['isOwnArmyOrFleet']]:
+        remaining_time = int(military_movement['eventTime']) - current_time
         delivered_times.append(remaining_time)
     if delivered_times:
         return min(delivered_times) + get_random_wait_time()
