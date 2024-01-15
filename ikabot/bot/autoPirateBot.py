@@ -14,8 +14,8 @@ class AutoPirateBot(Bot):
     """
     __MAXIMUM_PIRATE_MISSION_START_ATTEMPTS = 20
 
-    def __init__(self, session, bot_config):
-        super().__init__(session, bot_config)
+    def __init__(self, ikariam_service, bot_config):
+        super().__init__(ikariam_service, bot_config)
         self.bot_type = bot_config['type']
         self.city_id = bot_config['cityId']
         self.convert_points = bot_config.get('convertPoints', None)
@@ -70,7 +70,7 @@ class AutoPirateBot(Bot):
                 if last_mission_type == 'nightly':
                     # we've executed one night mission. sleep till day start
                     total_sleep_time = self.__get_time_to_sleep_to_next_given_hour(now, day_config['startHour'])
-                    self.session.wait(
+                    self.ikariam_service.wait(
                         total_sleep_time,
                         "Sleeping until day start @{}h".format(day_config['startHour'])
                     )
@@ -90,12 +90,12 @@ class AutoPirateBot(Bot):
                 seconds_to_night_start = self.__get_time_to_sleep_to_next_given_hour(now, night_config['startHour'])
 
                 if seconds_to_day_start <= seconds_to_night_start:
-                    self.session.wait(
+                    self.ikariam_service.wait(
                         seconds_to_day_start,
                         "Schedule gap. Sleeping until day start @{}h".format(day_config['startHour'])
                     )
                 else:
-                    self.session.wait(
+                    self.ikariam_service.wait(
                         seconds_to_night_start,
                         "Schedule gap. Sleeping until night start @{}h".format(night_config['startHour'])
                     )
@@ -121,7 +121,7 @@ class AutoPirateBot(Bot):
                      total_missions)
 
         if self.bot_config['notifyWhenFinished']:
-            sendToBot(self.session, "I'm done with pirating")
+            sendToBot(self.ikariam_service, "I'm done with pirating")
 
     def __is_config_active(self, given_time, schedule_config):
         """
@@ -143,7 +143,7 @@ class AutoPirateBot(Bot):
         :return: void
         """
         if self.max_break_time > 0:
-            self.session.wait(
+            self.ikariam_service.wait(
                 seconds=1,
                 info='Waiting between missions. ' + additional_info,
                 max_random=self.max_break_time - 1)
@@ -154,11 +154,11 @@ class AutoPirateBot(Bot):
         template data of the response
         :return: dict[]
         """
-        data = getPiracyTemplateData(self.session, self.city_id)
+        data = getPiracyTemplateData(self.ikariam_service, self.city_id)
         if data['hasOngoingMission']:
-            self.session.wait(data['ongoingMissionTimeRemaining'],
+            self.ikariam_service.wait(data['ongoingMissionTimeRemaining'],
                               'Found unexpected mission. Waiting it to end.',
-                              max_random=5)
+                                      max_random=5)
             return self.__get_template_data_and_wait_ongoing_mission()
 
         return data
@@ -212,7 +212,7 @@ class AutoPirateBot(Bot):
             })
 
         # try to execute the pirate mission
-        html = self.session.post(params=params, noIndex=captcha is not None)
+        html = self.ikariam_service.post(params=params, noIndex=captcha is not None)
         if 'function=createCaptcha' not in html \
                 and '"showPirateFortressShip":0' in html:
 
@@ -220,18 +220,18 @@ class AutoPirateBot(Bot):
             # Well, it's far more convenient that we're going to execute the conversion right after we've started the new
             # mission rather that waiting the mission to end
             if self.convert_points is not None:
-                time_wait_for_conversion_start = self.session.wait(3, 'Simulating user before converting points',
-                                                                   max_random=5)
+                time_wait_for_conversion_start = self.ikariam_service.wait(3, 'Simulating user before converting points',
+                                                                           max_random=5)
                 if self.convert_points == 'mission':
                     convert_points_to_strength = mission['capturePoints']
                 else:
                     convert_points_to_strength = int(self.convert_points)
-                convertCapturePoints(self.session, self.city_id, convert_points_to_strength)
+                convertCapturePoints(self.ikariam_service, self.city_id, convert_points_to_strength)
 
             # execution is successful, go get some sleep
-            self.session.wait(mission['duration'] - time_wait_for_conversion_start,
+            self.ikariam_service.wait(mission['duration'] - time_wait_for_conversion_start,
                               'Executing piracy mission {}. {}'.format(mission['name'], additional_message),
-                              max_random=10)
+                                      max_random=10)
 
             return
 
@@ -245,16 +245,16 @@ class AutoPirateBot(Bot):
                 remaining_attempts=remaining_attempts - 1,
             )
 
-        self.session.setProcessInfo('We have to solve some captcha. Let me handle that')
+        self.ikariam_service.setProcessInfo('We have to solve some captcha. Let me handle that')
         captcha = None  # well, captcha failed, let's generate a new one
         while (captcha is None or captcha == 'Error') and remaining_attempts > 0:
             remaining_attempts -= 1
             logging.info("Found captcha. Trying to resolve it. "
                          "%d attempts remaining", remaining_attempts)
 
-            picture = self.session.get('action=Options&function=createCaptcha',
-                                       fullResponse=True).content
-            captcha = resolveCaptcha(self.session, picture)
+            picture = self.ikariam_service.get('action=Options&function=createCaptcha',
+                                               fullResponse=True).content
+            captcha = resolveCaptcha(self.ikariam_service, picture)
 
             logging.info("Resolved captcha to %s", captcha)
 

@@ -80,11 +80,11 @@ class TransportGoodsBot(Bot):
             obj = f'Sending {remaining_str} ---> {job.target_city["name"]}'
             self._set_process_info(message=obj, target_city=job.origin_city["name"])
 
-            ships_available = waitForAvailableShips(self.session, self._wait)
+            ships_available = waitForAvailableShips(self.ikariam_service, self._wait)
             storage_capacity_in_ships = ships_available * self.__MAXIMUM_SHIP_SIZE
 
-            origin_city = getCity(self.session.get(city_url + str(job.origin_city['id'])))
-            target_city = getCity(self.session.get(city_url + str(job.target_city['id'])))
+            origin_city = getCity(self.ikariam_service.get(city_url + str(job.origin_city['id'])))
+            target_city = getCity(self.ikariam_service.get(city_url + str(job.target_city['id'])))
 
             foreign = str(target_city['id']) != str(job.target_city['id'])
             if not foreign:
@@ -127,7 +127,7 @@ class TransportGoodsBot(Bot):
         # this can fail if a random request is made in between this two posts
 
         # Change from the city the bot is sitting right now to the city we want to load resources from
-        self.session.post(
+        self.ikariam_service.post(
             noIndex=True,
             params={
                 'action': 'header',
@@ -136,7 +136,7 @@ class TransportGoodsBot(Bot):
                 'oldView': 'city',
                 'cityId': origin_city['id'],
                 'backgroundView': 'city',
-                'currentCityId': getCurrentCityId(self.session),
+                'currentCityId': getCurrentCityId(self.ikariam_service),
                 'ajax': '1'
             }
         )
@@ -173,7 +173,7 @@ class TransportGoodsBot(Bot):
             key = 'cargo_resource' if ind == 0 else 'cargo_tradegood{:d}'.format(ind)
             data[key] = res
 
-        resp = self.session.post(params=data)
+        resp = self.ikariam_service.post(params=data)
         resp = json.loads(resp, strict=False)
         if resp[3][1][0]['type'] == 10:
             return resources_to_send

@@ -20,16 +20,16 @@ class Bot(ABC):
     def _start(self) -> None:
         raise NotImplementedError('Implement me in the current bot class')
 
-    def __init__(self, session, bot_config):
-        self.session = session
+    def __init__(self, ikariam_service, bot_config):
+        self.ikariam_service = ikariam_service
         self.bot_config = bot_config
 
     def __prepare_and_start_process(self, action, objective, target_city):
         try:
-            self.session.padre = False
+            self.ikariam_service.padre = False
             self.__setup_process_signals()
 
-            self.db = Database(bot_name=self.session.botName)
+            self.db = Database(bot_name=self.ikariam_service.botName)
             self.telegram = Telegram(db=self.db, is_user_attached=False)
             self.__process_manager = IkabotProcessListManager(self.db)
 
@@ -38,6 +38,7 @@ class Bot(ABC):
                 'objective': objective,
                 'targetCity': target_city
             })
+            self.ikariam_service.reset_db_telegram(db=self.db, telegram=self.telegram)
 
             logging.info("Starting %s with config: %s", self.__class__.__name__, self.bot_config)
             self._start()
@@ -49,8 +50,8 @@ class Bot(ABC):
             self.telegram.send_message(msg)
 
         finally:
+            self.ikariam_service.logout()
             self.db.close_db_conn()
-            self.session.logout()
 
     def start(self, action, objective, target_city=None):
         """

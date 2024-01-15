@@ -17,8 +17,8 @@ class BuildingUpgradeBot(Bot):
     __MAXIMUM_FAILED_WAITING_TIMES_ATTEMTPS = 3
     __SLEEP_DURATION_BETWEEN_FAILED_WAIT_TIMES = 20
 
-    def __init__(self, session, bot_config):
-        super().__init__(session, bot_config)
+    def __init__(self, ikariam_service, bot_config):
+        super().__init__(ikariam_service, bot_config)
         self.city_id = bot_config['cityId']
         self.city_name = bot_config['cityName']
 
@@ -87,7 +87,7 @@ class BuildingUpgradeBot(Bot):
         """
         failed_consecutive_wait_times = 0
         while True:
-            city = getCity(self.session.get(city_url + self.city_id))
+            city = getCity(self.ikariam_service.get(city_url + self.city_id))
             building = city['position'][self.building_position]
 
             self.__validate_building(building)
@@ -100,7 +100,7 @@ class BuildingUpgradeBot(Bot):
                 self.__expand_building(building)
 
                 # check if the upgrade has started
-                city = getCity(self.session.get(city_url + self.city_id))
+                city = getCity(self.ikariam_service.get(city_url + self.city_id))
                 building_in_construction = self.__get_currently_expanding_building(city)
                 if (building_in_construction is None
                         or building_in_construction['position'] != self.building_position
@@ -134,7 +134,7 @@ class BuildingUpgradeBot(Bot):
 
     def __get_waiting_times_with_reason(self, building_in_construction):
         waiting_times = []
-        minimal_fleet_arriving_time = getMinimumWaitingTime(self.session)
+        minimal_fleet_arriving_time = getMinimumWaitingTime(self.ikariam_service)
         if minimal_fleet_arriving_time > 0:
             waiting_times.append([
                 minimal_fleet_arriving_time,
@@ -181,7 +181,7 @@ class BuildingUpgradeBot(Bot):
         return self.get_building_level(building) < self.building_target_level
 
     def __expand_building(self, building):
-        self.session.post(
+        self.ikariam_service.post(
             noIndex=True,
             params={
                 'action': 'CityScreen',
