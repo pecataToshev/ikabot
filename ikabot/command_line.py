@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import time
 
-from ikabot.function.activateMiracle import activateMiracle
+from ikabot.function.activateMiracleBotConfigurator import activate_miracle_bot_configurator
 from ikabot.function.attacksMonitoringBotConfigurator import configure_alert_attacks_monitoring_bot
 from ikabot.function.wineMonitoringBotConfigurator import configure_wine_monitoring_bot
 from ikabot.function.attackBarbarians import attackBarbarians
@@ -11,7 +11,7 @@ from ikabot.function.buyResources import buyResources
 from ikabot.function.conductExperimentBotConfigurator import configure_conduct_experiment_bot
 from ikabot.helpers.checkForUpdate import checkForUpdate
 from ikabot.function.constructBuilding import constructBuilding
-from ikabot.function.constructionList import constructionList
+from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_bot_configurator
 from ikabot.function.decaptchaConf import decaptchaConf
 from ikabot.function.distributeResources import distributeResources
 from ikabot.function.donationBot import donationBot
@@ -49,7 +49,7 @@ _global_menu = [
     ['Refresh process info', __function_refresh],
     ['Construction', [
         __command_back,
-        ['Building Upgrades', constructionList],
+        ['Building Upgrades', upgrade_building_bot_configurator],
         ['Construct building', constructBuilding],
     ]],
     ['Resources & Donations', [
@@ -75,7 +75,7 @@ _global_menu = [
         ['Buy resources', buyResources],
         ['Sell resources', sellResources],
     ]],
-    ['Activate miracle', activateMiracle],
+    ['Activate miracle', activate_miracle_bot_configurator],
     ['Military actions', [
         __command_back,
         ['Train Army', trainArmy],

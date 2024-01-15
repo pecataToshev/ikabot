@@ -30,12 +30,12 @@ class TransportGoodsBot(Bot):
         return 'I execute transportation of resources'
 
     def _start(self) -> None:
-        jobs = self.__optimize_jobs(self.bot_config['jobs'])
+        jobs = self.optimize_jobs(self.bot_config['jobs'])
         for job in jobs:
             self.__execute_job(job)
 
     @staticmethod
-    def __optimize_jobs(jobs: list[TransportJob]) -> list[TransportJob]:
+    def optimize_jobs(jobs: list[TransportJob]) -> list[TransportJob]:
         """
         Optimizes routes by origin city
         :param jobs: the jobs to optimize

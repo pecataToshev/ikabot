@@ -1,20 +1,16 @@
-import datetime
-import logging
 import time
-import traceback
 
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url
-from ikabot.helpers.botComm import sendToBot
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.planRoutes import getMinimumWaitingTime
 
 
-class BuildingUpgradeBot(Bot):
+class UpgradeBuildingBot(Bot):
     """
     Upgrades building and transport resources automatically
     """
-    __MAXIMUM_FAILED_WAITING_TIMES_ATTEMTPS = 3
+    __MAXIMUM_FAILED_WAITING_TIMES_ATTEMPTS = 3
     __SLEEP_DURATION_BETWEEN_FAILED_WAIT_TIMES = 20
 
     def __init__(self, ikariam_service, bot_config):
@@ -117,13 +113,13 @@ class BuildingUpgradeBot(Bot):
             waiting_times = self.__get_waiting_times_with_reason(building_in_construction)
             if len(waiting_times) == 0:
                 failed_consecutive_wait_times += 1
-                if failed_consecutive_wait_times > self.__MAXIMUM_FAILED_WAITING_TIMES_ATTEMTPS:
+                if failed_consecutive_wait_times > self.__MAXIMUM_FAILED_WAITING_TIMES_ATTEMPTS:
                     raise Exception('I failed {} times to get waiting time. '
                                     'Something is wrong...'.format(failed_consecutive_wait_times))
                 self._wait(
                     self.__SLEEP_DURATION_BETWEEN_FAILED_WAIT_TIMES,
                     'Failed to get adequate waiting times {}/{}. Will try again'.format(
-                        failed_consecutive_wait_times, self.__MAXIMUM_FAILED_WAITING_TIMES_ATTEMTPS
+                        failed_consecutive_wait_times, self.__MAXIMUM_FAILED_WAITING_TIMES_ATTEMPTS
                     )
                 )
                 continue
