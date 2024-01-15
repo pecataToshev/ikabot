@@ -1,34 +1,26 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
-import os
+import random
 import re
-import sys
+import time
 
 from ikabot import config
 from ikabot.config import actionRequest, materials_names
+from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter, printProgressBar, \
     rightAlign
 from ikabot.helpers.pedirInfo import getIdsOfCities, read
+from ikabot.helpers.telegram import Telegram
+from ikabot.web.ikariamService import IkariamService
 
 
 def get_number(s):
     return int(s.replace(',', '').replace('.', ''))
 
 
-def islandWorkplaces(session, event, stdin_fd, predetermined_input):
-    """
-    Parameters
-    ----------
-    session : ikabot.web.ikariamService.IkariamService
-    event : multiprocessing.Event
-    stdin_fd: int
-    predetermined_input : multiprocessing.managers.SyncManager.list
-    """
-    sys.stdin = os.fdopen(stdin_fd)
-    config.predetermined_input = predetermined_input
-
+def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     action_exit = "Exit"
     action_donate = "Donate"
     action_change_workers = "Change workers"
@@ -107,13 +99,15 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
         return data
 
     def open_city_window(city_id):
-        return session.get(config.city_url + city_id)
+        return ikariam_service.get(config.city_url + city_id)
 
     def open_island_window(island_id):
-        return session.get(config.island_url + island_id)
+        return ikariam_service.get(config.island_url + island_id)
 
     def open_workplace_window(material_ind, island_id):
-        return session.post(params={
+        # Simulate user time to react
+        time.sleep(1+random.random())
+        return ikariam_service.post(params={
             'view': get_view(material_ind),
             'type': 'resource' if material_ind == 0 else material_ind,
             'islandId': island_id,
@@ -145,9 +139,7 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
         Retrieves workspaces data for current user
         :return: list[json workplaces]
         """
-        island_view_opened = False
-
-        [city_ids, cities] = getIdsOfCities(session, False)
+        [city_ids, cities] = getIdsOfCities(ikariam_service, False)
         loading_msg = "Loading workplaces for cities"
         all_workplaces = 3 * len(city_ids)
 
@@ -155,6 +147,7 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
 
         for city_ind, city_id in enumerate(city_ids):
             printProgressBar(loading_msg, city_ind*3+1, all_workplaces)
+            time.sleep(1+random.random())
             city = getCity(open_city_window(city_id))
 
             island_id = city['islandId']
@@ -165,9 +158,8 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
             }
 
             # Simulate person
-            if not island_view_opened:
-                open_island_window(island_id)
-                island_view_opened = True
+            time.sleep(1+random.random())
+            open_island_window(island_id)
 
             printProgressBar(loading_msg, city_ind*3+2, all_workplaces)
             workplaces.append(get_workplace_data(city_data, 0, island_id))
@@ -334,7 +326,7 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
             workplace,
             workplace['material'],
             json.loads(
-                session.post(params={
+                ikariam_service.post(params={
                     'type': get_view(workplace['material']),
                     'islandId': workplace['islandId'],
                     'currentIslandId': workplace['islandId'],
@@ -376,7 +368,7 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
             workplace['maxWorkers'], workplace['overchargedWorkers']))
         print('Or type "{}" for maximum workers'.format(input_max_workers))
         print('Or "{}" for maximum with helping hands'.format(input_max_hands))
-        workers = read(min=1, max=max_workers, digit=True,
+        workers = read(min=0, max=max_workers, digit=True,
                        additionalValues=[input_max_workers, input_max_hands])
 
         if workers == input_max_workers:
@@ -390,7 +382,7 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
             workplace,
             workplace['material'],
             json.loads(
-                session.post(params={
+                ikariam_service.post(params={
                     'action': 'IslandScreen',
                     'function': 'workerPlan',
                     'type': get_view(workplace['material']),
@@ -409,56 +401,49 @@ def islandWorkplaces(session, event, stdin_fd, predetermined_input):
         )
     # endregion
 
-    try:
-        workplaces = get_workplaces()
+    workplaces = get_workplaces()
 
-        while True:
-            print_workplaces(workplaces)
+    while True:
+        print_workplaces(workplaces)
 
-            [action_id, workplace_id] = wait_for_action(len(workplaces))
-            action = actions[action_id]
+        [action_id, workplace_id] = wait_for_action(len(workplaces))
+        action = actions[action_id]
 
-            if action == action_exit:
-                break
+        if action == action_exit:
+            break
 
-            workplace_ind = workplace_id - 1
-            workplace = workplaces[workplace_ind]
+        workplace_ind = workplace_id - 1
+        workplace = workplaces[workplace_ind]
 
-            # Simulate person
-            open_city_window(workplace['cityId'])  # change city
-            open_island_window(workplace['islandId'])
-            workplace = get_workplace_data(
-                workplace,
-                workplace['material'],
-                workplace['islandId']
-            )
+        # Simulate person
+        open_city_window(workplace['cityId'])  # change city
+        open_island_window(workplace['islandId'])
+        workplace = get_workplace_data(
+            workplace,
+            workplace['material'],
+            workplace['islandId']
+        )
 
-            print("\n")
-            print("     City: ", workplace['cityName'])
-            print("Workplace: ", materials_names[workplace['material']])
+        print("\n")
+        print("     City: ", workplace['cityName'])
+        print("Workplace: ", materials_names[workplace['material']])
 
-            if action == action_donate:
-                workplace = donate(workplace)
-            elif action == action_change_workers:
-                workplace = set_workers(workplace)
-            else:
-                print("Unknown action ", action)
+        if action == action_donate:
+            workplace = donate(workplace)
+        elif action == action_change_workers:
+            workplace = set_workers(workplace)
+        else:
+            print("Unknown action ", action)
 
-            # update all other workplaces related to this city
-            for ind, wp in enumerate(workplaces):
-                if wp['cityId'] == workplace['cityId'] and ind != workplace_ind:
-                    wp['availableWood'] = workplace['availableWood']
-                    wp['freeCitizens'] = workplace['freeCitizens']
-                    wp['goldPerHour'] = workplace['goldPerHour']
+        # update all other workplaces related to this city
+        for ind, wp in enumerate(workplaces):
+            if wp['cityId'] == workplace['cityId'] and ind != workplace_ind:
+                wp['availableWood'] = workplace['availableWood']
+                wp['freeCitizens'] = workplace['freeCitizens']
+                wp['goldPerHour'] = workplace['goldPerHour']
 
-            # update operational workplace
-            workplaces[workplace_ind] = workplace
+        # update operational workplace
+        workplaces[workplace_ind] = workplace
 
-            print("\nOperation is successful!")
-            enter()
-
-        event.set()
-        return
-    except KeyboardInterrupt:
-        event.set()
-        return
+        print("\nOperation is successful!")
+        enter()
