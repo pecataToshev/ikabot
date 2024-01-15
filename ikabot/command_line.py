@@ -24,7 +24,7 @@ from ikabot.function.islandWorkplaces import islandWorkplaces
 from ikabot.function.killTasks import kill_tasks
 from ikabot.function.loginDailyBotConfigurator import login_daily_bot_configurator
 from ikabot.function.proxyConf import proxyConf, show_proxy
-from ikabot.function.searchForIslandSpaces import searchForIslandSpaces
+from ikabot.function.islandMonitoringBotConfigurator import island_monitoring_bot_configurator
 from ikabot.function.sellResources import sellResources
 from ikabot.function.transportGoodsBotConfigurator import transport_goods_bot_configurator
 from ikabot.function.shipMovements import shipMovements
@@ -68,7 +68,7 @@ _global_menu = [
         __command_back,
         ['Alert attacks', configure_alert_attacks_monitoring_bot],
         ['Alert wine running out', configure_wine_monitoring_bot],
-        ['Monitor islands', searchForIslandSpaces],
+        ['Monitor islands', island_monitoring_bot_configurator],
     ]],
     ['Marketplace', [
         __command_back,
