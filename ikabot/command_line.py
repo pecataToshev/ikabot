@@ -7,7 +7,7 @@ from ikabot.function.attacksMonitoringBotConfigurator import configure_alert_att
 from ikabot.function.wineMonitoringBotConfigurator import configure_wine_monitoring_bot
 from ikabot.function.attackBarbarians import attackBarbarians
 from ikabot.function.autoPiracyBotConfigurator import autoPiracyBotConfigurator
-from ikabot.function.buyResources import buyResources
+from ikabot.function.buyResourcesBotConfigurator import buy_resources_bot_configurator
 from ikabot.function.conductExperimentBotConfigurator import configure_conduct_experiment_bot
 from ikabot.helpers.checkForUpdate import checkForUpdate
 from ikabot.function.constructBuilding import constructBuilding
@@ -71,7 +71,7 @@ _global_menu = [
     ]],
     ['Marketplace', [
         __command_back,
-        ['Buy resources', buyResources],
+        ['Buy resources', buy_resources_bot_configurator],
         ['Sell resources', sellResources],
     ]],
     ['Activate miracle', activate_miracle_bot_configurator],

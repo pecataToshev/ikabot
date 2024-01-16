@@ -24,7 +24,7 @@ class TransportGoodsBot(Bot):
     """
     Performs transportations
     """
-    __MAXIMUM_SHIP_SIZE = 500
+    MAXIMUM_SHIP_SIZE = 500
 
     def _get_process_info(self) -> str:
         return 'I execute transportation of resources'
@@ -81,7 +81,7 @@ class TransportGoodsBot(Bot):
             self._set_process_info(message=obj, target_city=job.origin_city["name"])
 
             ships_available = waitForAvailableShips(self.ikariam_service, self._wait)
-            storage_capacity_in_ships = ships_available * self.__MAXIMUM_SHIP_SIZE
+            storage_capacity_in_ships = ships_available * self.MAXIMUM_SHIP_SIZE
 
             origin_city = getCity(self.ikariam_service.get(city_url + str(job.origin_city['id'])))
             target_city = getCity(self.ikariam_service.get(city_url + str(job.target_city['id'])))
@@ -141,7 +141,7 @@ class TransportGoodsBot(Bot):
             }
         )
 
-        required_ships = int(math.ceil((Decimal(sum(resources_to_send)) / Decimal(self.__MAXIMUM_SHIP_SIZE))))
+        required_ships = int(math.ceil((Decimal(sum(resources_to_send)) / Decimal(self.MAXIMUM_SHIP_SIZE))))
         # Request to send the resources from the origin to the target
         data = {
             'action': 'transportOperations',

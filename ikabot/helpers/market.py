@@ -27,7 +27,7 @@ def getCommercialCities(session):
         city = getCity(html)
         for pos, building in enumerate(city['position']):
             if building['building'] == 'branchOffice':
-                city['pos'] = pos
+                city['marketPosition'] = pos
                 html = getMarketHtml(session, city)
                 positions = re.findall(r'<option.*?>(\d+)</option>', html)
                 city['rango'] = int(positions[-1])
