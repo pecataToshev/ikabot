@@ -25,7 +25,7 @@ from ikabot.function.killTasks import kill_tasks
 from ikabot.function.loginDailyBotConfigurator import login_daily_bot_configurator
 from ikabot.function.proxyConf import proxyConf, show_proxy
 from ikabot.function.islandMonitoringBotConfigurator import island_monitoring_bot_configurator
-from ikabot.function.sellResources import sellResources
+from ikabot.function.sellResourcesBotConfigurator import sell_resources_bot_configurator
 from ikabot.function.transportGoodsBotConfigurator import transport_goods_bot_configurator
 from ikabot.function.shipMovements import shipMovements
 from ikabot.function.showPiracyInfo import showPiracyInfo
@@ -72,7 +72,7 @@ _global_menu = [
     ['Marketplace', [
         __command_back,
         ['Buy resources', buy_resources_bot_configurator],
-        ['Sell resources', sellResources],
+        ['Sell resources', sell_resources_bot_configurator],
     ]],
     ['Activate miracle', activate_miracle_bot_configurator],
     ['Military actions', [
