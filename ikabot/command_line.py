@@ -31,7 +31,7 @@ from ikabot.function.shipMovements import shipMovements
 from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.function.stationArmy import stationArmy
 from ikabot.function.telegramFunctions import test_telegram_bot, update_telegram_bot
-from ikabot.function.trainArmy import trainArmy
+from ikabot.function.trainArmyBotConfigurator import train_army_bot_configurator
 from ikabot.function.update import update
 from ikabot.function.vacationMode import vacationMode
 from ikabot.helpers.gui import banner, formatTimestamp
@@ -77,7 +77,7 @@ _global_menu = [
     ['Activate miracle', activate_miracle_bot_configurator],
     ['Military actions', [
         __command_back,
-        ['Train Army', trainArmy],
+        ['Train Army', train_army_bot_configurator],
         ['Send Troops/Ships', stationArmy],
         ['Attack barbarians', attackBarbarians],
     ]],
