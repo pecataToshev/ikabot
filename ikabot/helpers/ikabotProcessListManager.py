@@ -10,17 +10,6 @@ import psutil
 
 from ikabot.config import isWindows
 from ikabot.helpers.gui import formatTimestamp, printTable
-from ikabot.helpers.signals import deactivate_sigint
-
-
-def set_child_mode(session):
-    """
-    Parameters
-    ----------
-    session : ikabot.web.ikariamService.IkariamService
-    """
-    session.padre = False
-    deactivate_sigint()
 
 
 def run(command):
