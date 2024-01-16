@@ -1,99 +1,69 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import traceback
-
 from ikabot import config
+from ikabot.bot.transportGoodsBot import TransportGoodsBot, TransportJob
 from ikabot.config import city_url, materials_names
-from ikabot.helpers.botComm import sendToBot
+from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import banner, enter
-from ikabot.helpers.pedirInfo import getIdsOfCities, read
-from ikabot.helpers.planRoutes import executeRoutes
-from ikabot.helpers.ikabotProcessListManager import set_child_mode
-from ikabot.helpers.signals import setInfoSignal
+from ikabot.helpers.gui import addThousandSeparator, banner, enter
+from ikabot.helpers.pedirInfo import askUserYesNo, getIdsOfCities, read
+from ikabot.helpers.telegram import Telegram
+from ikabot.web.ikariamService import IkariamService
 
 
-def distributeResources(session, event, stdin_fd, predetermined_input):
-    """
-    Parameters
-    ----------
-    session : ikabot.web.ikariamService.IkariamService
-    event : multiprocessing.Event
-    stdin_fd: int
-    predetermined_input : multiprocessing.managers.SyncManager.list
-    """
-    sys.stdin = os.fdopen(stdin_fd)
-    config.predetermined_input = predetermined_input
-    try:
-        banner()
+def distribute_resources_bot_configurator(ikariam_service: IkariamService, db: Database, telegram: Telegram):
+    banner()
 
-        print('What resource do you want to distribute?')
-        print('(0) Exit')
-        for i in range(len(materials_names)):
-            print('({:d}) {}'.format(i+1, materials_names[i]))
-        resource = read(min=0, max=5)
-        if resource == 0:
-            event.set()  # give main process control before exiting
-            return
-        resource -= 1
+    print('What resource do you want to distribute?')
+    print('(0) Exit')
+    for i in range(len(materials_names)):
+        print('({:d}) {}'.format(i+1, materials_names[i]))
+    resource = read(min=0, max=5)
+    if resource == 0:
+        return
+    resource -= 1
 
-        if resource == 0:
-            evenly = True
-        else:
-            print('\nHow do you want to distribute the resources?')
-            print('1) From cities that produce them to cities that do not')
-            print('2) Distribute them evenly among all cities')
-            type_distribution = read(min=1, max=2)
-            evenly = type_distribution == 2
+    if resource == 0:
+        evenly = True
+    else:
+        print('\nHow do you want to distribute the resources?')
+        print('1) From cities that produce them to cities that do not')
+        print('2) Distribute them evenly among all cities')
+        type_distribution = read(min=1, max=2)
+        evenly = type_distribution == 2
 
-        if evenly:
-            routes = distribute_evenly(session, resource)
-        else:
-            routes = distribute_unevenly(session, resource)
+    if evenly:
+        routes = distribute_evenly(ikariam_service, resource)
+    else:
+        routes = distribute_unevenly(ikariam_service, resource)
 
-        if routes is None:
-            event.set()
-            return
-
-        banner()
-        print('\nThe following shipments will be made:\n')
-        for route in routes:
-            print('{} -> {} : {} {}'.format(route[0]['name'], route[1]['name'], route[resource+3], materials_names[resource]))  # displays all routes to be executed in console
-
-        print('\nProceed? [Y/n]')
-        rta = read(values=['y', 'Y', 'n', 'N', ''])
-        if rta.lower() == 'n':
-            event.set()
-            return
-
-    except KeyboardInterrupt:
-        event.set()
+    if routes is None:
         return
 
-    session.setProcessObjective(
-        action='Distribute Resources',
-        objective='{} {}'.format(
+    banner()
+    print('\nThe following shipments will be made:\n')
+    for route in routes:
+        print('{:>{maxCityLen}} ---> {:<{maxCityLen}} : {} {}'.format(
+            route.origin_city['name'],
+            route.target_city['name'],
             materials_names[resource],
-            'evenly' if evenly else 'from produces'
-        ),
+            addThousandSeparator(route.resources[resource]),
+            maxCityLen=config.MAXIMUM_CITY_NAME_LENGTH
+        ))  # displays all routes to be executed in console
+
+    if not askUserYesNo('Proceed'):
+        return
+
+    TransportGoodsBot(
+        ikariam_service=ikariam_service,
+        bot_config={
+            'jobs': routes,
+        }
+    ).start(
+        action='Distribute Resources',
+        objective='Evenly' if evenly else 'From Producers'
     )
-
-    set_child_mode(session)
-    event.set()  # this is where we give back control to main process
-
-    info = '\nDistribute {}\n'.format(materials_names[resource])
-    setInfoSignal(session, info)
-
-    try:
-        executeRoutes(session, routes)  # plan trips for all the routes
-    except Exception as e:
-        msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
-        sendToBot(session, msg)  # sends message to telegram bot
-    finally:
-        session.logout()
 
 
 def distribute_evenly(session, resource_type):
@@ -166,8 +136,11 @@ def distribute_evenly(session, resource_type):
 
             toSendArr = [0] * len(materials_names)
             toSendArr[resource_type] = toSend
-            route = (allCities[originCityID], allCities[destinationCityID], allCities[destinationCityID]['islandId'], *toSendArr)
-            routes.append(route)
+            routes.append(TransportJob(
+                origin_city=allCities[originCityID],
+                target_city=allCities[destinationCityID],
+                resources=toSendArr,
+            ))
 
             # ROUTE BLOCK
             if originCities[originCityID] > destinationCities[destinationCityID]:
@@ -250,7 +223,6 @@ def distribute_unevenly(session, resource_type):
     routes = []
     for destination_city_id in destination_cities:
         destination_city = destination_cities[destination_city_id]
-        island_id = destination_city['islandId']
         missing_resources = toSend[destination_city_id]
         for origin_city_id in origin_cities:
             if missing_resources == 0:
@@ -259,10 +231,8 @@ def distribute_unevenly(session, resource_type):
             origin_city = origin_cities[origin_city_id]
             resources_available_in_this_city = origin_city['available_amount_of_resource']
             for route in routes:
-                origin = route[0]
-                resource = route[resource_type + 3]
-                if origin['id'] == origin_city_id:
-                    resources_available_in_this_city -= resource
+                if route.origin_city['id'] == origin_city_id:
+                    resources_available_in_this_city -= route.resources[resource_type]
 
             send_this_round = min(missing_resources, resources_available_in_this_city)
             available = destination_city['free_storage_for_resource']
@@ -277,8 +247,11 @@ def distribute_unevenly(session, resource_type):
 
             toSendArr = [0] * len(materials_names)
             toSendArr[resource_type] = send_this_round
-            route = (origin_city, destination_city, island_id, *toSendArr)
 
-            routes.append(route)
+            routes.append(TransportJob(
+                origin_city=origin_city,
+                target_city=destination_city,
+                resources=toSendArr,
+            ))
 
     return routes

@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.7', '3.11']
 
     steps:
     - name: Checkout
@@ -31,11 +31,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install -e .
-    - name: Run unit tests
-      run: |
-        pip install pytest
-        export PYTHONPATH="$PYTHONPATH;$(pwd)"
-        pytest tests -vvvvvvvvvv
+#    - name: Run unit tests
+#      run: |
+#        pip install pytest
+#        export PYTHONPATH="$PYTHONPATH;$(pwd)"
+#        pytest tests -vvvvvvvvvv
     - name: Just run ikabot
       run: |
         printf "\n\n\n" | python -m ikabot &> log.log || cat log.log

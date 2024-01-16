@@ -13,7 +13,7 @@ from ikabot.helpers.checkForUpdate import checkForUpdate
 from ikabot.function.constructBuilding import constructBuilding
 from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_bot_configurator
 from ikabot.function.decaptchaConf import decaptchaConf
-from ikabot.function.distributeResources import distributeResources
+from ikabot.function.distributeResourcesBotConfigurator import distribute_resources_bot_configurator
 from ikabot.function.donationBot import donationBot
 from ikabot.function.dumpWorld import dumpWorld
 from ikabot.function.getStatus import getStatus
@@ -54,7 +54,7 @@ _global_menu = [
     ['Resources & Donations', [
         __command_back,
         ['Send resources', transport_goods_bot_configurator],
-        ['Distribute resources', distributeResources],
+        ['Distribute resources', distribute_resources_bot_configurator],
         ['Donate once', islandWorkplaces],
         ['Donate automatically', donationBot],
     ]],
