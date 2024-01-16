@@ -5,7 +5,7 @@ import time
 from ikabot.function.activateMiracleBotConfigurator import activate_miracle_bot_configurator
 from ikabot.function.attacksMonitoringBotConfigurator import configure_alert_attacks_monitoring_bot
 from ikabot.function.wineMonitoringBotConfigurator import configure_wine_monitoring_bot
-from ikabot.function.attackBarbarians import attackBarbarians
+from ikabot.function.attackBarbariansBotConfigurator import attack_barbarians_bot_configurator
 from ikabot.function.autoPiracyBotConfigurator import autoPiracyBotConfigurator
 from ikabot.function.buyResourcesBotConfigurator import buy_resources_bot_configurator
 from ikabot.function.conductExperimentBotConfigurator import configure_conduct_experiment_bot
@@ -79,7 +79,7 @@ _global_menu = [
         __command_back,
         ['Train Army', train_army_bot_configurator],
         ['Send Troops/Ships', stationArmy],
-        ['Attack barbarians', attackBarbarians],
+        ['Attack barbarians', attack_barbarians_bot_configurator],
     ]],
     ['See movements', shipMovements],
     ['Piracy', [
