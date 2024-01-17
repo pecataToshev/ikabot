@@ -274,7 +274,7 @@ def sendResourcesMenu(ikariam_service, beneficent_city_id, missing):
             return None
         elif send_resources is False or expand_anyway is False:
             return None
-        all_routes.append(routes)
+        all_routes.extend(routes)
 
     if enough_resources:
         print('The resources will be sent.')

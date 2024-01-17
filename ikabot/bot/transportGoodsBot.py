@@ -47,9 +47,7 @@ class TransportGoodsBot(Bot):
         """
         Optimizes routes by origin city
         """
-        logging.info("Jobs %s", jobs)
         def get_key(_job: TransportJob):
-            logging.info("getKey: %s", _job)
             return '{}-{}'.format(_job.origin_city['id'], _job.target_city['id'])
 
         job_map = {}
