@@ -1,3 +1,4 @@
+import logging
 import time
 
 from ikabot.bot.bot import Bot
@@ -91,6 +92,7 @@ class UpgradeBuildingBot(Bot):
                 # We've successfully finished the job
                 return True
 
+            logging.info('city: %s', city)
             building_in_construction = self.__get_currently_expanding_building(city)
             if building_in_construction is None and building['canUpgrade']:
                 self.__expand_building(building)
@@ -165,6 +167,8 @@ class UpgradeBuildingBot(Bot):
                     self.get_building_level(building_in_construction)
                 )
             ])
+        logging.info("Figuring out why it is not working: minimal_fleet_arriving_time:%s, transport_resources_pid:%s, building_in_construction:%s, building_upgrade_time_left:%s",
+                     minimal_fleet_arriving_time, self.transport_resources_pid, building_in_construction, building_upgrade_time_left)
         return waiting_times
 
     def __validate_building(self, building):
