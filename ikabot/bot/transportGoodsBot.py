@@ -5,6 +5,7 @@ import json
 import math
 import sys
 from decimal import Decimal
+from typing import List
 
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, materials_names, SECONDS_IN_HOUR
@@ -36,11 +37,9 @@ class TransportGoodsBot(Bot):
             self.__execute_job(job)
 
     @staticmethod
-    def optimize_jobs(jobs: list[TransportJob]) -> list[TransportJob]:
+    def optimize_jobs(jobs: List[TransportJob]) -> List[TransportJob]:
         """
         Optimizes routes by origin city
-        :param jobs: the jobs to optimize
-        :return: list[TransportJob]
         """
         def get_key(_job):
             return '{}-{}'.format(_job.origin_city['id'], _job.target_city['id'])

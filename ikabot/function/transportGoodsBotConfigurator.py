@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+from typing import List
 
 from ikabot.bot.transportGoodsBot import TransportGoodsBot, TransportJob
 from ikabot.config import materials_names
@@ -52,7 +53,7 @@ def __plan_route(ikariam_service: IkariamService, routes: list[TransportJob]):
 
 
 def transport_goods_bot_configurator(ikariam_service: IkariamService, db: Database, telegram:Telegram):
-    routes: list[TransportJob] = []
+    routes: List[TransportJob] = []
     while True:
         try:
             print('Origin city:')

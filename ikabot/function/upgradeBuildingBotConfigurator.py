@@ -183,7 +183,7 @@ def chooseResourceProviders(cities, beneficent_city, resource, missing, send_res
     send_resources : bool/None
     expand_anyway : bool/None
 
-    :returns bool, bool, bool, list[TransportJob]:
+    :returns bool, bool, bool, List[TransportJob]:
         if resources are enough
         should send the resources anyway
         should try to expand anyway
