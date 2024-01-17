@@ -444,7 +444,7 @@ def upgrade_building_bot_configurator(ikariam_service, db, telegram):
         bot_config={
             'cityId': city['id'],
             'cityName': city['name'],
-            'building': building['positionAndName'],
+            'building': building,
             'transport_resources_pid': None if _transport_process is None else _transport_process.pid
         }
     ).start(
