@@ -56,4 +56,4 @@ class WineMonitoringBot(Bot):
                 else:
                     alert_was_triggered[city_id] = False
     
-            self.ikariam_service.wait(20*60, 'I wait for the next check')
+            self._wait(20*60, 'I wait for the next check')

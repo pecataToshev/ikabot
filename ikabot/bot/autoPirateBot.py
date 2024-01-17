@@ -69,7 +69,7 @@ class AutoPirateBot(Bot):
                 if last_mission_type == 'nightly':
                     # we've executed one night mission. sleep till day start
                     total_sleep_time = self.__get_time_to_sleep_to_next_given_hour(now, day_config['startHour'])
-                    self.ikariam_service.wait(
+                    self._wait(
                         total_sleep_time,
                         "Sleeping until day start @{}h".format(day_config['startHour'])
                     )
@@ -89,12 +89,12 @@ class AutoPirateBot(Bot):
                 seconds_to_night_start = self.__get_time_to_sleep_to_next_given_hour(now, night_config['startHour'])
 
                 if seconds_to_day_start <= seconds_to_night_start:
-                    self.ikariam_service.wait(
+                    self._wait(
                         seconds_to_day_start,
                         "Schedule gap. Sleeping until day start @{}h".format(day_config['startHour'])
                     )
                 else:
-                    self.ikariam_service.wait(
+                    self._wait(
                         seconds_to_night_start,
                         "Schedule gap. Sleeping until night start @{}h".format(night_config['startHour'])
                     )
@@ -142,7 +142,7 @@ class AutoPirateBot(Bot):
         :return: void
         """
         if self.max_break_time > 0:
-            self.ikariam_service.wait(
+            self._wait(
                 seconds=1,
                 info='Waiting between missions. ' + additional_info,
                 max_random=self.max_break_time - 1)
@@ -155,7 +155,7 @@ class AutoPirateBot(Bot):
         """
         data = getPiracyTemplateData(self.ikariam_service, self.city_id)
         if data['hasOngoingMission']:
-            self.ikariam_service.wait(data['ongoingMissionTimeRemaining'],
+            self._wait(data['ongoingMissionTimeRemaining'],
                               'Found unexpected mission. Waiting it to end.',
                                       max_random=5)
             return self.__get_template_data_and_wait_ongoing_mission()
@@ -219,7 +219,7 @@ class AutoPirateBot(Bot):
             # Well, it's far more convenient that we're going to execute the conversion right after we've started the
             # new mission rather that waiting the mission to end
             if self.convert_points is not None:
-                time_wait_for_conversion_start = self.ikariam_service.wait(
+                time_wait_for_conversion_start = self._wait(
                     seconds=3,
                     info='Simulating user before converting points',
                     max_random=5
@@ -231,7 +231,7 @@ class AutoPirateBot(Bot):
                 convertCapturePoints(self.ikariam_service, self.city_id, convert_points_to_strength)
 
             # execution is successful, go get some sleep
-            self.ikariam_service.wait(mission['duration'] - time_wait_for_conversion_start,
+            self._wait(mission['duration'] - time_wait_for_conversion_start,
                               'Executing piracy mission {}. {}'.format(mission['name'], additional_message),
                                       max_random=10)
 
