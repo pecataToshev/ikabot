@@ -147,7 +147,7 @@ def addThousandSeparator(num, character='.', include_sign=False):
     return format(int(num), sign+',').replace(',', character)
 
 
-def daysHoursMinutes(totalSeconds):
+def daysHoursMinutes(totalSeconds: int):
     """Formats the total number of seconds into days hours minutes (eg. 321454 -> 3D 17H)
     Parameters
     ----------

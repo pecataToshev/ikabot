@@ -42,7 +42,7 @@ def shipMovements(ikariam_service, db, telegram):
     print('Ships {:d}/{:d}\n'.format(getAvailableShips(ikariam_service), getTotalShips(ikariam_service)))
 
     movements = get_military_and_see_movements(ikariam_service)
-    time_now = time.time()
+    time_now = int(time.time())
 
     if len(movements) == 0:
         print('There are no movements')
@@ -63,7 +63,9 @@ def shipMovements(ikariam_service, db, telegram):
         destination = '{} ({})'.format(movement['target']['name'], movement['target']['avatarName'])
         arrow = '<-' if movement['event']['isFleetReturning'] else '->'
         time_left = int(movement['eventTime']) - time_now
-        print('{}{} {} {}: {} ({}) {}'.format(color, origin, arrow, destination, movement['event']['missionText'], daysHoursMinutes(time_left), bcolors.ENDC))
+        print('{}{} {} {}: {} ({}) {}'.format(color, origin, arrow, destination,
+                                              movement['event']['missionText'], daysHoursMinutes(time_left),
+                                              bcolors.ENDC))
 
         if movement['isHostile']:
             troops = movement['army']['amount']
