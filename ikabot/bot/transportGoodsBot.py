@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import logging
 import math
 import sys
 from decimal import Decimal
@@ -20,6 +21,11 @@ class TransportJob:
         self.origin_city = origin_city
         self.target_city = target_city
         self.resources = resources
+
+    def __repr__(self):
+        return (f"{{'origin_city': {self.origin_city['name']}, "
+                f"'target_city': {self.target_city['name']}, "
+                f"'resources': {self.resources}}}")
 
 
 class TransportGoodsBot(Bot):
@@ -41,7 +47,9 @@ class TransportGoodsBot(Bot):
         """
         Optimizes routes by origin city
         """
-        def get_key(_job):
+        logging.info("Jobs %s", jobs)
+        def get_key(_job: TransportJob):
+            logging.info("getKey: %s", _job)
             return '{}-{}'.format(_job.origin_city['id'], _job.target_city['id'])
 
         job_map = {}
@@ -55,7 +63,7 @@ class TransportGoodsBot(Bot):
         for job in jobs:
             key = get_key(job)
             _jobs = job_map[key]
-            if jobs is not None:
+            if _jobs is not None:
                 res.append(TransportJob(
                     origin_city=job.origin_city,
                     target_city=job.target_city,
