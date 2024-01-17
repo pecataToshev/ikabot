@@ -154,6 +154,6 @@ def getCity(html):
         production_per_second[city['producedTradegood']] = city['tradegoodProductionPerSecond']
 
     city['productionPerSecond'] = production_per_second
-    city['productionPerHour'] = [r*SECONDS_IN_HOUR for r in production_per_second]
+    city['productionPerHour'] = [int(r*SECONDS_IN_HOUR) for r in production_per_second]
 
     return city
