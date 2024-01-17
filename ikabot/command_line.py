@@ -38,7 +38,7 @@ from ikabot.function.telegramFunctions import test_telegram_bot, update_telegram
 from ikabot.function.trainArmyBotConfigurator import train_army_bot_configurator
 from ikabot.function.update import update
 from ikabot.function.vacationMode import vacationMode
-from ikabot.helpers.gui import banner, enter, formatTimestamp
+from ikabot.helpers.gui import banner, clear, enter, formatTimestamp
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.userInput import read
 
@@ -189,8 +189,9 @@ def menu(ikariam_service, db, telegram):
             enter()
 
     if consecutive_keyboard_interruptions:
-        print('Forcefully quiting the command centre')
+        logging.debug('Forcefully quiting the command centre')
         sys.exit(1)
 
-    print('Gracefully exiting the command centre')
+    clear()
+    logging.debug('Gracefully exiting the command centre')
     sys.exit(0)

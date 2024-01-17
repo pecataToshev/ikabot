@@ -18,11 +18,12 @@ def __record_factory(old_factory, *args, **kwargs):
     return record
 
 
-def setup_logging():
-    print('Setup logging')
+def setup_logging(named_params: dict):
+    log_level = named_params.get('logLevel', 'Info').upper()
+    print('Setup logging:', log_level)
     os.makedirs(LOG_DIR, exist_ok=True)
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.getLevelName(log_level),
         datefmt='%Y-%m-%dT%H:%M:%S',
         format='%(asctime)s.%(msecs)03d pid:%(process)-6s %(levelname)-5s %(filename)s %(botName)s - %(message)s',
         handlers=[

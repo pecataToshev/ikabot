@@ -21,7 +21,6 @@ LOG_DIR = os.path.join(LOG_DIR, 'ikabot')
 LOG_FILE = os.path.join(LOG_DIR, 'ikabot.log')
 
 do_ssl_verify = True
-has_params = False
 
 BOT_NAME = ''
 infoUser = ''
