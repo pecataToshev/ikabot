@@ -6,6 +6,7 @@ import time
 import traceback
 from abc import ABC, abstractmethod
 
+from ikabot import config
 from ikabot.helpers.database import Database
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.telegram import Telegram
@@ -29,7 +30,7 @@ class Bot(ABC):
             self.ikariam_service.padre = False
             self.__setup_process_signals()
 
-            self.db = Database(bot_name=self.ikariam_service.botName)
+            self.db = Database(bot_name=config.BOT_NAME)
             self.telegram = Telegram(db=self.db, is_user_attached=False)
             self.__process_manager = IkabotProcessListManager(self.db)
 
