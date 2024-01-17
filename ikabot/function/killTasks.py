@@ -11,7 +11,7 @@ from ikabot.web.ikariamService import IkariamService
 
 
 def kill_tasks(ikariam_service: IkariamService, db: Database, telegram: Telegram):
-    process_list_manager = IkabotProcessListManager(ikariam_service)
+    process_list_manager = IkabotProcessListManager(db)
 
     while True:
         banner()

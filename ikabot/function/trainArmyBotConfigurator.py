@@ -3,6 +3,7 @@
 
 import copy
 import json
+from typing import List
 
 from ikabot.bot.trainArmyBot import TrainArmyBot
 from ikabot.config import city_url, materials_names
@@ -16,7 +17,7 @@ from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 
 
-def generateArmyData(units_info: dict) -> list[dict]:
+def generateArmyData(units_info: dict) -> List[dict]:
     i = 1
     units = []
     while 'js_barracksSlider{:d}'.format(i) in units_info:
