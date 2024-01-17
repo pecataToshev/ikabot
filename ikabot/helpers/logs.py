@@ -22,7 +22,7 @@ def setup_logging():
     print('Setup logging')
     os.makedirs(LOG_DIR, exist_ok=True)
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         datefmt='%Y-%m-%dT%H:%M:%S',
         format='%(asctime)s.%(msecs)03d pid:%(process)-6s %(levelname)-5s %(filename)s %(botName)s - %(message)s',
         handlers=[
