@@ -37,7 +37,8 @@ class Bot(ABC):
             self.__process_manager.upsert_process({
                 'action': action,
                 'objective': objective,
-                'targetCity': target_city
+                'targetCity': target_city,
+                'status': 'starting'
             })
             self.ikariam_service.reset_db_telegram(db=self.db, telegram=self.telegram)
 
