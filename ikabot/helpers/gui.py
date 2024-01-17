@@ -147,11 +147,11 @@ def addThousandSeparator(num, character='.', include_sign=False):
     return format(int(num), sign+',').replace(',', character)
 
 
-def daysHoursMinutes(totalSeconds: int):
+def daysHoursMinutes(total_seconds):
     """Formats the total number of seconds into days hours minutes (eg. 321454 -> 3D 17H)
     Parameters
     ----------
-    totalSeconds : int
+    total_seconds : int
         total number of seconds
 
     Returns
@@ -159,22 +159,23 @@ def daysHoursMinutes(totalSeconds: int):
     text : str
         formatted string (D H M S)
     """
-    if totalSeconds == 0:
-        return '0 s'
-    dias = int(totalSeconds / Decimal(86400))
-    totalSeconds -= dias * Decimal(86400)
-    horas = int(totalSeconds / Decimal(3600))
-    totalSeconds -= horas * Decimal(3600)
-    minutos = int(totalSeconds / Decimal(60))
-    seconds = int(totalSeconds % 60)
+    total_seconds = int(total_seconds)
+    if total_seconds == 0:
+        return '0S'
+    days = int(total_seconds / Decimal(86400))
+    total_seconds -= days * Decimal(86400)
+    hours = int(total_seconds / Decimal(3600))
+    total_seconds -= hours * Decimal(3600)
+    minutes = int(total_seconds / Decimal(60))
+    seconds = int(total_seconds % 60)
     texto = ''
-    if dias > 0:
-        texto = str(dias) + 'D '
-    if horas > 0:
-        texto = texto + str(horas) + 'H '
-    if minutos > 0 and dias == 0:
-        texto = texto + str(minutos) + 'M '
-    if dias == 0 and horas == 0 and seconds > 0:
+    if days > 0:
+        texto = str(days) + 'D '
+    if hours > 0:
+        texto = texto + str(hours) + 'H '
+    if days == 0 and minutes > 0:
+        texto = texto + str(minutes) + 'M '
+    if days == 0 and hours == 0 and seconds > 0:
         texto = texto + str(seconds) + 'S '
     return texto[:-1]
 
