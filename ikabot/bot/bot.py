@@ -45,6 +45,11 @@ class Bot(ABC):
             logging.info("Starting %s with config: %s", self.__class__.__name__, self.bot_config)
             self._start()
 
+            logging.info("Done executing %s with config: %s", self.__class__.__name__, self.bot_config)
+            self.__process_manager.upsert_process({
+                'status': 'Done'
+            })
+
         except Exception as e:
             msg = 'Error in: {}\nMessage: {}\nCause: {}'.format(
                 self._get_process_info(), str(e), traceback.format_exc()
