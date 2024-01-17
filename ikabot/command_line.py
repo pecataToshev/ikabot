@@ -15,7 +15,7 @@ from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_bot_
 from ikabot.function.decaptchaConf import decaptchaConf
 from ikabot.function.distributeResourcesBotConfigurator import distribute_resources_bot_configurator
 from ikabot.function.donationBotConfigurator import donation_bot_configurator
-from ikabot.function.dumpWorld import dumpWorld
+from ikabot.function.dumpWorld import dump_world_bot_configurator, view_dump
 from ikabot.function.getStatus import getStatus
 from ikabot.function.getStatusImproved import getStatusForAllCities
 from ikabot.function.importExportCookie import importCookie, exportCookie
@@ -96,7 +96,11 @@ _global_menu = [
         __command_back,
         ['Login daily', login_daily_bot_configurator],
         ['Activate vacation mode', vacationMode],
-        ['Dump / View world', dumpWorld],
+        ['Dump / View world', [
+            __command_back,
+            ['Create new dump', dump_world_bot_configurator],
+            ['Load existing dump', view_dump],
+        ]],
     ]],
     ['Options / Settings', [
         __command_back,

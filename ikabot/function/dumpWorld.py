@@ -5,256 +5,63 @@ import ast
 import gzip
 import json
 import os
-import sys
 import threading
-import time
-import traceback
-from pathlib import Path
 
-from ikabot import config
+from ikabot.bot.dumpWorldBot import DumpWorldBot
 from ikabot.config import isWindows
-from ikabot.helpers.botComm import sendToBot
-from ikabot.helpers.getJson import getIsland
+from ikabot.helpers.database import Database
 from ikabot.helpers.gui import banner, bcolors, enter, getDateTime
-from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.ikabotProcessListManager import set_child_mode
-from ikabot.helpers.signals import setInfoSignal
+from ikabot.helpers.pedirInfo import askUserYesNo, read
+from ikabot.helpers.telegram import Telegram
+from ikabot.web.ikariamService import IkariamService
 
 LINE_UP = '\033[1A'
 LINE_CLEAR = '\x1b[2K'
 #              status, history, start_time
-stop_updating = threading.Event()
-lock = threading.Lock()
-shared_data = ['','',0,stop_updating, lock]
 home = 'USERPROFILE' if isWindows else 'HOME'
-selected_islands = set()
 
 
-def dumpWorld(session, event, stdin_fd, predetermined_input):
-    """
-    Parameters
-    ----------
-    session : ikabot.web.ikariamService.IkariamService
-    event : multiprocessing.Event
-    stdin_fd: int
-    predetermined_input : multiprocessing.managers.SyncManager.list
-    """
-    sys.stdin = os.fdopen(stdin_fd)
-    config.predetermined_input = predetermined_input
-
-    try:
-        banner()
-        if os.path.exists(os.getenv(home) + '/ikabot_world_dumps'):
-            print('1) Create new dump')
-            print('2) Load existing dump')
-            choice = read(min=1, max=2, digit=True)
-            if choice == 2:
-                view_dump(session, event)
-                event.set()
-                return
-        banner()
-        print('{}⚠️ BEWARE - THE RESULTING DUMP CONTAINS ACCOUNT IDENTIFYING INFORMATION ⚠️{}\n'.format(bcolors.WARNING, bcolors.ENDC))
-        print('This action will take a couple of hours to complete. Are you sure you want to initiate a data dump now? (Y|N)')
-        choice = read(values=['y', 'Y', 'n', 'N'])
-        if (choice in ['n','N']):
-            event.set()
-            return
-        print('Type in the waiting time between each request in miliseconds (default = 1500): ')
-        choice = read(min=0, max=10000, digit=True, default=1500)
-        waiting_time = int(choice)/1000
-        print('Start scan form island id (0 to start from beginning) (default = 0): ')
-        choice = read(min=0, digit=True, default=0)
-        start_id = int(choice)
-        print('Do you want only shallow data about the islands? If yes you will not be able to search the dump by player names but the dump will be quick. (Y|N): ')
-        choice = read(values=['y', 'Y', 'n', 'N'])
-        shallow = choice
-        
-        thread = threading.Thread(target=update_terminal, args=(shared_data,))
-        thread.start()
-        set_child_mode(session)
-        info = '\nDumped world data\n'
-        setInfoSignal(session, info)
-
-        dump_path = do_it(session, waiting_time, start_id, shallow)
-
-        shared_data[3].set()
-        shared_data[4].acquire()
-        time.sleep(5)
-
-        banner()
-        print('\n{}SUCCESS!{} World data has been dumped to {} in {}s \n'.format(bcolors.GREEN, bcolors.ENDC,dump_path, str(round(time.time()-shared_data[2]))))
-        enter()
-        event.set()
-        return
-    except Exception:
-        shared_data[3].set()
-        shared_data[4].acquire(timeout=10)
-        event.set()
-        msg = 'Error in:\n{}\nCause:\n{}'.format(info, traceback.format_exc())
-        sendToBot(session, msg)
+def dump_world_bot_configurator(ikariam_service: IkariamService, db: Database, telegram: Telegram):
+    banner()
+    print('{}⚠️ BEWARE - THE RESULTING DUMP CONTAINS ACCOUNT IDENTIFYING INFORMATION ⚠️{}\n'.format(bcolors.WARNING, bcolors.ENDC))
+    if not askUserYesNo('This action will take a couple of hours to complete. Are you sure you want to initiate a data dump now'):
         return
 
+    print('Type in the waiting time between each request in miliseconds (default = 1500): ')
+    choice = read(min=0, max=10000, digit=True, default=1500)
+    waiting_time = int(choice)/1000
 
-def do_it(session, waiting_time, start_id, shallow):
-    """
-    Parameters
-    ----------
-    session : ikabot.web.ikariamService.IkariamService
-        Session object
-    waiting_time : int
-        Time to wait between each network request (to prevent getting rate limited)
-    start_id : int
-        Id of the island to start the dump from (0 starts from beginning)
-    shallow : str
-        String that determines if the data should be shallow (only map accessible data)
-    
-    Returns
-    -------
-    dump_path: str
-    """
+    print('Start scan form island id (0 to start from beginning) (default = 0): ')
+    choice = read(min=0, digit=True, default=0)
+    start_id = int(choice)
 
-    shared_data[2] = time.time()
-    world = {'name': 's' + str(session.server_number) + '-' + str(session.server),
-             'self_name': session.username,
-             'dump_start_date': time.time(),
-             'dump_end_date': 0,
-             'islands': [],
-             'shallow': shallow in ['y', 'Y']
-            }
-    shared_data.append(world)
-    #scan 0 to 50 x and y
-    shallow_islands = []
-    update_status('Initiating first map sweep', 0, 0, True)
-    update_status('Getting (0-50,0-50) islands', 25, 1.25)
-    data = session.post('action=WorldMap&function=getJSONArea&x_min=0&x_max=50&y_min=0&y_max=50')
-    for x, val in json.loads(data)['data'].items():
-        for y, val2 in val.items():
-            shallow_islands.append({'x': x, 'y': y, 'id': val2[0], 'name': val2[1], 'resource_type': val2[2], 'miracle_type': val2[3], 'wood_lvl': val2[6], 'players': val2[7] })
-    update_status('Getting (50-100,0-50) islands', 50, 2.5)
-    time.sleep(0.5)
-    data = session.post('action=WorldMap&function=getJSONArea&x_min=50&x_max=100&y_min=0&y_max=50')
-    for x, val in json.loads(data)['data'].items():
-        for y, val2 in val.items():
-            shallow_islands.append({'x': x, 'y': y, 'id': val2[0], 'name': val2[1], 'resource_type': val2[2], 'miracle_type': val2[3], 'wood_lvl': val2[6], 'players': val2[7] })
-    update_status('Getting (0-50,50-100) islands', 75, 3.75)
-    time.sleep(0.5)
-    data = session.post('action=WorldMap&function=getJSONArea&x_min=0&x_max=50&y_min=50&y_max=100')
-    for x, val in json.loads(data)['data'].items():
-        for y, val2 in val.items():
-            shallow_islands.append({'x': x, 'y': y, 'id': val2[0], 'name': val2[1], 'resource_type': val2[2], 'miracle_type': val2[3], 'wood_lvl': val2[6], 'players': val2[7] })
-    update_status('Getting (50-100,50-100) islands', 100, 5)
-    time.sleep(0.5)
-    data = session.post('action=WorldMap&function=getJSONArea&x_min=50&x_max=100&y_min=50&y_max=100')
-    for x, val in json.loads(data)['data'].items():
-        for y, val2 in val.items():
-            shallow_islands.append({'x': x, 'y': y, 'id': val2[0], 'name': val2[1], 'resource_type': val2[2], 'miracle_type': val2[3], 'wood_lvl': val2[6], 'players': val2[7] })
+    shallow = askUserYesNo('Do you want only shallow data about the islands? If yes you will not be able to search '
+                           'the dump by player names but the dump will be quick.')
 
-# [
-# "58",         //id 0
-# "Phytios",    //name 1
-# "1",          //resource type 2
-# "2",          //type of miracle 3
-# "5",          // ?? 4
-# "4",          // ?? 5
-# "9",          // lumber level  6
-# "12",         // number of people 7
-# 0,            // piracy in range 8
-# "0",          // helios tower 9
-# "0",          // red 10
-# "0"           // blue 11
-# ]
-    
-    dump_path = os.getenv(home) + '/ikabot_world_dumps/s' + str(session.server_number) + '-' + str(session.server) + '/'
+    dump_path = os.getenv(home) + '/ikabot_world_dumps/s' + str(ikariam_service.server_number) + '-' + str(ikariam_service.server) + '/'
     dump_path = dump_path.replace('\\','/')
-    dump_name = getDateTime() + '.json.gz'
+    dump_path += getDateTime() + ('_shallow' if shallow else '') + '.json.gz'
 
-    if shallow in ['y','Y']:
-        dump_name = dump_name.replace('.json.gz', '_shallow') + '.json.gz'
-        update_status('Shallow dump is on. Dumping data...', 100, 100, True)
-        world['islands'] = shallow_islands
-        dump(world, dump_path, dump_name)
-        return dump_path + dump_name
+    DumpWorldBot(
+        ikariam_service=ikariam_service,
+        bot_config={
+            'shallow': shallow,
+            'start_id': start_id,
+            'waiting_time': waiting_time,
+            'dump_path': dump_path,
+        }
+    ).start(
+        action='Dump world',
+        objective='Shallow' if shallow else 'Full',
+    )
 
-    all_island_ids = set()
-    total_settlements = 0
-    for island in shallow_islands:
-        all_island_ids.add(island['id'])
-        total_settlements += int(island['players'])
 
-    update_status('Got {} islands with {} towns in total'.format(len(all_island_ids), str(total_settlements)), 100, 5, True)
-    update_status('Getting data for each island. This will take a while...', 0, 5, True)
+def view_dump(ikariam_service: IkariamService, db: Database, telegram: Telegram):
+    if not os.path.exists(os.getenv(home) + '/ikabot_world_dumps'):
+        print('No existing dumps found. Exiting')
+        enter()
+        return
 
-    #scan each island
-
-    world_islands_number = len(all_island_ids)
-    all_island_ids = list(split(sorted(map(int, all_island_ids)), 1))
-    
-    dump_islands(shared_data, all_island_ids[0], waiting_time, start_id, session, world_islands_number)
-
-    update_status('Got {} individual islands'.format(world_islands_number), 100, 100, True)
-
-    update_status('Dumping data to {}'.format(dump_path + dump_name), 100, 100, True)
-
-    dump(shared_data[5], dump_path, dump_name)
-    
-
-    return dump_path + dump_name
-
-def split(a, n):
-    k, m = divmod(len(a), n)
-    return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
-
-def dump(world, dump_path, dump_name):
-    world['dump_end_date'] = time.time()
-    p = Path(dump_path)
-    p.mkdir(exist_ok=True, parents=True)
-    with gzip.open(dump_path+dump_name,'wb') as file:
-        json_string = json.dumps(world).encode('utf-8')
-        file.write(json_string)
-       
-def dump_islands(shared_data, all_island_ids, waiting_time, start_id, session, world_islands_number):
-    for i, island_id in enumerate(sorted(map(int, all_island_ids))):
-        if(int(island_id) < start_id):
-            continue
-        update_status('Getting island id {}'.format(island_id), len(shared_data[5]['islands'])/world_islands_number*100, 5+(len(shared_data[5]['islands'])/world_islands_number * 95))
-        html = ''
-        try:
-            html = session.get('view=island&islandId=' + str(island_id))
-        except Exception:
-            # try again
-            html = session.get('view=island&islandId=' + str(island_id))
-        island = getIsland(html)
-        shared_data[4].acquire()
-        shared_data[5]['islands'].append(island)
-        shared_data[4].release()
-        time.sleep(waiting_time)
-
-def update_terminal(shared_data):
-    while(True):
-        banner()
-        print('\n')
-        shared_data[4].acquire()
-        print(shared_data[1])
-        shared_data[4].release()
-        chars = ['\\','|','/','─']
-        for i in range(20):
-            shared_data[4].acquire()
-            print(' '*120, end='\r')
-            print(shared_data[0] + ',\tdt: ' + str(round(time.time()-shared_data[2],2)) + 's\t' + chars[i%4] , end='\r')
-            shared_data[4].release()
-            time.sleep(0.05)
-        if stop_updating.is_set():
-            return
-        
-def update_status(message, percent, percent_total, add_history = False):
-    shared_data[4].acquire()
-    shared_data[0] = message + '\t' + str(round(percent,1)) + '%,\ttotal: ' + str(round(percent_total,1)) + '%'
-    if(add_history):
-        shared_data[1] += shared_data[0] + '\n'
-    shared_data[4].release()
-    
-
-def view_dump(session, event):
     files = [file.replace('\\','/') for file in get_files(os.getenv(home) + '/ikabot_world_dumps') if '.json.gz' in file ]
 
     print('All dumps are stored in ' + os.getenv(home) + '/ikabot_world_dumps\n')
@@ -266,10 +73,11 @@ def view_dump(session, event):
     selected_dump = files[choice]
     with gzip.open(selected_dump, 'rb') as file:
         selected_dump = json.load(file)
-    
+
+    selected_islands = set()
     while True:
         banner()
-        print_map(selected_dump['islands'])
+        print_map(selected_dump['islands'], selected_islands)
         print('0) Back')
         print('1) Search islands by island criteria')
         if not selected_dump['shallow']:
@@ -278,7 +86,6 @@ def view_dump(session, event):
 
         choice = read(min=0, max=3, digit=True)
         if choice == 0:
-            event.set()
             return
         elif choice == 1:
             print('Search island by a certain criteria. The available properties of an island are:')
@@ -345,7 +152,7 @@ def view_dump(session, event):
             enter()
 
 
-def print_map(islands):
+def print_map(islands, selected_islands):
     """Prints out a 100x100 matrix with all world islands on it. Selected islands are colored red.
     Parameters
     ----------
