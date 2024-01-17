@@ -1,6 +1,8 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import logging
+import os
+import sys
 import time
 import traceback
 
@@ -149,6 +151,7 @@ def menu(ikariam_service, db, telegram):
     checkForUpdate()
     show_proxy(db)
     process_list_manager = IkabotProcessListManager(db)
+    consecutive_keyboard_interruptions = False
 
     while True:
         banner()
@@ -158,6 +161,7 @@ def menu(ikariam_service, db, telegram):
 
         try:
             selected = choose_from_menu(_global_menu)
+            consecutive_keyboard_interruptions = False
 
             if selected == __function_exit:
                 # Perform exit of the app
@@ -170,8 +174,11 @@ def menu(ikariam_service, db, telegram):
             # we've selected a function, let's execute it
             selected(ikariam_service, db, telegram)
         except KeyboardInterrupt:
-            # we're going to refresh the menu
-            pass
+            if consecutive_keyboard_interruptions:
+                break
+            # First time.. We're going to refresh the menu
+            consecutive_keyboard_interruptions = True
+            continue
 
         except Exception as e:
             msg = 'Error...\nMessage: {}\nCause: {}'.format(
@@ -181,3 +188,9 @@ def menu(ikariam_service, db, telegram):
             logging.error(msg)
             enter()
 
+    if consecutive_keyboard_interruptions:
+        print('Forcefully quiting the command centre')
+        sys.exit(1)
+
+    print('Gracefully exiting the command centre')
+    sys.exit(0)
