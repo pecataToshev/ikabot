@@ -10,7 +10,7 @@ class Database:
     __bot_name_where = "{} = :{}".format(__bot_name_str, __bot_name_str)
 
     def __init__(self, bot_name):
-        logging.info('Creating db connection; botName=%s', bot_name)  # TODO: Change to debug
+        logging.debug('Creating db connection; botName=%s', bot_name)  # TODO: Change to debug
         self.__bot_name = bot_name
         self.__conn = sqlite3.connect(config.DB_FILE)
         self.__cursor = self.__conn.cursor()

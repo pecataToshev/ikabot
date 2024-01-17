@@ -61,14 +61,20 @@ class Bot(ABC):
         :param target_city: str/None -> what is the action's beneficent
         :return: process -> the started process
         """
+        logging.debug("Here we are, trying to start the process")
         process = multiprocessing.Process(
             target=self.__prepare_and_start_process,
             args=(action, objective, target_city)
         )
+
+        logging.debug("Just before process start")
         process.start()
+
+        logging.debug("This is the process, %s", process)
         return process
 
     def __setup_process_signals(self):
+        logging.debug("Stop signals to bot's process")
         signal.signal(signal.SIGINT, lambda signal_num, frame: None)
         signal.signal(signal.SIGABRT, lambda signal_num, frame: self.telegram.send_message(self._get_process_info()))
 

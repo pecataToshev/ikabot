@@ -15,6 +15,7 @@ class Telegram:
     __CHAT_ID = 'chatId'
 
     def __init__(self, db, is_user_attached):
+        logging.debug("Setup telegram, isUserAttached: %s", is_user_attached)
         self.__db = db
         self.__is_user_attached = is_user_attached
 
