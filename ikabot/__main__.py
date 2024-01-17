@@ -29,7 +29,6 @@ def main():
     try:
         menu(ikariam_service, db, telegram)
     finally:
-        clear()
         ikariam_service.logout()
 
 
