@@ -4,8 +4,9 @@
 import sys
 
 from ikabot.config import actionRequest
-from ikabot.helpers.gui import banner, clear, enter, getCurrentCityId
-from ikabot.helpers.pedirInfo import askUserYesNo
+from ikabot.helpers.gui import banner, clear, enter
+from ikabot.helpers.citiesAndIslands import getCurrentCityId
+from ikabot.helpers.userInput import askUserYesNo
 
 
 def activateVacationMode(ikariam_service, db, telegram):

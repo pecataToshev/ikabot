@@ -4,7 +4,7 @@
 from ikabot.bot.wineMonitoringBot import WineMonitoringBot
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import banner, enter
-from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.userInput import read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 

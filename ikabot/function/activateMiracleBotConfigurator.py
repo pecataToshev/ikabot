@@ -4,10 +4,10 @@ import json
 
 from ikabot.bot.activateMiracleBot import ActivateMiracleBot
 from ikabot.config import actionRequest, city_url, island_url
-from ikabot.helpers.getJson import (
-    getCity, getIsland)
+from ikabot.helpers.getJson import getCity, getIsland
 from ikabot.helpers.gui import banner, daysHoursMinutes, enter
-from ikabot.helpers.pedirInfo import getIdsOfCities, getIslandsIds, read
+from ikabot.helpers.citiesAndIslands import getIdsOfCities, getIslandsIds
+from ikabot.helpers.userInput import read
 
 
 def obtainMiraclesAvailable(session):

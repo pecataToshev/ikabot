@@ -5,7 +5,8 @@ import time
 
 from ikabot.bot.conductExperimentBot import ConductExperimentBot
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
-from ikabot.helpers.pedirInfo import chooseCity, read
+from ikabot.helpers.citiesAndIslands import chooseCity
+from ikabot.helpers.userInput import read
 
 
 def configure_conduct_experiment_bot(ikariam_service, db, telegram):

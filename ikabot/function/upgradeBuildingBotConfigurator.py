@@ -16,7 +16,8 @@ from ikabot.config import actionRequest, city_url, materials_names, materials_na
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, decodeUnicodeEscape, enter
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
-from ikabot.helpers.pedirInfo import askUserYesNo, chooseCity, getIdsOfCities, read
+from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
+from ikabot.helpers.userInput import askUserYesNo, read
 
 
 def getCostsReducers(city):

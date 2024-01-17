@@ -178,14 +178,6 @@ def daysHoursMinutes(totalSeconds):
         texto = texto + str(seconds) + 'S '
     return texto[:-1]
 
-def getCurrentCityId(session):
-    """
-    Parameters
-    ----------
-    session : ikabot.web.ikariamService.IkariamService
-    """
-    html = session.get()
-    return re.search(r'currentCityId:\s(\d+),', html).group(1)
 
 def getDateTime(timestamp = None):
     """Returns a string of the current date and time in the YYYY-mm-dd_HH-MM-SS, if `timestamp` is provided then it converts it into the given format.

@@ -9,7 +9,8 @@ from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.naval import getTotalShips
-from ikabot.helpers.pedirInfo import chooseCity, getIslandsIds, read
+from ikabot.helpers.citiesAndIslands import chooseCity, getIslandsIds
+from ikabot.helpers.userInput import read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 

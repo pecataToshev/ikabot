@@ -6,7 +6,7 @@ import json
 
 from ikabot.config import actionRequest, city_url
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.pedirInfo import getIdsOfCities
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from bs4 import BeautifulSoup
 
 

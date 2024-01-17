@@ -6,7 +6,7 @@ import requests
 
 from ikabot import config
 from ikabot.helpers.gui import banner, enter
-from ikabot.helpers.pedirInfo import askUserYesNo, read
+from ikabot.helpers.userInput import askUserYesNo, read
 
 
 class Telegram:

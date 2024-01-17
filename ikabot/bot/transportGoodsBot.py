@@ -9,7 +9,8 @@ from decimal import Decimal
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, materials_names, SECONDS_IN_HOUR
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import addThousandSeparator, getCurrentCityId
+from ikabot.helpers.gui import addThousandSeparator
+from ikabot.helpers.citiesAndIslands import getCurrentCityId
 from ikabot.helpers.planRoutes import waitForAvailableShips
 
 

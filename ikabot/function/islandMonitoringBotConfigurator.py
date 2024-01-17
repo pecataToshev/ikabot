@@ -5,7 +5,7 @@ from ikabot.bot.islandMonitoringBot import IslandMonitoringBot
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import banner, enter
-from ikabot.helpers.pedirInfo import askUserYesNo, read
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 

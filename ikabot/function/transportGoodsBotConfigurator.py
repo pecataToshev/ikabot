@@ -5,7 +5,8 @@ from ikabot.bot.transportGoodsBot import TransportGoodsBot, TransportJob
 from ikabot.config import materials_names
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
-from ikabot.helpers.pedirInfo import askForValue, askUserYesNo, chooseCity
+from ikabot.helpers.citiesAndIslands import chooseCity
+from ikabot.helpers.userInput import askForValue, askUserYesNo
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 

@@ -5,7 +5,7 @@ from ikabot.config import isWindows
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, decodeUnicodeEscape, enter, \
     printTable
 from ikabot.helpers.ikabotProcessListManager import run
-from ikabot.helpers.pedirInfo import askUserYesNo, read
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
     getPiracyTemplateData
 

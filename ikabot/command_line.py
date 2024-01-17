@@ -36,7 +36,7 @@ from ikabot.function.update import update
 from ikabot.function.vacationMode import vacationMode
 from ikabot.helpers.gui import banner, formatTimestamp
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
-from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.userInput import read
 
 __function_refresh = 'refresh'
 __function_exit = 'exit'

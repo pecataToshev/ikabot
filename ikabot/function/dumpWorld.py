@@ -5,13 +5,12 @@ import ast
 import gzip
 import json
 import os
-import threading
 
 from ikabot.bot.dumpWorldBot import DumpWorldBot
 from ikabot.config import isWindows
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import banner, bcolors, enter, getDateTime
-from ikabot.helpers.pedirInfo import askUserYesNo, read
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 

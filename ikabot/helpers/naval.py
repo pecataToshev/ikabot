@@ -4,7 +4,7 @@ import json
 import re
 
 from ikabot.config import actionRequest
-from ikabot.helpers.gui import getCurrentCityId
+from ikabot.helpers.citiesAndIslands import getCurrentCityId
 
 
 def getAvailableShips(session):

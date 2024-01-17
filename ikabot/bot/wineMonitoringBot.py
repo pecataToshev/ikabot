@@ -4,7 +4,7 @@ from ikabot.bot.bot import Bot
 from ikabot.config import city_url, SECONDS_IN_HOUR
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import daysHoursMinutes
-from ikabot.helpers.pedirInfo import getIdsOfCities
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.resources import getProductionPerSecond
 
 

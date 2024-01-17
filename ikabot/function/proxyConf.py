@@ -7,7 +7,7 @@ import requests
 
 import ikabot.config as config
 from ikabot.helpers.gui import banner, enter
-from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.userInput import read
 
 
 def show_proxy(db):

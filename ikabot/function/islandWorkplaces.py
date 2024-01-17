@@ -11,7 +11,8 @@ from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter, printProgressBar, \
     rightAlign
-from ikabot.helpers.pedirInfo import getIdsOfCities, read
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
+from ikabot.helpers.userInput import read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 

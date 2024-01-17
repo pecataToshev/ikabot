@@ -5,7 +5,7 @@
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, SECONDS_IN_HOUR
 from ikabot.helpers.gui import getDateTime
-from ikabot.helpers.pedirInfo import getIdsOfCities
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
 
 
 class LoginDailyBot(Bot):

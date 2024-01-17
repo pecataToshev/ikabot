@@ -10,7 +10,8 @@ from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, bcolors, printProgressBar
 from ikabot.helpers.market import printGoldForAllCities
-from ikabot.helpers.pedirInfo import getIdsOfCities, read
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
+from ikabot.helpers.userInput import read
 from ikabot.helpers.resources import getProductionPerSecond
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService

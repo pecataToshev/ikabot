@@ -6,7 +6,7 @@ from ikabot.command_line import menu
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import clear
 from ikabot.helpers.logs import setup_logging
-from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.userInput import read
 from ikabot.helpers.telegram import Telegram
 from ikabot.migrations.migrate import apply_migrations
 from ikabot.web.ikariamService import IkariamService

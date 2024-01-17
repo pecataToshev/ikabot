@@ -9,7 +9,8 @@ from ikabot.config import actionRequest, city_url, materials_names
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, daysHoursMinutes, enter
-from ikabot.helpers.pedirInfo import askUserYesNo, chooseCity, getIdsOfCities, read
+from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 

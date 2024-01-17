@@ -4,7 +4,7 @@
 import json
 
 from ikabot.helpers.gui import banner, bcolors, enter
-from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.userInput import read
 
 
 def importCookie(ikariam_service, db, telegram):

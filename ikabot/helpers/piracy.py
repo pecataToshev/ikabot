@@ -3,7 +3,7 @@ import logging
 
 from ikabot.config import city_url, actionRequest
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.pedirInfo import getIdsOfCities
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
 
 
 def getPiracyTemplateData(session, city_id):

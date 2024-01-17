@@ -5,7 +5,7 @@ from ikabot.bot.bot import Bot
 from ikabot.config import island_url, materials_names
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import decodeUnicodeEscape
-from ikabot.helpers.pedirInfo import getIslandsIds
+from ikabot.helpers.citiesAndIslands import getIslandsIds
 
 
 class IslandMonitoringBot(Bot):

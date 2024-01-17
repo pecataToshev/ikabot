@@ -18,7 +18,7 @@ from ikabot import config
 from ikabot.config import actionRequest, ConnectionError_wait, user_agent
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
-from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.userInput import read
 
 #blackbox tokens
 blackbox_tokens = [ #ch, chi, ffi

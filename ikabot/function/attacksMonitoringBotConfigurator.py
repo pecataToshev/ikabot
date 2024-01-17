@@ -3,7 +3,7 @@
 
 from ikabot.bot.attacksMonitoringBot import AttacksMonitoringBot
 from ikabot.helpers.gui import banner, enter
-from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.userInput import read
 
 
 def configure_alert_attacks_monitoring_bot(ikariam_service, db, telegram):

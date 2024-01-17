@@ -7,7 +7,7 @@ from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.market import getCommercialCities, getGold, getMarketHtml
-from ikabot.helpers.pedirInfo import askUserYesNo, read
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 

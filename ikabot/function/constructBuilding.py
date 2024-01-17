@@ -6,7 +6,8 @@ import re
 
 from ikabot.config import actionRequest
 from ikabot.helpers.gui import banner, enter
-from ikabot.helpers.pedirInfo import chooseCity, read
+from ikabot.helpers.citiesAndIslands import chooseCity
+from ikabot.helpers.userInput import read
 
 
 def constructBuilding(ikariam_service, db, telegram):

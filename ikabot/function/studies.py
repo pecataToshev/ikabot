@@ -6,7 +6,7 @@ import json
 from ikabot.config import actionRequest
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, enter
-from ikabot.helpers.pedirInfo import read
+from ikabot.helpers.userInput import read
 
 
 def __get_studies(session):
