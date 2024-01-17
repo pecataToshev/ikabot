@@ -4,15 +4,15 @@ from typing import List
 
 from ikabot.bot.transportGoodsBot import TransportGoodsBot, TransportJob
 from ikabot.config import materials_names
+from ikabot.helpers.citiesAndIslands import chooseCity
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
-from ikabot.helpers.citiesAndIslands import chooseCity
-from ikabot.helpers.userInput import askForValue, askUserYesNo
 from ikabot.helpers.telegram import Telegram
+from ikabot.helpers.userInput import askForValue, askUserYesNo
 from ikabot.web.ikariamService import IkariamService
 
 
-def __plan_route(ikariam_service: IkariamService, routes: list[TransportJob]):
+def __plan_route(ikariam_service: IkariamService, routes: List[TransportJob]):
     banner()
     print('Origin city:')
     origin_city = chooseCity(ikariam_service)
