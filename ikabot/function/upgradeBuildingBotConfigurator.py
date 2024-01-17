@@ -28,7 +28,7 @@ def getCostsReducers(city):
 
     Returns
     -------
-    reducers_per_material_level : dict[int, int]
+    reducers_per_material_level : Dict[int, int]
     """
     reducers_per_material = [0] * len(materials_names)
     assert len(reducers_per_material) == 5

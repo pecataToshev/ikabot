@@ -3,7 +3,7 @@
 
 import copy
 import json
-from typing import List
+from typing import Dict, List
 
 from ikabot.bot.trainArmyBot import TrainArmyBot
 from ikabot.config import city_url, materials_names
@@ -29,7 +29,7 @@ def generateArmyData(units_info: dict) -> List[dict]:
     return units
 
 
-def __filter_cities_by_resource(cities, resource_id) -> dict[int,bool]:
+def __filter_cities_by_resource(cities, resource_id) -> Dict[int, bool]:
     d = {}
     for _, city in cities.items():
         if city['tradegood'] == resource_id:

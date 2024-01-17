@@ -34,7 +34,7 @@ from ikabot.function.telegramFunctions import test_telegram_bot, update_telegram
 from ikabot.function.trainArmyBotConfigurator import train_army_bot_configurator
 from ikabot.function.update import update
 from ikabot.function.vacationMode import vacationMode
-from ikabot.helpers.gui import banner, formatTimestamp
+from ikabot.helpers.gui import banner, enter, formatTimestamp
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.userInput import read
 
@@ -170,3 +170,9 @@ def menu(ikariam_service, db, telegram):
         except KeyboardInterrupt:
             # we're going to refresh the menu
             pass
+
+        except Exception as e:
+            print("Something went wrong")
+            print(e)
+            enter()
+
