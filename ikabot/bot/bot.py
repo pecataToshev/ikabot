@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 
 from ikabot import config
 from ikabot.helpers.database import Database
+from ikabot.helpers.gui import bcolors
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.telegram import Telegram
 
@@ -55,6 +56,9 @@ class Bot(ABC):
                 self._get_process_info(), str(e), traceback.format_exc()
             )
             self.telegram.send_message(msg)
+            self.__process_manager.upsert_process({
+                'status': bcolors.RED + 'ERROR' + bcolors.ENDC
+            })
 
         finally:
             self.ikariam_service.logout()
