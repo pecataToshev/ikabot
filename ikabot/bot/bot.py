@@ -48,7 +48,8 @@ class Bot(ABC):
 
             logging.info("Done executing %s with config: %s", self.__class__.__name__, self.bot_config)
             self.__process_manager.upsert_process({
-                'status': 'Done'
+                'status': 'Done',
+                'nextActionTime': None,
             })
 
         except Exception as e:
@@ -57,7 +58,8 @@ class Bot(ABC):
             )
             self.telegram.send_message(msg)
             self.__process_manager.upsert_process({
-                'status': bcolors.RED + 'ERROR' + bcolors.ENDC
+                'status': bcolors.RED + 'ERROR' + bcolors.ENDC,
+                'nextActionTime': None,
             })
 
         finally:

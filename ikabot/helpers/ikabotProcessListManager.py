@@ -100,13 +100,15 @@ class IkabotProcessListManager:
         self.__db.set_process(_stored_process)
 
         # Print process
-        _stored_process['pid'] = None
-        _stored_process['lastActionTime'] = None
-        _stored_process['botName'] = None
-        if _stored_process.get('nextActionTime', None) is not None:
-            _stored_process['nextActionTime'] = formatTimestamp(_stored_process['nextActionTime'])
-        _stored_process = {k: v for k, v in _stored_process.items() if v is not None}
-        logging.info("Upsert process: %s", _stored_process)
+        logging.info(
+            "updateProcess: %s | %s | next: %s | obj: %s | %s",
+            _stored_process['action'],
+            _stored_process['status'],
+            '-' if _stored_process.get('nextActionTime', None) is None else formatTimestamp(
+                _stored_process['nextActionTime']),
+            _stored_process['objective'],
+            _stored_process['info'],
+        )
 
     def print_proces_table(self, process_list=None, add_process_numbers=False):
         """
