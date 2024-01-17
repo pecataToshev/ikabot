@@ -1,6 +1,8 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import logging
 import time
+import traceback
 
 from ikabot.function.activateMiracleBotConfigurator import activate_miracle_bot_configurator
 from ikabot.function.attacksMonitoringBotConfigurator import configure_alert_attacks_monitoring_bot
@@ -173,7 +175,10 @@ def menu(ikariam_service, db, telegram):
             pass
 
         except Exception as e:
-            print("Something went wrong")
-            print(e)
+            msg = 'Error...\nMessage: {}\nCause: {}'.format(
+                str(e), traceback.format_exc()
+            )
+            print(msg)
+            logging.error(msg)
             enter()
 
