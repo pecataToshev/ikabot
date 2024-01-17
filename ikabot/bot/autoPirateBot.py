@@ -247,7 +247,7 @@ class AutoPirateBot(Bot):
                 remaining_attempts=remaining_attempts - 1,
             )
 
-        self.ikariam_service.setProcessInfo('We have to solve some captcha. Let me handle that')
+        self._set_process_info('We have to solve some captcha. Let me handle that')
         captcha = None  # well, captcha failed, let's generate a new one
         while (captcha is None or captcha == 'Error') and remaining_attempts > 0:
             remaining_attempts -= 1

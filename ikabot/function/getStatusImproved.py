@@ -12,7 +12,6 @@ from ikabot.helpers.gui import banner, bcolors, printProgressBar
 from ikabot.helpers.market import printGoldForAllCities
 from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.userInput import read
-from ikabot.helpers.resources import getProductionPerSecond
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 
@@ -87,13 +86,7 @@ def getStatusForAllCities(ikariam_service: IkariamService, db: Database, telegra
     # region Retrieve cities data
     for res_ind, city_id in enumerate(city_ids):
         printProgressBar("Retrieving cities data", res_ind+1, len(city_ids))
-        city = getCity(ikariam_service.get(city_url + city_id))
-
-        resource_production = getProductionPerSecond(ikariam_service, city_id)
-        resource_production_per_hour = [int(resource_production[0] * SECONDS_IN_HOUR), 0, 0, 0, 0]
-        resource_production_per_hour[int(resource_production[2])] = int(resource_production[1] * SECONDS_IN_HOUR)
-        city['resourceProductionPerHour'] = resource_production_per_hour
-        cities.append(city)
+        cities.append(getCity(ikariam_service.get(city_url + city_id)))
     # endregion
 
     # Remove progressbar
@@ -112,7 +105,7 @@ def getStatusForAllCities(ikariam_service: IkariamService, db: Database, telegra
         'cityName': TOTAL,
         'storageCapacity': sum(c['storageCapacity'] for c in cities),
         'availableResources': [sum(x) for x in zip(*[c['availableResources'] for c in cities])],
-        'resourceProductionPerHour': [sum(x) for x in zip(*[c['resourceProductionPerHour'] for c in cities])],
+        'productionPerHour': [sum(x) for x in zip(*[c['productionPerHour'] for c in cities])],
         'wineConsumptionPerHour': sum(c['wineConsumptionPerHour'] for c in cities)
     }
 
@@ -137,7 +130,7 @@ def getStatusForAllCities(ikariam_service: IkariamService, db: Database, telegra
             res_in_storage = available_resources[res_ind]
             row1.append(get_storage(storage_capacity, res_in_storage))
 
-            res_incr = city['resourceProductionPerHour'][res_ind]
+            res_incr = city['productionPerHour'][res_ind]
             if res_ind == 1:
                 res_incr -= city['wineConsumptionPerHour']
             row2.append(get_increment(res_incr))
