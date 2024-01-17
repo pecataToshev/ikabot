@@ -102,12 +102,12 @@ class IkabotProcessListManager:
         # Print process
         logging.info(
             "updateProcess: %s | %s | next: %s | obj: %s | %s",
-            _stored_process['action'],
-            _stored_process['status'],
+            _stored_process.get('action', '-'),
+            _stored_process.get('status', '-'),
             '-' if _stored_process.get('nextActionTime', None) is None else formatTimestamp(
                 _stored_process['nextActionTime']),
-            _stored_process['objective'],
-            _stored_process['info'],
+            _stored_process.get('objective', '-'),
+            _stored_process.get('info', '-'),
         )
 
     def print_proces_table(self, process_list=None, add_process_numbers=False):
