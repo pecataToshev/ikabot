@@ -395,7 +395,7 @@ def upgrade_building_bot_configurator(ikariam_service, db, telegram):
     if building is None:
         return
 
-    target_level = building['upgradeTo']
+    target_level = building['targetLevel']
     current_level = UpgradeBuildingBot.get_building_level(building)
 
     # calculate the resources that are needed
