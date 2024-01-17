@@ -331,11 +331,7 @@ def getBuildingToExpand(city):
         return None
 
     building = buildings[selected_building_id - 1]
-
-    current_level = int(building['level'])
-    # if the building is being expanded, add 1 level
-    if building['isBusy']:
-        current_level += 1
+    current_level = UpgradeBuildingBot.get_building_level(building)
 
     print()
     print()

@@ -167,6 +167,7 @@ def menu(ikariam_service, db, telegram):
 
             # we've selected a function, let's execute it
             selected(ikariam_service, db, telegram)
+            enter() # TODO: remove
         except KeyboardInterrupt:
             # we're going to refresh the menu
             pass

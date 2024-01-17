@@ -38,7 +38,7 @@ def clear():
 def banner():
     """Clears all text on the console and displays the Ikabot ASCII art banner
     """
-    clear()
+    # clear() # TODO: remove comment
     bner = """
     `7MMF'  `7MM                       `7MM\"""Yp,                 mm
       MM      MM                         MM    Yb                 MM
