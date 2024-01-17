@@ -8,7 +8,7 @@ from ikabot.bot.sellResourcesBot import SellResourcesToOfferBot, SellResourcesWi
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
-from ikabot.helpers.market import getCommercialCities, storageCapacityOfMarket
+from ikabot.helpers.market import getCommercialCities, getMarketInfo, storageCapacityOfMarket
 from ikabot.helpers.userInput import read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
@@ -29,25 +29,6 @@ def chooseCommercialCity(commercial_cities):
         print('({:d}) {}'.format(i + 1, city['name']))
     ind = read(min=1, max=len(commercial_cities))
     return commercial_cities[ind - 1]
-
-
-def getMarketInfo(session, city):
-    """
-    Parameters
-    ----------
-    session : ikabot.web.ikariamService.IkariamService
-    city : dict
-
-    Returns
-    -------
-    response : dict
-    """
-    params = {'view': 'branchOfficeOwnOffers', 'activeTab': 'tab_branchOfficeOwnOffers', 'cityId': city['id'],
-              'position': city['pos'], 'backgroundView': 'city', 'currentCityId': city['id'],
-              'templateView': 'branchOfficeOwnOffers', 'currentTab': 'tab_branchOfficeOwnOffers',
-              'actionRequest': actionRequest, 'ajax': '1'}
-    resp = session.post(params=params, noIndex=True)
-    return json.loads(resp, strict=False)[1][1][1]
 
 
 def getOffers(session, my_market_city, resource_type):

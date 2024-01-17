@@ -6,9 +6,8 @@ from decimal import Decimal
 
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, materials_names
-from ikabot.function.sellResourcesBotConfigurator import getMarketInfo
 from ikabot.helpers.gui import addThousandSeparator
-from ikabot.helpers.market import onSellInMarket, storageCapacityOfMarket
+from ikabot.helpers.market import getMarketInfo, onSellInMarket, storageCapacityOfMarket
 from ikabot.helpers.planRoutes import waitForAvailableShips
 
 

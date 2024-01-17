@@ -120,3 +120,22 @@ def printGoldForAllCities(session, city_id):
     for html_table in html_tables:
         print_table(html_table)
         print('-' * 85)  # Add a separator between tables
+
+
+def getMarketInfo(session, city):
+    """
+    Parameters
+    ----------
+    session : ikabot.web.ikariamService.IkariamService
+    city : dict
+
+    Returns
+    -------
+    response : dict
+    """
+    params = {'view': 'branchOfficeOwnOffers', 'activeTab': 'tab_branchOfficeOwnOffers', 'cityId': city['id'],
+              'position': city['pos'], 'backgroundView': 'city', 'currentCityId': city['id'],
+              'templateView': 'branchOfficeOwnOffers', 'currentTab': 'tab_branchOfficeOwnOffers',
+              'actionRequest': actionRequest, 'ajax': '1'}
+    resp = session.post(params=params, noIndex=True)
+    return json.loads(resp, strict=False)[1][1][1]

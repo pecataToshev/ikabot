@@ -5,7 +5,8 @@ import copy
 import json
 
 from ikabot.bot.trainArmyBot import TrainArmyBot
-from ikabot.config import actionRequest, city_url, materials_names
+from ikabot.config import city_url, materials_names
+from ikabot.helpers.buildings import extract_target_building, get_building_info
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, daysHoursMinutes, enter
@@ -13,28 +14,6 @@ from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
 from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
-
-
-def get_target_building(city: dict, building_type: str):
-    for building in city['position']:
-        if building['building'] == building_type:
-            return building
-    return None
-
-
-def get_building_info(ikariam_service:IkariamService, city_id: int, building: dict):
-    data = ikariam_service.post(
-        params={
-            'view': building['building'],
-            'cityId': city_id,
-            'position': building['position'],
-            'backgroundView': 'city',
-            'currentCityId': city_id,
-            'actionRequest': actionRequest,
-            'ajax': '1'
-        }
-    )
-    return json.loads(data, strict=False)
 
 
 def generateArmyData(units_info: dict) -> list[dict]:
@@ -151,7 +130,7 @@ def train_army_bot_configurator(ikariam_service: IkariamService, db: Database, t
     banner()
 
     building_type = 'barracks' if train_troops else 'shipyard'
-    building = get_target_building(city, building_type)
+    building = extract_target_building(city, building_type)
     if building is None:
         print(building_type, 'not built.')
         enter()
@@ -164,7 +143,7 @@ def train_army_bot_configurator(ikariam_service: IkariamService, db: Database, t
         city = getCity(ikariam_service.get(city_url + str(city_id)))
         training_cities_map[city_id] = city
 
-        building = get_target_building(city, building_type)
+        building = extract_target_building(city, building_type)
         if building is None:
             print('Cannot replicate trainings in', city['name'], 'due to', building_type, 'not built')
             training_cities_map.pop(city_id)

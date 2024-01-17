@@ -5,7 +5,7 @@ import re
 
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, materials_names
-from ikabot.function.trainArmyBotConfigurator import get_building_info, get_target_building
+from ikabot.helpers.buildings import extract_target_building, get_building_info
 from ikabot.helpers.getJson import getCity
 
 
@@ -30,7 +30,7 @@ class TrainArmyBot(Bot):
         while training_index < len(self.trainings):
             training = self.trainings[training_index]
             city = getCity(self.ikariam_service.get(city_url + self.city_id))
-            building = get_target_building(city, self.building_building)
+            building = extract_target_building(city, self.building_building)
 
             if building is None:
                 self.telegram.send_message("Building {} disappeared in {}. Aborting training job!".format(
