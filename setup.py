@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="ikabot",
-    version='2024.0117.dev154516',
+    version='2024.0117.dev163642',
     author="Petar Toshev",
     author_email="pecata.toshev+ikabot@gmail.com",
     license='MIT',
