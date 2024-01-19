@@ -1,6 +1,8 @@
 import logging
 import os
 import random
+import signal
+import sys
 import time
 import traceback
 from abc import ABC, abstractmethod
@@ -24,9 +26,18 @@ class Bot(ABC):
         self.ikariam_service = ikariam_service
         self.bot_config = bot_config
 
+    @staticmethod
+    def __set_process_signals():
+        def exit_child(signum, frame):
+            sys.exit(signum)
+        signal.signal(signal.SIGTERM, exit_child)
+        signal.signal(signal.SIGKILL, exit_child)
+        signal.signal(signal.SIGABRT, exit_child)
+
     def __prepare_and_start_process(self, process_info):
         try:
             logging.info("Preparing %s with config: %s", self.__class__.__name__, self.bot_config)
+            self.__set_process_signals()
             self.ikariam_service.padre = False
 
             # Reinitialize connections
