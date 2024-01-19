@@ -313,41 +313,32 @@ class IkariamService:
         servers = json.loads(r.text, strict=False)
 
         if not self.logged:
+            self.account = self.db.get_stored_value('account')
+            if self.account is None:
+                if len([account for account in accounts if account['blocked'] is False]) == 1:
+                    self.account = [account for account in accounts if account['blocked'] is False][0]
+                else:
+                    print('With which account do you want to log in?\n')
 
-            if len([account for account in accounts if account['blocked'] is False]) == 1:
-                self.account = [account for account in accounts if account['blocked'] is False][0]
-            else:
-                print('With which account do you want to log in?\n')
+                    max_name = max([len(account['name']) for account in accounts if account['blocked'] is False])
+                    i = 0
+                    for account in [account for account in accounts if account['blocked'] is False]:
+                        account_group = account['accountGroup']
+                        world, server_lang = [(srv['name'], srv['language']) for srv in servers if srv['accountGroup'] == account_group][0]
 
-                max_name = max([len(account['name']) for account in accounts if account['blocked'] is False])
-                i = 0
-                for account in [account for account in accounts if account['blocked'] is False]:
-                    account_group = account['accountGroup']
-                    world, server_lang = [(srv['name'], srv['language']) for srv in servers if srv['accountGroup'] == account_group][0]
-
-                    i += 1
-                    pad = ' ' * (max_name - len(account['name']))
-                    print('({:d}) {}{} [{} - {}]'.format(i, account['name'], pad, server_lang, world))
-                num = read(min=1, max=i)
-                self.account = [account for account in accounts if account['blocked'] is False][num - 1]
+                        i += 1
+                        pad = ' ' * (max_name - len(account['name']))
+                        print('({:d}) {}{} [{} - {}]'.format(i, account['name'], pad, server_lang, world))
+                    num = read(min=1, max=i)
+                    self.account = [account for account in accounts if account['blocked'] is False][num - 1]
+                self.db.store_value('account', self.account)
 
             self.username = self.account['name']
             self.server_language = self.account['server']['language']
             self.account_group = self.account['accountGroup']
             self.server_number = str(self.account['server']['number'])
-            
-            self.word, self.server = [(srv['name'], srv['language']) for srv in servers if srv['accountGroup'] == self.account_group][0]
 
-            data = {
-                'email': self.mail,
-                'password': self.password,
-                'username': self.username,
-                'serverLanguage': self.server_language,
-                'server': self.server,
-                'world': self.word,
-                'serverNumber': self.server_number,
-            }
-            self.db.store_value('accountData', data)
+            self.word, self.server = [(srv['name'], srv['language']) for srv in servers if srv['accountGroup'] == self.account_group][0]
 
             config.infoUser = 'Server:{}'.format(self.server)
             config.infoUser += ', World:{}'.format(self.word)
