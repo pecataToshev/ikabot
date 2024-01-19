@@ -31,7 +31,6 @@ class Bot(ABC):
         def exit_child(signum, frame):
             sys.exit(signum)
         signal.signal(signal.SIGTERM, exit_child)
-        signal.signal(signal.SIGKILL, exit_child)
         signal.signal(signal.SIGABRT, exit_child)
 
     def __prepare_and_start_process(self, process_info):
