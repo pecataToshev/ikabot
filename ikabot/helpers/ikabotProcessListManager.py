@@ -42,7 +42,7 @@ class ProcessStatus(Enum):
         return bcolors.ENDC
 
 
-class __ProcessSpecialAction(Enum):
+class _ProcessSpecialAction(Enum):
     SET_DELETION_TIME = 'set-deletion-time'
     SET_TERMINATED_STATUS = 'set-terminated-status'
     HAS_DIFFERENT_NAME = 'has-different-name'
@@ -50,7 +50,7 @@ class __ProcessSpecialAction(Enum):
     HAS_EXPIRED_SHOWTIME = 'do-delete'
 
 
-def __determine_process_special_action(process: dict, ika_process_name: str) -> Union[__ProcessSpecialAction, None]:
+def _determine_process_special_action(process: dict, ika_process_name: str) -> Union[_ProcessSpecialAction, None]:
     try:
         proc = psutil.Process(pid=process['pid'])
 
@@ -59,26 +59,26 @@ def __determine_process_special_action(process: dict, ika_process_name: str) -> 
         if isWindows or proc.status() != 'zombie':
             if proc.name() != ika_process_name:
                 # not the same name, so probably restarted the system
-                return __ProcessSpecialAction.HAS_DIFFERENT_NAME
+                return _ProcessSpecialAction.HAS_DIFFERENT_NAME
         else:
             # the process is zombie
             if process['status'] != ProcessStatus.ZOMBIE:
-                return __ProcessSpecialAction.SET_ZOMBIE
+                return _ProcessSpecialAction.SET_ZOMBIE
 
     except psutil.NoSuchProcess:
         # The process is no-longer running
         if process['status'] in [ProcessStatus.DONE, ProcessStatus.TERMINATED, ProcessStatus.ERROR]:
             next_action_time = process.get('nextActionTime', None)
             if next_action_time is None:
-                return __ProcessSpecialAction.SET_DELETION_TIME
+                return _ProcessSpecialAction.SET_DELETION_TIME
             if time.time() >= next_action_time:
-                return __ProcessSpecialAction.HAS_EXPIRED_SHOWTIME
+                return _ProcessSpecialAction.HAS_EXPIRED_SHOWTIME
             return None
 
         if process['status'] == ProcessStatus.FORCE_KILLED:
-            return __ProcessSpecialAction.HAS_EXPIRED_SHOWTIME
+            return _ProcessSpecialAction.HAS_EXPIRED_SHOWTIME
 
-        return __ProcessSpecialAction.SET_TERMINATED_STATUS
+        return _ProcessSpecialAction.SET_TERMINATED_STATUS
 
     return None
 
@@ -104,22 +104,22 @@ class IkabotProcessListManager:
         ika_process_name = psutil.Process(pid=os.getpid()).name()
         deletion_time = time.time() + 5 * 60
         for process in process_list:
-            action = __determine_process_special_action(process, ika_process_name)
+            action = _determine_process_special_action(process, ika_process_name)
 
-            if action in [__ProcessSpecialAction.HAS_DIFFERENT_NAME, __ProcessSpecialAction.HAS_EXPIRED_SHOWTIME]:
+            if action in [_ProcessSpecialAction.HAS_DIFFERENT_NAME, _ProcessSpecialAction.HAS_EXPIRED_SHOWTIME]:
                 logging.info('Deleting process: reason=%s, process=%s', action, process)
                 self.__db.delete_process(process['pid'])
                 continue
-            elif action == __ProcessSpecialAction.SET_TERMINATED_STATUS:
+            elif action == _ProcessSpecialAction.SET_TERMINATED_STATUS:
                 logging.info('Process has been terminated or quit unexpectedly: %s', process)
                 process['status'] = ProcessStatus.TERMINATED
                 process['nextActionTime'] = deletion_time
                 self.__db.set_process(process)
-            elif action == __ProcessSpecialAction.SET_ZOMBIE:
+            elif action == _ProcessSpecialAction.SET_ZOMBIE:
                 logging.info('Found process zombie. Setting to zombie %s', process)
                 process['status'] = ProcessStatus.ZOMBIE
                 self.__db.set_process(process)
-            elif action == __ProcessSpecialAction.SET_DELETION_TIME:
+            elif action == _ProcessSpecialAction.SET_DELETION_TIME:
                 logging.info('Setting deletion time for process: %s', process)
                 process['nextActionTime'] = deletion_time
                 self.__db.set_process(process)
