@@ -1,5 +1,4 @@
 import logging
-import multiprocessing
 import re
 import sys
 import traceback
@@ -55,8 +54,4 @@ def __init_parameters():
 
 
 if __name__ == '__main__':
-    # On Windows calling this function is necessary.
-    if sys.platform.startswith('win'):
-        multiprocessing.freeze_support()
-
     main()

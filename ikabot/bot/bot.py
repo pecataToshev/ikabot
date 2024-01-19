@@ -1,5 +1,5 @@
 import logging
-import multiprocessing
+import os
 import random
 import signal
 import time
@@ -68,7 +68,7 @@ class Bot(ABC):
         :param action: str -> what the process is doing
         :param objective: str -> what's the end goal of the process
         :param target_city: str/None -> what is the action's beneficent
-        :return: process -> the started process
+        :return: int -> pid of the new process
         """
         info_process = {
             'action': action,
@@ -78,17 +78,12 @@ class Bot(ABC):
         }
 
         logging.debug("Here we are, trying to start the process: %s", info_process)
-        multiprocessing_context = multiprocessing.get_context('spawn')
-        process = multiprocessing_context.Process(
-            target=self.__prepare_and_start_process,
-            args=(info_process, )
-        )
+        child_pid = os.fork()
+        if child_pid != 0:
+            return child_pid
 
-        logging.debug("Just before process start")
-        process.start()
-
-        logging.debug("This is the process, %s", process)
-        return process
+        self.__prepare_and_start_process(info_process)
+        return os.getpid()
 
     def __setup_process_signals(self):
         logging.debug("Stop signals to bot's process")
