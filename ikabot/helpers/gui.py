@@ -86,6 +86,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
         'title': str -> title of the column in the printed table
         'fmt': None/lambda -> if the value has to be transformed before print
         'align': char -> align character of the column values
+        'setColor': None/lambda -> set color to the cell (uses value before transformation)
     }
 
     :param table_config: list[dict[]] -> table columns config
@@ -107,23 +108,27 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
     for row_index, row_data in enumerate(table_data):
         _row = []
         for column_index, column_config in enumerate(table_config):
-            _v = row_data.get(column_config['key'], None)
+            _raw_column_data = row_data.get(column_config['key'], None)
+            _v = _raw_column_data
             if 'fmt' in column_config and _v is not None:
                 _v = column_config['fmt'](_v)
             if 'useDataRowIndexForValue' in column_config:
                 _v = column_config['useDataRowIndexForValue'](row_index)
-            _row.append(_v or missing_value)
             _max_len[column_index] = max(_max_len[column_index], len(str(_v or missing_value)))
+            if 'setColor' in column_config:
+                _v = column_config['setColor'](_raw_column_data) + _v
+            _row.append(_v or missing_value)
         _table.append(_row)
 
     for tri, tr in enumerate(_table):
-        print(row_color(tri) + row_additional_indentation + ' | '.join(
+        row_clr = row_color(tri)
+        print(row_clr + row_additional_indentation + (row_clr + ' | ').join(
             ['{column: {align}{len}}'.format(
                 column=c,
                 align=table_config[ci].get('align', column_align),
                 len=_max_len[ci])
              for ci, c in enumerate(tr)]
-        ))
+        ) + bcolors.ENDC)
 
     print()
 

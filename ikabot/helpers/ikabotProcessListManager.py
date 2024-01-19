@@ -5,11 +5,14 @@ import os
 import subprocess
 import time
 from datetime import datetime
+from enum import Enum
+from typing import Union
 
 import psutil
 
 from ikabot.config import isWindows
-from ikabot.helpers.gui import formatTimestamp, printTable
+from ikabot.helpers.database import Database
+from ikabot.helpers.gui import bcolors, formatTimestamp, printTable
 
 
 def run(command):
@@ -20,8 +23,68 @@ def run(command):
         return ret
 
 
+class ProcessStatus(Enum):
+    INITIALIZED = 'initialized'
+    DONE = 'done'
+    TERMINATED = 'terminated'
+    FORCE_KILLED = 'force-killed'
+    RUNNING = 'running'
+    WAITING = 'waiting'
+    ZOMBIE = 'zombie'
+    ERROR = 'error'
+
+    @staticmethod
+    def get_color(status):
+        if status == ProcessStatus.ERROR:
+            return bcolors.RED
+        if status == ProcessStatus.DONE:
+            return bcolors.GREEN
+        return bcolors.ENDC
+
+
+class __ProcessSpecialAction(Enum):
+    SET_DELETION_TIME = 'set-deletion-time'
+    SET_TERMINATED_STATUS = 'set-terminated-status'
+    HAS_DIFFERENT_NAME = 'has-different-name'
+    SET_ZOMBIE = 'set-zombie'
+    HAS_EXPIRED_SHOWTIME = 'do-delete'
+
+
+def __determine_process_special_action(process: dict, ika_process_name: str) -> Union[__ProcessSpecialAction, None]:
+    try:
+        proc = psutil.Process(pid=process['pid'])
+
+        # check if the process is not zombie
+        # windows doesn't support the status method
+        if isWindows or proc.status() != 'zombie':
+            if proc.name() != ika_process_name:
+                # not the same name, so probably restarted the system
+                return __ProcessSpecialAction.HAS_DIFFERENT_NAME
+        else:
+            # the process is zombie
+            if process['status'] != ProcessStatus.ZOMBIE:
+                return __ProcessSpecialAction.SET_ZOMBIE
+
+    except psutil.NoSuchProcess:
+        # The process is no-longer running
+        if process['status'] in [ProcessStatus.DONE, ProcessStatus.TERMINATED, ProcessStatus.ERROR]:
+            next_action_time = process.get('nextActionTime', None)
+            if next_action_time is None:
+                return __ProcessSpecialAction.SET_DELETION_TIME
+            if time.time() >= next_action_time:
+                return __ProcessSpecialAction.HAS_EXPIRED_SHOWTIME
+            return None
+
+        if process['status'] == ProcessStatus.FORCE_KILLED:
+            return __ProcessSpecialAction.HAS_EXPIRED_SHOWTIME
+
+        return __ProcessSpecialAction.SET_TERMINATED_STATUS
+
+    return None
+
+
 class IkabotProcessListManager:
-    def __init__(self, db):
+    def __init__(self, db: Database):
         """
         Init processes -> reads and updates the file
         :param db: ikabot.helpers.database.Database
@@ -38,31 +101,28 @@ class IkabotProcessListManager:
 
         # check it's still running
         running_ikabot_processes = []
-        ika_process = psutil.Process(pid=os.getpid()).name()
+        ika_process_name = psutil.Process(pid=os.getpid()).name()
+        deletion_time = time.time() + 5 * 60
         for process in process_list:
-            try:
-                proc = psutil.Process(pid=process['pid'])
-            except psutil.NoSuchProcess:
-                # The process is no-longer running
-                logging.info('Process is no-longer running. Deleting %s', process)
+            action = __determine_process_special_action(process, ika_process_name)
+
+            if action in [__ProcessSpecialAction.HAS_DIFFERENT_NAME, __ProcessSpecialAction.HAS_EXPIRED_SHOWTIME]:
+                logging.info('Deleting process: reason=%s, process=%s', action, process)
                 self.__db.delete_process(process['pid'])
                 continue
-
-            # windows doesn't support the status method
-            is_alive = True if isWindows else proc.status() != 'zombie'
-
-            if is_alive:
-                if proc.name() != ika_process:
-                    # not the same name, so probably restarted the system
-                    logging.info('Process has different name. Deleting %s', process)
-                    self.__db.delete_process(process['pid'])
-                    continue
-            else:
-                # the process is zombie
-                if process['status'] != 'zombie':
-                    logging.info('Found process zombie. Setting to zombie %s', process)
-                    process['status'] = 'zombie'
-                    self.__db.set_process(process)
+            elif action == __ProcessSpecialAction.SET_TERMINATED_STATUS:
+                logging.info('Process has been terminated or quit unexpectedly: %s', process)
+                process['status'] = ProcessStatus.TERMINATED
+                process['nextActionTime'] = deletion_time
+                self.__db.set_process(process)
+            elif action == __ProcessSpecialAction.SET_ZOMBIE:
+                logging.info('Found process zombie. Setting to zombie %s', process)
+                process['status'] = ProcessStatus.ZOMBIE
+                self.__db.set_process(process)
+            elif action == __ProcessSpecialAction.SET_DELETION_TIME:
+                logging.info('Setting deletion time for process: %s', process)
+                process['nextActionTime'] = deletion_time
+                self.__db.set_process(process)
 
             running_ikabot_processes.append(process)
 
@@ -141,7 +201,7 @@ class IkabotProcessListManager:
             table_config=additional_columns + [
                 {'key': 'pid', 'title': 'pid'},
                 {'key': 'action', 'title': 'Action'},
-                {'key': 'status', 'title': 'Status'},
+                {'key': 'status', 'title': 'Status', 'setColor': ProcessStatus.get_color},
                 {'key': 'lastActionTime', 'title': 'Last Action', 'fmt': formatTimestamp},
                 {'key': 'nextActionTime', 'title': 'Next Action', 'fmt': __fmt_next_action},
                 {'key': 'targetCity', 'title': 'Target City'},

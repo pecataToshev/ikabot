@@ -1,15 +1,13 @@
 import logging
 import os
 import random
-import signal
 import time
 import traceback
 from abc import ABC, abstractmethod
 
 from ikabot import config
 from ikabot.helpers.database import Database
-from ikabot.helpers.gui import bcolors
-from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
+from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager, ProcessStatus
 from ikabot.helpers.telegram import Telegram
 
 
@@ -30,21 +28,22 @@ class Bot(ABC):
         try:
             logging.info("Preparing %s with config: %s", self.__class__.__name__, self.bot_config)
             self.ikariam_service.padre = False
-            self.__setup_process_signals()
 
+            # Reinitialize connections
             self.db = Database(bot_name=config.BOT_NAME)
             self.telegram = Telegram(db=self.db, is_user_attached=False)
             self.__process_manager = IkabotProcessListManager(self.db)
-
-            self.__process_manager.upsert_process(process_info)
             self.ikariam_service.reset_db_telegram(db=self.db, telegram=self.telegram)
+
+            # Insert process into the process table
+            self.__process_manager.upsert_process(process_info)
 
             logging.info("Starting %s with config: %s", self.__class__.__name__, self.bot_config)
             self._start()
 
             logging.info("Done executing %s with config: %s", self.__class__.__name__, self.bot_config)
             self.__process_manager.upsert_process({
-                'status': 'Done',
+                'status': ProcessStatus.DONE,
                 'nextActionTime': None,
             })
 
@@ -54,7 +53,7 @@ class Bot(ABC):
             )
             self.telegram.send_message(msg)
             self.__process_manager.upsert_process({
-                'status': bcolors.RED + 'ERROR' + bcolors.ENDC,
+                'status': ProcessStatus.ERROR,
                 'nextActionTime': None,
             })
 
@@ -74,7 +73,7 @@ class Bot(ABC):
             'action': action,
             'objective': objective,
             'targetCity': target_city,
-            'status': 'init'
+            'status': ProcessStatus.INITIALIZED
         }
 
         logging.info("Forking proces with info: %s", info_process)
@@ -84,11 +83,6 @@ class Bot(ABC):
 
         self.__prepare_and_start_process(info_process)
         return os.getpid()
-
-    def __setup_process_signals(self):
-        logging.debug("Stop signals to bot's process")
-        signal.signal(signal.SIGINT, lambda signal_num, frame: None)
-        signal.signal(signal.SIGABRT, lambda signal_num, frame: self.telegram.send_message(self._get_process_info()))
 
     def _wait(self, seconds, info, max_random=0):
         """
