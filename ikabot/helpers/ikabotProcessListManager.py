@@ -144,7 +144,7 @@ class IkabotProcessListManager:
         :param process: dict[] -> process to update
         :return:
         """
-        _pid = os.getpid()
+        _pid = process.get('pid', os.getpid())
 
         _stored_process = self.__get_processes(filters=[['pid', '==', _pid]])
         if len(_stored_process) > 0:

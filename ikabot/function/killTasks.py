@@ -4,7 +4,7 @@
 from ikabot.config import isWindows
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import banner, enter
-from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager, run
+from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager, ProcessStatus, run
 from ikabot.helpers.userInput import read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
@@ -16,7 +16,7 @@ def kill_tasks(ikariam_service: IkariamService, db: Database, telegram: Telegram
     while True:
         banner()
 
-        process_list = process_list_manager.get_process_list(filters=[['action', '!=', 'killTasks']])
+        process_list = process_list_manager.get_process_list()
 
         if len(process_list) == 0:
             print('There are no tasks running')
@@ -39,3 +39,6 @@ def kill_tasks(ikariam_service: IkariamService, db: Database, telegram: Telegram
             run("taskkill /F /PID {}".format(process_to_kill['pid']))
         else:
             run("kill -9 {}".format(process_to_kill['pid']))
+
+        process_to_kill['status'] = ProcessStatus.FORCE_KILLED
+        process_list_manager.upsert_process(process_to_kill)
