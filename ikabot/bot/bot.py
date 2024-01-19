@@ -81,6 +81,7 @@ class Bot(ABC):
         )
 
         logging.debug("Just before process start")
+        process.daemon = True
         process.start()
 
         logging.debug("This is the process, %s", process)
