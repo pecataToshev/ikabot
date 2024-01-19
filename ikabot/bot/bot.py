@@ -11,7 +11,6 @@ from ikabot.helpers.database import Database
 from ikabot.helpers.gui import bcolors
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.telegram import Telegram
-from ikabot.web.ikariamService import IkariamService
 
 
 class Bot(ABC):
@@ -24,20 +23,25 @@ class Bot(ABC):
         raise NotImplementedError('Implement me in the current bot class')
 
     def __init__(self, ikariam_service, bot_config):
-        self.bot_name = config.BOT_NAME
+        self.ikariam_service = ikariam_service
         self.bot_config = bot_config
 
-    def __prepare_and_start_process(self, init_process):
+    def __prepare_and_start_process(self, action, objective, target_city):
         try:
+            self.ikariam_service.padre = False
             self.__setup_process_signals()
 
-            self.db = Database(bot_name=self.bot_name)
+            self.db = Database(bot_name=config.BOT_NAME)
             self.telegram = Telegram(db=self.db, is_user_attached=False)
-            self.ikariam_service = IkariamService(self.db, self.telegram)
-            self.ikariam_service.padre = False
             self.__process_manager = IkabotProcessListManager(self.db)
 
-            self.__process_manager.upsert_process(init_process)
+            self.__process_manager.upsert_process({
+                'action': action,
+                'objective': objective,
+                'targetCity': target_city,
+                'status': 'starting'
+            })
+            self.ikariam_service.reset_db_telegram(db=self.db, telegram=self.telegram)
 
             logging.info("Starting %s with config: %s", self.__class__.__name__, self.bot_config)
             self._start()
