@@ -104,7 +104,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
         return
 
     _max_len = [len(tc['title']) for tc in table_config]
-    _table = [[tc['title'] for tc in table_config]]
+    _table = [[{'data': tc['title'], 'color': ''} for tc in table_config]]
     for row_index, row_data in enumerate(table_data):
         _row = []
         for column_index, column_config in enumerate(table_config):
@@ -114,19 +114,22 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
                 _v = column_config['fmt'](_v)
             if 'useDataRowIndexForValue' in column_config:
                 _v = column_config['useDataRowIndexForValue'](row_index)
-            _max_len[column_index] = max(_max_len[column_index], len(str(_v or missing_value)))
+            _v = str(_v or missing_value)
+            _max_len[column_index] = max(_max_len[column_index], len(_v))
+            _color = ''
             if 'setColor' in column_config:
-                _v = column_config['setColor'](_raw_column_data) + _v
-            _row.append(_v or missing_value)
+                _color = column_config['setColor'](_raw_column_data)
+            _row.append({'data': _v, 'color': _color})
         _table.append(_row)
 
     for tri, tr in enumerate(_table):
         row_clr = row_color(tri)
         print(row_clr + row_additional_indentation + (row_clr + ' | ').join(
-            ['{column: {align}{len}}'.format(
-                column=c,
+            ['{color}{data: {align}{len}}'.format(
                 align=table_config[ci].get('align', column_align),
-                len=_max_len[ci])
+                len=_max_len[ci],
+                **c,
+            )
              for ci, c in enumerate(tr)]
         ) + bcolors.ENDC)
 
