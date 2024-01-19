@@ -191,7 +191,8 @@ class Telegram:
 
         updates = updates['result']
         responses = [update['message'] for update in updates if 'message' in update
-                     and update['message']['chat']['id'] == int(telegram_data['chatId'])]
+                     and ('chatId' not in telegram_data
+                          or update['message']['chat']['id'] == int(telegram_data['chatId']))]
 
         if not full_response:
             responses = [r['text'] for r in responses]
