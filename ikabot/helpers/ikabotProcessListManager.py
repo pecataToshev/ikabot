@@ -35,9 +35,11 @@ class ProcessStatus:
 
     @staticmethod
     def get_color(status):
-        if status == ProcessStatus.ERROR:
+        if status in [ProcessStatus.ERROR]:
             return bcolors.RED
-        if status == ProcessStatus.DONE:
+        if status in [ProcessStatus.TERMINATED, ProcessStatus.ZOMBIE]:
+            return bcolors.WARNING
+        if status in [ProcessStatus.DONE]:
             return bcolors.GREEN
         return bcolors.ENDC
 

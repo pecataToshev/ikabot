@@ -118,7 +118,7 @@ class Bot(ABC):
             remaining_time = total_sleep_time - actual_sleep_time
 
         self.__process_manager.upsert_process({
-            'status': 'sleeping',
+            'status': ProcessStatus.WAITING,
             'nextActionTime': time.time() + actual_sleep_time,
             'info': info
         })
@@ -126,7 +126,7 @@ class Bot(ABC):
         time.sleep(actual_sleep_time)
 
         self.__process_manager.upsert_process({
-            'status': 'running',
+            'status': ProcessStatus.RUNNING,
             'nextActionTime': None,
             'info': 'After ' + info
         })
