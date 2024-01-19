@@ -60,7 +60,7 @@ class Telegram:
                 bot_token = read(msg="Bot's token: ")
                 bot_token = bot_token.replace(' ', '')
 
-            messages = self.get_user_responses(True)
+            messages = self.__get_user_responses({self.__BOT_TOKEN: bot_token},True)
             if messages is None:
                 require_bot_token = True
                 if not askUserYesNo('Invalid telegram bot. Do you want to try again'):
@@ -103,17 +103,7 @@ class Telegram:
         if telegram_data is None:
             return None
 
-        updates = requests.get(self.__get_telegram_url(telegram_data[self.__BOT_TOKEN], 'getUpdates')).json()
-        if 'ok' not in updates or updates['ok'] is False:
-            return None
-
-        responses = [update['message'] for update in updates if 'message' in update
-                     and update['message']['chat']['id'] == int(telegram_data['chatId'])]
-
-        if not full_response:
-            responses = [r['text'] for r in responses]
-
-        return responses
+        return self.__get_user_responses(telegram_data, full_response)
 
     def has_valid_data(self):
         return self.__get_telegram_data() is not None
@@ -186,3 +176,23 @@ class Telegram:
             )
 
         return True
+
+    @staticmethod
+    def __get_user_responses(telegram_data, full_response: bool):
+        """
+        Retrieve the messages user sent to the bot on telegram.
+        :param telegram_data: dict[]
+        :param full_response: bool -> return the whole messages
+        :return:
+        """
+        updates = requests.get(Telegram.__get_telegram_url(telegram_data[Telegram.__BOT_TOKEN], 'getUpdates')).json()
+        if 'ok' not in updates or updates['ok'] is False:
+            return None
+
+        responses = [update['message'] for update in updates if 'message' in update
+                     and update['message']['chat']['id'] == int(telegram_data['chatId'])]
+
+        if not full_response:
+            responses = [r['text'] for r in responses]
+
+        return responses
