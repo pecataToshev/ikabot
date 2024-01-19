@@ -127,7 +127,7 @@ class Telegram:
 
     @staticmethod
     def __get_chat_id(messages):
-        for message in messages['result']:
+        for message in messages[]:
             return message['message']['chat']['id']
         return None
 
@@ -189,8 +189,7 @@ class Telegram:
         if 'ok' not in updates or updates['ok'] is False:
             return None
 
-        updates = updates['result']
-        responses = [update['message'] for update in updates if 'message' in update
+        responses = [update['message'] for update in updates['result'] if 'message' in update
                      and ('chatId' not in telegram_data
                           or update['message']['chat']['id'] == int(telegram_data['chatId']))]
 
