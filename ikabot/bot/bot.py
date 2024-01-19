@@ -11,6 +11,7 @@ from ikabot.helpers.database import Database
 from ikabot.helpers.gui import bcolors
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.telegram import Telegram
+from ikabot.web.ikariamService import IkariamService
 
 
 class Bot(ABC):
@@ -23,25 +24,20 @@ class Bot(ABC):
         raise NotImplementedError('Implement me in the current bot class')
 
     def __init__(self, ikariam_service, bot_config):
-        self.ikariam_service = ikariam_service
+        self.bot_name = config.BOT_NAME
         self.bot_config = bot_config
 
-    def __prepare_and_start_process(self, action, objective, target_city):
+    def __prepare_and_start_process(self, init_process):
         try:
-            self.ikariam_service.padre = False
             self.__setup_process_signals()
 
-            self.db = Database(bot_name=config.BOT_NAME)
+            self.db = Database(bot_name=self.bot_name)
             self.telegram = Telegram(db=self.db, is_user_attached=False)
+            self.ikariam_service = IkariamService(self.db, self.telegram)
+            self.ikariam_service.padre = False
             self.__process_manager = IkabotProcessListManager(self.db)
 
-            self.__process_manager.upsert_process({
-                'action': action,
-                'objective': objective,
-                'targetCity': target_city,
-                'status': 'starting'
-            })
-            self.ikariam_service.reset_db_telegram(db=self.db, telegram=self.telegram)
+            self.__process_manager.upsert_process(init_process)
 
             logging.info("Starting %s with config: %s", self.__class__.__name__, self.bot_config)
             self._start()
@@ -74,11 +70,18 @@ class Bot(ABC):
         :param target_city: str/None -> what is the action's beneficent
         :return: process -> the started process
         """
-        logging.debug("Here we are, trying to start the process")
+        info_process = {
+            'action': action,
+            'objective': objective,
+            'target_city': target_city,
+            'status': 'init'
+        }
+
+        logging.debug("Here we are, trying to start the process: %s", info_process)
         multiprocessing_context = multiprocessing.get_context('spawn')
         process = multiprocessing_context.Process(
             target=self.__prepare_and_start_process,
-            args=(action, objective, target_city)
+            args=(info_process, )
         )
 
         logging.debug("Just before process start")
