@@ -189,6 +189,7 @@ class Telegram:
         if 'ok' not in updates or updates['ok'] is False:
             return None
 
+        updates = updates['result']
         responses = [update['message'] for update in updates if 'message' in update
                      and update['message']['chat']['id'] == int(telegram_data['chatId'])]
 
