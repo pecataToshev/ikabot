@@ -73,7 +73,7 @@ class Bot(ABC):
         info_process = {
             'action': action,
             'objective': objective,
-            'target_city': target_city,
+            'targetCity': target_city,
             'status': 'init'
         }
 
