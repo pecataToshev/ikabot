@@ -26,9 +26,9 @@ class Bot(ABC):
         self.ikariam_service = ikariam_service
         self.bot_config = bot_config
 
-    @staticmethod
-    def __set_process_signals():
+    def __set_process_signals(self):
         def exit_child(signum, frame):
+            logging.info("Exiting process; signum: %s; frame: %s", signum, frame)
             sys.exit(signum)
         signal.signal(signal.SIGTERM, exit_child)
         signal.signal(signal.SIGABRT, exit_child)
