@@ -23,7 +23,7 @@ def run(command):
         return ret
 
 
-class ProcessStatus(Enum):
+class ProcessStatus:
     INITIALIZED = 'initialized'
     DONE = 'done'
     TERMINATED = 'terminated'
