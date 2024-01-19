@@ -418,7 +418,7 @@ def upgrade_building_bot_configurator(ikariam_service, db, telegram):
             missing[i] = resources_needed[i] - city['availableResources'][i]
 
     # show missing resources to the user
-    _transport_process = None
+    _transport_process_pid = None
     if sum(missing) > 0:
         print('\nMissing:')
         for i in range(len(materials_names)):
@@ -433,7 +433,7 @@ def upgrade_building_bot_configurator(ikariam_service, db, telegram):
             if not askUserYesNo('Proceed anyway'):
                 return
         else:
-            _transport_process = sendResourcesMenu(ikariam_service, city_id, missing)
+            _transport_process_pid = sendResourcesMenu(ikariam_service, city_id, missing)
     else:
         print('\nYou have enough materials')
         if not askUserYesNo('Proceed'):
@@ -445,7 +445,7 @@ def upgrade_building_bot_configurator(ikariam_service, db, telegram):
             'cityId': city['id'],
             'cityName': city['name'],
             'building': building,
-            'transport_resources_pid': None if _transport_process is None else _transport_process.pid
+            'transport_resources_pid': _transport_process_pid
         }
     ).start(
         action='Upgrade Building',
