@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import atexit
 import logging
 import os
 import sys
@@ -140,6 +141,11 @@ def choose_from_menu(menu_options, prefix=''):
     return fn
 
 
+def at_console_exit():
+    logging.info('Exiting the program')
+    print('Exiting the program')
+
+
 def menu(ikariam_service, db, telegram):
     """
     Parameters
@@ -148,6 +154,7 @@ def menu(ikariam_service, db, telegram):
     db: ikabot.helpers.database.Database
     telegram: ikabot.helpers.telegram.Telegram
     """
+    atexit.register(at_console_exit)
     checkForUpdate()
     show_proxy(db)
     process_list_manager = IkabotProcessListManager(db)
