@@ -75,13 +75,13 @@ class Bot(ABC):
         :return: process -> the started process
         """
         logging.debug("Here we are, trying to start the process")
-        process = multiprocessing.Process(
+        multiprocessing_context = multiprocessing.get_context('spawn')
+        process = multiprocessing_context.Process(
             target=self.__prepare_and_start_process,
             args=(action, objective, target_city)
         )
 
         logging.debug("Just before process start")
-        process.daemon = True
         process.start()
 
         logging.debug("This is the process, %s", process)
