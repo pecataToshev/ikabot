@@ -26,8 +26,9 @@ class Bot(ABC):
         self.ikariam_service = ikariam_service
         self.bot_config = bot_config
 
-    def __prepare_and_start_process(self, action, objective, target_city):
+    def __prepare_and_start_process(self, process_info):
         try:
+            logging.info("Preparing %s with config: %s", self.__class__.__name__, self.bot_config)
             self.ikariam_service.padre = False
             self.__setup_process_signals()
 
@@ -35,12 +36,7 @@ class Bot(ABC):
             self.telegram = Telegram(db=self.db, is_user_attached=False)
             self.__process_manager = IkabotProcessListManager(self.db)
 
-            self.__process_manager.upsert_process({
-                'action': action,
-                'objective': objective,
-                'targetCity': target_city,
-                'status': 'starting'
-            })
+            self.__process_manager.upsert_process(process_info)
             self.ikariam_service.reset_db_telegram(db=self.db, telegram=self.telegram)
 
             logging.info("Starting %s with config: %s", self.__class__.__name__, self.bot_config)
@@ -81,7 +77,7 @@ class Bot(ABC):
             'status': 'init'
         }
 
-        logging.debug("Here we are, trying to start the process: %s", info_process)
+        logging.info("Forking proces with info: %s", info_process)
         child_pid = os.fork()
         if child_pid != 0:
             return child_pid
