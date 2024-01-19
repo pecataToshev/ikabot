@@ -127,7 +127,7 @@ class Telegram:
 
     @staticmethod
     def __get_chat_id(messages):
-        for message in messages[]:
+        for message in messages:
             return message['message']['chat']['id']
         return None
 
