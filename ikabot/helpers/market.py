@@ -25,9 +25,9 @@ def getCommercialCities(session):
     for city_id in cities_ids:
         html = session.get(city_url + city_id)
         city = getCity(html)
-        for pos, building in enumerate(city['position']):
+        for building in city['position']:
             if building['building'] == 'branchOffice':
-                city['marketPosition'] = pos
+                city['marketPosition'] = building['position']
                 html = getMarketHtml(session, city)
                 positions = re.findall(r'<option.*?>(\d+)</option>', html)
                 city['rango'] = int(positions[-1])
@@ -43,7 +43,7 @@ def getMarketHtml(session, city):
     session : ikabot.web.ikariamService.IkariamService
     city : dict
     """
-    url = 'view=branchOffice&cityId={}&position={:d}&currentCityId={}&backgroundView=city&actionRequest={}&ajax=1'.format(city['id'], city['pos'], city['id'], actionRequest)
+    url = 'view=branchOffice&cityId={}&position={:d}&currentCityId={}&backgroundView=city&actionRequest={}&ajax=1'.format(city['id'], city['marketPosition'], city['id'], actionRequest)
     data = session.post(url)
     json_data = json.loads(data, strict=False)
     return json_data[1][1][1]
@@ -134,7 +134,7 @@ def getMarketInfo(session, city):
     response : dict
     """
     params = {'view': 'branchOfficeOwnOffers', 'activeTab': 'tab_branchOfficeOwnOffers', 'cityId': city['id'],
-              'position': city['pos'], 'backgroundView': 'city', 'currentCityId': city['id'],
+              'position': city['marketPosition'], 'backgroundView': 'city', 'currentCityId': city['id'],
               'templateView': 'branchOfficeOwnOffers', 'currentTab': 'tab_branchOfficeOwnOffers',
               'actionRequest': actionRequest, 'ajax': '1'}
     resp = session.post(params=params, noIndex=True)

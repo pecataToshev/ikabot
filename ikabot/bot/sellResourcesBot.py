@@ -44,7 +44,7 @@ class SellResourcesWithOwnOfferBot(Bot):
 
                 payloadPost = {
                     'cityId': self.city['id'],
-                    'position': self.city['pos'],
+                    'position': self.city['marketPosition'],
                     'action': 'CityScreen',
                     'function': 'updateOffers',
                     'resourceTradeType': '444',
