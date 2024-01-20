@@ -109,7 +109,7 @@ class IkabotProcessListManager:
             action = _determine_process_special_action(process, ika_process_name)
 
             if action in [_ProcessSpecialAction.HAS_DIFFERENT_NAME, _ProcessSpecialAction.HAS_EXPIRED_SHOWTIME]:
-                logging.info('Deleting process: reason=%s, process=%s', action, process)
+                logging.info('Deleting process: reason=%s, process=%s', action.value, process)
                 self.__db.delete_process(process['pid'])
                 continue
             elif action == _ProcessSpecialAction.SET_TERMINATED_STATUS:
