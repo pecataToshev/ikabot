@@ -1,19 +1,17 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
-import random
 import re
-import time
 
 from ikabot import config
 from ikabot.config import actionRequest, materials_names
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter, printProgressBar, \
     rightAlign
-from ikabot.helpers.citiesAndIslands import getIdsOfCities
-from ikabot.helpers.userInput import read
 from ikabot.helpers.telegram import Telegram
+from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -106,8 +104,6 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
         return ikariam_service.get(config.island_url + island_id)
 
     def open_workplace_window(material_ind, island_id):
-        # Simulate user time to react
-        time.sleep(1+random.random())
         return ikariam_service.post(params={
             'view': get_view(material_ind),
             'type': 'resource' if material_ind == 0 else material_ind,
@@ -148,7 +144,6 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
 
         for city_ind, city_id in enumerate(city_ids):
             printProgressBar(loading_msg, city_ind*3+1, all_workplaces)
-            time.sleep(1+random.random())
             city = getCity(open_city_window(city_id))
 
             island_id = city['islandId']
@@ -157,9 +152,6 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
                 'cityName': city['cityName'],
                 'islandId': island_id,
             }
-
-            # Simulate person
-            time.sleep(1+random.random())
             open_island_window(island_id)
 
             printProgressBar(loading_msg, city_ind*3+2, all_workplaces)
