@@ -41,6 +41,7 @@ ConnectionError_wait = 5 * 60
 actionRequest = 'REQUESTID'
 
 predetermined_input = []
+application_params = {}
 
 MAXIMUM_CITY_NAME_LENGTH = 20
 SECONDS_IN_HOUR = 60 * 60

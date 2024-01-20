@@ -573,7 +573,8 @@ class IkariamService:
         return re.search(r'actionRequest"?:\s*"(.*?)"', html).group(1)
 
     def __prepare_last_request_for_logs(self):
-        if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+        if (logging.getLogger().getEffectiveLevel() == logging.DEBUG
+                and config.application_params.get('disableRequestHistoryBodyPrinting', False)):
             return decodeUnicodeEscape(
                 str(self.requestHistory[-1])
                 .replace("\n", '')
@@ -583,7 +584,7 @@ class IkariamService:
                 .replace("  ", ' ')
                 .replace("  ", ' ')
             )
-        return 'only when DEBUG level'
+        return "{method} {url}".format(**self.requestHistory[-1])
 
     def get(self, url='', params={}, ignoreExpire=False, noIndex=False, fullResponse=False):
         """Sends get request to ikariam
