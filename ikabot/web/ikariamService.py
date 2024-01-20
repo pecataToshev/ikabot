@@ -573,8 +573,7 @@ class IkariamService:
         return re.search(r'actionRequest"?:\s*"(.*?)"', html).group(1)
 
     def __prepare_last_request_for_logs(self):
-        if (logging.getLogger().getEffectiveLevel() == logging.DEBUG
-                and config.application_params.get('disableRequestHistoryBodyPrinting', False)):
+        if config.application_params.get('logRequestResponse', False):
             return decodeUnicodeEscape(
                 str(self.requestHistory[-1])
                 .replace("\n", '')
