@@ -160,6 +160,7 @@ def menu(ikariam_service, db, telegram):
 
         try:
             selected = choose_from_menu(_global_menu)
+            logging.debug('Selected from the menu: %s', selected.__name__)
             consecutive_keyboard_interruptions = False
 
             if selected == __function_exit:
@@ -173,6 +174,8 @@ def menu(ikariam_service, db, telegram):
             # we've selected a function, let's execute it
             selected(ikariam_service, db, telegram)
         except KeyboardInterrupt:
+            logging.debug('Received keyboard interruption in command line, consecutive_keyboard_interruptions: %s',
+                          consecutive_keyboard_interruptions)
             if consecutive_keyboard_interruptions:
                 break
             # First time.. We're going to refresh the menu

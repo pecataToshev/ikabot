@@ -57,7 +57,7 @@ class Bot(ABC):
                 'nextActionTime': None,
             })
 
-        except Exception as e:
+        except BaseException as e:
             msg = 'Error in: {}\nMessage: {}\nCause: {}'.format(
                 self._get_process_info(), str(e), traceback.format_exc()
             )
