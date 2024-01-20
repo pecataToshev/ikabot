@@ -15,8 +15,8 @@ from ikabot.web.ikariamService import IkariamService
 
 def main():
     named_params, config.predetermined_input = __init_parameters()
-    apply_migrations()
     setup_logging(named_params)
+    apply_migrations()
 
     config.BOT_NAME = read(msg='Please provide the unique bot identifier for this account: ')
 

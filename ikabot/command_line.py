@@ -179,7 +179,7 @@ def menu(ikariam_service, db, telegram):
                           consecutive_keyboard_interruptions)
             if consecutive_keyboard_interruptions:
                 break
-            # First time.. We're going to refresh the menu
+            # First time. We're going to refresh the menu
             consecutive_keyboard_interruptions = True
             continue
 
