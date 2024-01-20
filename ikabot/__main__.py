@@ -18,6 +18,10 @@ def main():
     config.application_params, config.predetermined_input = init_parameters(sys.argv)
     config.predetermined_input.pop(0)  # Remove the script path
     setup_logging(config.application_params)
+
+    logging.debug("Named Parameters: %s", config.application_params)
+    logging.debug("Arguments: %s", config.predetermined_input)
+
     apply_migrations()
 
     config.BOT_NAME = read(msg='Please provide the unique bot identifier for this account: ')
