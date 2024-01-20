@@ -25,7 +25,7 @@ def setup_logging(named_params: dict):
     logging.basicConfig(
         level=logging.getLevelName(log_level),
         datefmt='%Y-%m-%dT%H:%M:%S',
-        format='%(asctime)s.%(msecs)03d pid:%(process)-6s %(levelname)-7s %(botName)s %(filename)s - %(message)s',
+        format='%(asctime)s.%(msecs)03d pid:%(process)-6s %(levelname)-7s %(botName)s - %(message)s',
         handlers=[
             TimedRotatingFileHandler(
                 filename=LOG_FILE,
