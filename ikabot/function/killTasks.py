@@ -1,13 +1,12 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-import time
 
 from ikabot.config import isWindows
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager, ProcessStatus, run
-from ikabot.helpers.userInput import read
 from ikabot.helpers.telegram import Telegram
+from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
 
 
