@@ -43,5 +43,5 @@ def kill_tasks(ikariam_service: IkariamService, db: Database, telegram: Telegram
             run("kill -9 {}".format(process_to_kill['pid']))
 
         process_to_kill['status'] = ProcessStatus.FORCE_KILLED
-        process_list_manager.upsert_process(process_to_kill)
+        process_to_kill['nextActionTime'] = None
         process_list_manager.upsert_process(process_to_kill)
