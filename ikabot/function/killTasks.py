@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import time
 
 from ikabot.config import isWindows
 from ikabot.helpers.database import Database
@@ -35,10 +36,12 @@ def kill_tasks(ikariam_service: IkariamService, db: Database, telegram: Telegram
 
         process_to_kill = process_list[choice - 1]
 
+        print('Killing process {pid} | {action} | {objective}'.format(**process_to_kill))
         if isWindows:
             run("taskkill /F /PID {}".format(process_to_kill['pid']))
         else:
             run("kill -9 {}".format(process_to_kill['pid']))
 
         process_to_kill['status'] = ProcessStatus.FORCE_KILLED
+        process_list_manager.upsert_process(process_to_kill)
         process_list_manager.upsert_process(process_to_kill)

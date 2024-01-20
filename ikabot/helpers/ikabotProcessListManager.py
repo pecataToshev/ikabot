@@ -35,7 +35,7 @@ class ProcessStatus:
 
     @staticmethod
     def get_color(status):
-        if status in [ProcessStatus.ERROR]:
+        if status in [ProcessStatus.ERROR, ProcessStatus.FORCE_KILLED]:
             return bcolors.RED
         if status in [ProcessStatus.TERMINATED, ProcessStatus.ZOMBIE]:
             return bcolors.WARNING
@@ -53,6 +53,20 @@ class _ProcessSpecialAction(Enum):
 
 
 def _determine_process_special_action(process: dict, ika_process_name: str) -> Union[_ProcessSpecialAction, None]:
+    if process['status'] in [
+        ProcessStatus.DONE,
+        ProcessStatus.ZOMBIE,
+        ProcessStatus.TERMINATED,
+        ProcessStatus.ERROR,
+        ProcessStatus.FORCE_KILLED
+    ]:
+        next_action_time = process.get('nextActionTime', None)
+        if next_action_time is None:
+            return _ProcessSpecialAction.SET_DELETION_TIME
+        if time.time() >= next_action_time:
+            return _ProcessSpecialAction.HAS_EXPIRED_SHOWTIME
+        return None
+
     try:
         proc = psutil.Process(pid=process['pid'])
 
@@ -68,18 +82,6 @@ def _determine_process_special_action(process: dict, ika_process_name: str) -> U
                 return _ProcessSpecialAction.SET_ZOMBIE
 
     except psutil.NoSuchProcess:
-        # The process is no-longer running
-        if process['status'] in [ProcessStatus.DONE, ProcessStatus.TERMINATED, ProcessStatus.ERROR]:
-            next_action_time = process.get('nextActionTime', None)
-            if next_action_time is None:
-                return _ProcessSpecialAction.SET_DELETION_TIME
-            if time.time() >= next_action_time:
-                return _ProcessSpecialAction.HAS_EXPIRED_SHOWTIME
-            return None
-
-        if process['status'] == ProcessStatus.FORCE_KILLED:
-            return _ProcessSpecialAction.HAS_EXPIRED_SHOWTIME
-
         return _ProcessSpecialAction.SET_TERMINATED_STATUS
 
     return None
@@ -104,7 +106,7 @@ class IkabotProcessListManager:
         # check it's still running
         running_ikabot_processes = []
         ika_process_name = psutil.Process(pid=os.getpid()).name()
-        deletion_time = time.time() + 5 * 60
+        deletion_time = time.time() + 30
         for process in process_list:
             action = _determine_process_special_action(process, ika_process_name)
 
@@ -163,7 +165,8 @@ class IkabotProcessListManager:
 
         # Print process
         logging.info(
-            "updateProcess: %s | %s | next: %s | obj: %s | %s",
+            "updateProcess: %s | %s | %s | next: %s | obj: %s | %s",
+            _stored_process.get('pid', '-'),
             _stored_process.get('action', '-'),
             _stored_process.get('status', '-'),
             '-' if _stored_process.get('nextActionTime', None) is None else formatTimestamp(

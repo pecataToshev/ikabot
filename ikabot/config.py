@@ -25,7 +25,6 @@ do_ssl_verify = True
 BOT_NAME = ''
 infoUser = ''
 
-ikaFile = '.ikabot'
 DB_FILE = os.path.join(os.path.expanduser("~"), '.ikabot.db')
 
 city_url = 'view=city&cityId='
