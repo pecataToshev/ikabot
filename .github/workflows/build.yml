@@ -31,11 +31,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install -e .
-#    - name: Run unit tests
-#      run: |
-#        pip install pytest
-#        export PYTHONPATH="$PYTHONPATH;$(pwd)"
-#        pytest tests -vvvvvvvvvv
+    - name: Run unit tests
+      run: |
+        python -m unittest discover
     - name: Just run ikabot
       run: |
         printf "\n\n\n" | python -m ikabot &> log.log || cat log.log

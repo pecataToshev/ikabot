@@ -2,6 +2,7 @@ import logging
 import re
 import sys
 import traceback
+from typing import List
 
 from ikabot import config
 from ikabot.command_line import menu
@@ -14,7 +15,8 @@ from ikabot.web.ikariamService import IkariamService
 
 
 def main():
-    config.application_params, config.predetermined_input = __init_parameters()
+    config.application_params, config.predetermined_input = init_parameters(sys.argv)
+    config.predetermined_input.pop(0)  # Remove the script path
     setup_logging(config.application_params)
     apply_migrations()
 
@@ -33,23 +35,33 @@ def main():
         db.close_db_conn()
 
 
-def __init_parameters():
+def __parse_param_value(param: str):
+    if param.lower() in ('true', 'on'):
+        return True
+    elif param.lower() in ('false', 'off'):
+        return False
+    elif param.isdigit():
+        return int(param)
+    else:
+        return param
+
+
+def init_parameters(input_args: List[str]):
     named_params = {}
     positional_params = []
 
-    for element in sys.argv:
-        match = re.match(r'--(\w+)=(\w+)', element)
+    pattern = re.compile(r'--(\w+)(?:=(\w+))?')
+    for element in input_args:
+        match = pattern.match(element)
         if match:
-            key, value = match.groups()
-            named_params[key] = value
-            continue
+            key, val = match.groups()
+            if val is not None:
+                named_params[key] = __parse_param_value(val)
+            else:
+                named_params[key] = True
+        else:
+            positional_params.append(__parse_param_value(element))
 
-        try:
-            positional_params.append(int(element))
-        except ValueError:
-            positional_params.append(element)
-
-    positional_params.pop(0)  # Remove the script path
     return named_params, positional_params
 
 
