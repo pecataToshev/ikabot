@@ -160,7 +160,8 @@ def menu(ikariam_service, db, telegram):
 
         try:
             selected = choose_from_menu(_global_menu)
-            logging.debug('Selected from the menu: %s', selected.__name__)
+            logging.debug('Selected from the menu: %s',
+                          selected.__name__ if type(selected) is not str else selected)
             consecutive_keyboard_interruptions = False
 
             if selected == __function_exit:
