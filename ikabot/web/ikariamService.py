@@ -241,7 +241,7 @@ class IkariamService:
                         print('Check your Telegram and do it fast. The captcha expires quickly')
                         captcha_time = time.time()
                         while True:
-                            response = self.telegram.get_user_responses(full_response=True)
+                            response = self.telegram.get_user_responses()
                             if response is None or response == []:
                                 time.sleep(5)
                                 continue

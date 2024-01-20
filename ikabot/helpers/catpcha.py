@@ -35,15 +35,11 @@ def resolveCaptcha(db: Database, telegram: Telegram, picture):
                 return captcha_result.upper()
             time.sleep(5)  # 'Resolving Captcha'
     elif decaptcha_config['name'] == 'telegram':
-        telegram.send_message('Please solve the captcha', photo=picture)
-        captcha_time = time.time()
-        while(True):
-            response = telegram.get_user_responses(full_response=True)
-            if len(response) == 0:
-                time.sleep(5)
-                continue
-            response = response[-1]
-            if response['date'] > captcha_time:
-                return response['text']
-            time.sleep(5)
+        return telegram.wait_user_reply(
+            msg='Solve captcha',
+            picture=picture,
+        )
+
+
+
 

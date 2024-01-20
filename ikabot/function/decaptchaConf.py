@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import base64
-import time
 
 import requests
 
@@ -137,23 +136,12 @@ def __configure_telegram(db, telegram):
         print('You will now receive the piracy captcha over Telegram!')
         return True
     print('A captcha has been sent to you over Telegram. Please open the picture fully and respond on Telegram')
-    telegram.send_message('Please resolve the captcha', Photo=base64.b64decode(decaptcha_test_pictures[0]['picture']))
-    captcha_time = time.time()
+    captcha = telegram.wait_user_reply(
+        msg='Testing resolve captcha via telegram. Please solve.',
+        picture=base64.b64decode(decaptcha_test_pictures[0]['picture']),
+    )
 
-    while (True):
-        response = telegram.get_user_responses(full_response=True)
-        if response == []:
-            time.sleep(5)
-            continue
-        response = response[-1]
-        if response['date'] < captcha_time:
-            time.sleep(5)
-            continue
-        else:
-            captcha = response['text']
-            break
-        time.sleep(5)
-    if captcha.lower() == decaptcha_test_pictures[0]['ground_truth'].lower():
+    if captcha is not None and captcha.lower() == decaptcha_test_pictures[0]['ground_truth'].lower():
         print('{}Success!{} Captcha is correct!'.format(bcolors.GREEN, bcolors.ENDC))
         return True
     else:

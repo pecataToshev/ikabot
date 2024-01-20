@@ -1,6 +1,9 @@
 import logging
+import math
 import os
 import random
+import time
+from decimal import Decimal
 
 import requests
 
@@ -60,7 +63,7 @@ class Telegram:
                 bot_token = read(msg="Bot's token: ")
                 bot_token = bot_token.replace(' ', '')
 
-            messages = self.__get_user_responses({self.__BOT_TOKEN: bot_token},True)
+            messages = self.__get_user_responses({self.__BOT_TOKEN: bot_token})
             if messages is None:
                 require_bot_token = True
                 if not askUserYesNo('Invalid telegram bot. Do you want to try again'):
@@ -92,43 +95,66 @@ class Telegram:
 
             require_bot_token = True
 
-    def get_user_responses(self, full_response: bool, skip_update_data_request=False):
+    def get_user_responses(self):
         """
         Retrieve the messages user sent to the bot on telegram.
-        :param full_response: bool -> return the whole messages
-        :param skip_update_data_request: bool -> should I skip the update of the data
-        :return:
+        :return: List[dict] | None
         """
-        telegram_data = self.__get_telegram_data(skip_update_data_request)
+        telegram_data = self.__get_telegram_data()
         if telegram_data is None:
             return None
 
-        return self.__get_user_responses(telegram_data, full_response)
+        return self.__get_user_responses(telegram_data)
+
+    def wait_user_reply(self, msg: str, picture=None, max_wait_seconds: int = 60):
+        """
+        Send message to the user and waits for reply
+        :param msg: Describes user options
+        :param picture: picture (probably captcha)
+        :param max_wait_seconds:
+        :return: str | None
+        """
+        telegram_data = self.__get_telegram_data()
+        if telegram_data is None:
+            return None
+
+        message_sent = self.__send_message(
+            telegram_data=telegram_data,
+            msg=f'{msg}\nPlease REPLY to this message with the answer!',
+            photo=picture
+        )
+
+        sleep_time = 5  # seconds
+        for _ in range(math.ceil(Decimal(max_wait_seconds) / sleep_time)):
+            responses = self.__get_user_responses(telegram_data)
+            if len(responses) > 0:
+                for r in responses:
+                    if 'reply_to_message' in r and r['reply_to_message']['message_id'] == message_sent['message_id']:
+                        return r['text']
+            time.sleep(sleep_time)
+
+        return None
 
     def has_valid_data(self):
         return self.__get_telegram_data() is not None
 
-    def __get_telegram_data(self, skip_update_data_request=False):
+    def __get_telegram_data(self):
         """
         This function returns stored Telegram data and checks if there is any.
         If there is no data - trying to update the data
         If there is data - returns the data
-        :param skip_update_data_request: bool -> should I skip the update of the data
         :return: dict[]/None
         """
         telegram_data = self.__db.get_stored_value(self.__DB_KEY)
         if self.__is_data_valid(telegram_data):
             return telegram_data
 
-        if skip_update_data_request:
-            return None
-
         return self.update_data()
 
     @staticmethod
     def __get_chat_id(messages):
         for message in messages:
-            return message['message']['chat']['id']
+            return message['chat']['id']
         return None
 
     @staticmethod
@@ -154,7 +180,7 @@ class Telegram:
         telegram_url = Telegram.__get_telegram_url(telegram_data[Telegram.__BOT_TOKEN], 'sendMessage')
 
         if photo is None:
-            requests.get(
+            updates = requests.get(
                 url=telegram_url,
                 params={
                     'chat_id': telegram_data[Telegram.__CHAT_ID],
@@ -164,7 +190,7 @@ class Telegram:
         else:
             # we need to clear the headers here because telegram doesn't like keep-alive,
             # might as well get rid of all headers
-            requests.post(
+            updates = requests.post(
                 url=telegram_url,
                 files={
                     'document': ('captcha.png', photo)
@@ -175,25 +201,23 @@ class Telegram:
                 }
             )
 
-        return True
+        updates = updates.json()
+        if 'ok' not in updates or updates['ok'] is False:
+            return None
+
+        return updates['result']
 
     @staticmethod
-    def __get_user_responses(telegram_data, full_response: bool):
+    def __get_user_responses(telegram_data):
         """
         Retrieve the messages user sent to the bot on telegram.
         :param telegram_data: dict[]
-        :param full_response: bool -> return the whole messages
         :return:
         """
         updates = requests.get(Telegram.__get_telegram_url(telegram_data[Telegram.__BOT_TOKEN], 'getUpdates')).json()
         if 'ok' not in updates or updates['ok'] is False:
             return None
 
-        responses = [update['message'] for update in updates['result'] if 'message' in update
-                     and ('chatId' not in telegram_data
-                          or update['message']['chat']['id'] == int(telegram_data['chatId']))]
-
-        if not full_response:
-            responses = [r['text'] for r in responses]
-
-        return responses
+        return [update['message'] for update in updates['result'] if 'message' in update
+                and ('chatId' not in telegram_data
+                     or update['message']['chat']['id'] == int(telegram_data['chatId']))]
