@@ -27,7 +27,8 @@ class Bot(ABC):
         self.bot_config = bot_config
 
     def __set_process_signals(self):
-        os.close(0)  # Closes standard input to detach from next client inputs (and keyboard interrupt)
+        os.close(0)  # Closes standard input to detach from next client inputs
+        signal.signal(signal.SIGINT, lambda x, y: None)  # ignore keyboard interrupt
 
         def exit_child(signum, frame):
             logging.info("Exiting process; signum: %s; frame: %s", signum, frame)
