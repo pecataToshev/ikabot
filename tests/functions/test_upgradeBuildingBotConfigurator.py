@@ -13,7 +13,6 @@ source_cities = [city_1, city_2, city_3, city_4]
 all_cities = [target] + source_cities
 
 
-
 def set_res(res, city, addition=0):
     r = [0] * len(city['availableResources'])
     r[res] = city['availableResources'][res] + addition
