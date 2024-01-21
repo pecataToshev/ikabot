@@ -175,7 +175,6 @@ def chooseResourceProviders(cities, beneficent_city, resource, missing, send_res
     """
     Parameters
     ----------
-    session : ikabot.web.ikariamService.IkariamService
     cities : list[dict[]]
     beneficent_city : dict
     resource : int
@@ -197,7 +196,6 @@ def chooseResourceProviders(cities, beneficent_city, resource, missing, send_res
     tradegood_initials = [material_name[0] for material_name in materials_names]
 
     routes = []
-    total_available = 0
     for city in cities:
         if city['id'] == beneficent_city['id']:
             continue
@@ -208,26 +206,27 @@ def chooseResourceProviders(cities, beneficent_city, resource, missing, send_res
 
         # ask the user it this city should provide resources
         tradegood_initial = tradegood_initials[int(city['tradegood'])]
-        city_name_padded = "{: >{len}}".format(
-            decodeUnicodeEscape(city['name']),
-            len=MAXIMUM_CITY_NAME_LENGTH,
-        )
 
-        _msg = '{} ({}): {}'.format(city_name_padded, tradegood_initial, addThousandSeparator(available))
+        _msg = '{: >{len}} ({}): {}'.format(decodeUnicodeEscape(city['name']),
+                                            tradegood_initial, addThousandSeparator(available),
+                                            len=MAXIMUM_CITY_NAME_LENGTH)
         if not askUserYesNo(_msg):
             continue
 
+        resources_to_get = min(available, missing)
         # if so, save the city and calculate the total amount resources to send
-        total_available += available
         to_send = [0] * len(materials_names)
-        to_send[resource] = available
+        to_send[resource] = resources_to_get
         routes.append(TransportJob(city, beneficent_city, to_send))
-        # if we have enough resources, return
-        if total_available >= missing:
+
+        # if no missing resources are left, return
+        missing -= resources_to_get
+        if missing <= 0:
             return True, send_resources, expand_anyway, routes
 
     # if we reach this part, there are not enough resources to expand the building
-    print('\nThere are not enough resources.')
+    print('\nThere are not enough {} resources: {} missing'.format(materials_names[resource],
+                                                                   addThousandSeparator(missing)))
 
     if len(routes) > 0 and send_resources is None:
         send_resources = askUserYesNo('Send the resources anyway')

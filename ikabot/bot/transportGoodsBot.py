@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import json
-import logging
 import math
 import sys
 from decimal import Decimal
@@ -10,9 +9,9 @@ from typing import List
 
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, materials_names, SECONDS_IN_HOUR
+from ikabot.helpers.citiesAndIslands import getCurrentCityId
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator
-from ikabot.helpers.citiesAndIslands import getCurrentCityId
 from ikabot.helpers.planRoutes import waitForAvailableShips
 
 
@@ -26,6 +25,15 @@ class TransportJob:
         return (f"{{'origin_city': {self.origin_city['name']}, "
                 f"'target_city': {self.target_city['name']}, "
                 f"'resources': {self.resources}}}")
+
+    def __eq__(self, other):
+        if not isinstance(other, TransportJob):
+            return False
+        return (
+                self.origin_city == other.origin_city
+                and self.target_city == other.target_city
+                and self.resources == other.resources
+        )
 
 
 class TransportGoodsBot(Bot):
