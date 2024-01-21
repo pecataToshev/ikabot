@@ -48,9 +48,6 @@ class UpgradeBuildingBot(Bot):
 
         # We've failed
 
-
-        print('a')
-
     @staticmethod
     def get_building_level(building):
         current_level = building['level']
@@ -131,7 +128,7 @@ class UpgradeBuildingBot(Bot):
                 continue
 
             failed_consecutive_wait_times = 0
-            self._wait(waiting_times[0] + 3, waiting_times[1], 10)
+            self._wait(waiting_times[0] + 30, waiting_times[1], 30)
 
     def __get_waiting_time_with_reason(self, building_in_construction):
         """
