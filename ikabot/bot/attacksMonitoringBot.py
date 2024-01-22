@@ -32,7 +32,7 @@ class AttacksMonitoringBot(Bot):
                     known_attacks[event_id] = arrival_time
 
             # remove old attacks from knownAttacks
-            for event_id in known_attacks:
+            for event_id in dict(known_attacks):  # prevents RuntimeError: dictionary changed size during iteration
                 if event_id not in current_attacks:
                     known_attacks.pop(event_id)
 
