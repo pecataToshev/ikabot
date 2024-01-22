@@ -259,7 +259,7 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
         for i, a in enumerate(actions):
             print(" {: >2}) {}".format(i, a))
         print()
-        action_id = read(min=0, max=len(actions), digit=True)
+        action_id = read(min=0, max=len(actions)-1, digit=True)
         if actions[action_id] == action_exit:
             return [action_id, action_id]
 
