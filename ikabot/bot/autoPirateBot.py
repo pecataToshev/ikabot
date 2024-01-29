@@ -227,7 +227,7 @@ class AutoPirateBot(Bot):
                 if self.convert_points == 'mission':
                     convert_points_to_strength = mission['capturePoints']
                 else:
-                    convert_points_to_strength = int(self.convert_points)
+                    convert_points_to_strength = self.convert_points
                 convertCapturePoints(self.ikariam_service, self.city_id, convert_points_to_strength)
 
             # execution is successful, go get some sleep
