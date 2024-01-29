@@ -69,13 +69,17 @@ def convertCapturePoints(session, pirate_city_id, conversion_points):
         logging.info("Found ongoing conversion. Will will skip this one")
         return False
 
-    if conversion_points == 0:
+    if not isinstance(conversion_points, int):
+        logging.error("Wrong value for conversion_points: %s (type: %s)", conversion_points, type(conversion_points))
+        return False
+
+    if conversion_points <= 0:
         logging.info("No points to convert")
         return False
 
     crew_strength = int(conversion_points / template_data['crewConversionFactor'])
 
-    logging.info("Will start conversion of %d capture points into %d crew strenght",
+    logging.info("Will start conversion of %d capture points into %d crew strength",
                  conversion_points, crew_strength)
 
     session.post(params={
