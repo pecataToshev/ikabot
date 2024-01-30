@@ -1,3 +1,5 @@
+import math
+
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, decodeUnicodeEscape, enter, \
     printTable
 from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
@@ -62,7 +64,7 @@ def showPiracyInfo(ikariam_service, db, telegram):
             {'key': 'place', 'title': '#'},
             {'key': 'name', 'title': 'Player', 'fmt': decodeUnicodeEscape},
             {'key': 'capturePoints', 'title': 'Capture Points', 'fmt': addThousandSeparator},
-            {'key': 'distance', 'title': 'Distance'},
+            {'key': 'distance', 'title': 'Distance', 'fmt': math.ceil},
         ],
         table_data=template_data['highscore'],
         row_color=lambda row_id: (
