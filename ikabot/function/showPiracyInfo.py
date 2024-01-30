@@ -29,13 +29,21 @@ def showPiracyInfo(ikariam_service, db, telegram):
     print('Capture points:', addThousandSeparator(template_data['capturePoints']))
 
     if template_data['hasOngoingMission']:
-        mission = [m for m in template_data['pirateCaptureLevels']
-                   if m['buildingLevel'] == template_data['ongoingMissionLevel']][0]
         print()
-        print("Ongoing mission:", decodeUnicodeEscape(mission['name']))
-        print(" Capture points:", addThousandSeparator(mission['capturePoints']))
-        print("           Gold:", addThousandSeparator(mission['gold']))
-        print("      Time left:", daysHoursMinutes(template_data['ongoingMissionTimeRemaining']))
+        __prnt = lambda k, v: print("{:>16}: {}".format(k, v))
+
+        if template_data['ongoingMissionType'] == 'capture':
+            mission = [m for m in template_data['pirateCaptureLevels']
+                       if m['buildingLevel'] == template_data['ongoingMissionLevel']][0]
+
+            __prnt("Ongoing mission:", decodeUnicodeEscape(mission['name']))
+            __prnt("Capture points:", addThousandSeparator(mission['capturePoints']))
+            __prnt("Gold:", addThousandSeparator(mission['gold']))
+        else:
+            # Other mission found. Probably raid.
+            __prnt('Mission Type', template_data['ongoingMissionType'])
+
+        __prnt("Time left:", daysHoursMinutes(template_data['ongoingMissionTimeRemaining']))
 
     if template_data['hasOngoingConvertion']:
         print()
