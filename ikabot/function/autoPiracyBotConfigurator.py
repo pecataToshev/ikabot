@@ -88,10 +88,19 @@ def autoPiracyBotConfigurator(ikariam_service, db, telegram):
     if askUserYesNo("Would you like to convert some capture points after each mission"):
         _all = 'all'
         _mission = 'mission'
+        _over = 'over'
         print("Type {} for all available capture points".format(_all))
         print("Type {} for capture points from the executed mission".format(_mission))
+        print("Type {} to convert all the capture points above certain threshold".format(_over))
         print('Type any number, to convert exact amount')
-        bot_config['convertPoints'] = read(min=1, additionalValues=[_all, _mission], digit=True)
+        bot_config['convertPoints'] = read(min=1, additionalValues=[_all, _mission, _over], digit=True)
+        if bot_config['convertPoints'] == _over:
+            _default_over = 7000
+            bot_config['convertPoints'] = '{}-{}'.format(
+                _over,
+                read(min=1, digit=True, default=_default_over,
+                     msg='Enter the minimum pirate points that you must have after (default: {})'.format(_default_over))
+            )
 
     print()
     bot_config['maxBreakTime'] = read(min=0, digit=True, msg="Enter the maximum additional waiting time between consecutive missions in seconds. (min = 0) ")

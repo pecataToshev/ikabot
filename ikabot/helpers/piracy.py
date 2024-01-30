@@ -62,6 +62,9 @@ def convertCapturePoints(session, pirate_city_id, conversion_points):
 
     if conversion_points == 'all':
         conversion_points = captured_points
+    elif type(conversion_points) is str and conversion_points.startswith('over-'):
+        minimum_threshold = int(conversion_points.replace('over-', ''))
+        conversion_points = max(0, captured_points - minimum_threshold)
     else:
         conversion_points = min(int(conversion_points), captured_points)
 

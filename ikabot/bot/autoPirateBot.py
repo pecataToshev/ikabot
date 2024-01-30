@@ -215,20 +215,9 @@ class AutoPirateBot(Bot):
         if 'function=createCaptcha' not in html \
                 and '"showPirateFortressShip":0' in html:
 
-            time_wait_for_conversion_start = 0
             # Well, it's far more convenient that we're going to execute the conversion right after we've started the
             # new mission rather that waiting the mission to end
-            if self.convert_points is not None:
-                time_wait_for_conversion_start = self._wait(
-                    seconds=3,
-                    info='Simulating user before converting points',
-                    max_random=5
-                )
-                if self.convert_points == 'mission':
-                    convert_points_to_strength = mission['capturePoints']
-                else:
-                    convert_points_to_strength = self.convert_points
-                convertCapturePoints(self.ikariam_service, self.city_id, convert_points_to_strength)
+            time_wait_for_conversion_start = self.__convert_capture_points(mission)
 
             # execution is successful, go get some sleep
             self._wait(mission['duration'] - time_wait_for_conversion_start,
@@ -268,3 +257,21 @@ class AutoPirateBot(Bot):
             captcha=captcha,
             remaining_attempts=remaining_attempts,
         )
+
+    def __convert_capture_points(self, mission):
+        if self.convert_points is None:
+            return 0
+
+        time_wait_for_conversion_start = self._wait(
+            seconds=2,
+            info='Simulating user before converting points',
+            max_random=4
+        )
+
+        if self.convert_points == 'mission':
+            convert_points_to_strength = mission['capturePoints']
+        else:
+            convert_points_to_strength = self.convert_points
+        convertCapturePoints(self.ikariam_service, self.city_id, convert_points_to_strength)
+
+        return time_wait_for_conversion_start
