@@ -4,8 +4,12 @@
 import json
 import re
 
+from ikabot.config import SECONDS_IN_HOUR
 from ikabot.helpers.gui import decodeUnicodeEscape
-from ikabot.helpers.resources import getAvailableResources, getWarehouseCapacity, getWineConsumptionPerHour
+from ikabot.helpers.resources import extract_resource_production, extract_tradegood, extract_tradegood_production, \
+    getAvailableResources, \
+    getWarehouseCapacity, \
+    getWineConsumptionPerHour
 
 
 def getFreeCitizens(html):
@@ -106,25 +110,26 @@ def getCity(html):
     city['ownerName'] = decodeUnicodeEscape(city.pop('ownerName'))
     city['x'] = int(city.pop('islandXCoord'))
     city['y'] = int(city.pop('islandYCoord'))
-    city['cityName'] = decodeUnicodeEscape(city['name'])
+    city['name'] = decodeUnicodeEscape(city['name'])
+    city['cityName'] = city['name']
 
-    i = 0
-    for position in city['position']:
-        position['position'] = i
-        i += 1
-        if 'level' in position:
-            position['level'] = int(position['level'])
-        position['isBusy'] = False
-        if 'constructionSite' in position['building']:
-            position['isBusy'] = True
-            position['building'] = position['building'][:-17]
-        elif 'buildingGround ' in position['building']:
-            position['name'] = 'empty'
-            position['type'] = position['building'].split(' ')[-1]
-            position['building'] = 'empty'
+    for building_position, building in enumerate(city['position']):
+        building['position'] = building_position
+        if 'name' in building and building['name']:
+            building['name'] = decodeUnicodeEscape(building['name'])
+        if 'level' in building:
+            building['level'] = int(building['level'])
+        building['isBusy'] = False
+        if 'constructionSite' in building['building']:
+            building['isBusy'] = True
+            building['building'] = building['building'][:-17]
+        elif 'buildingGround ' in building['building']:
+            building['name'] = 'empty'
+            building['type'] = building['building'].split(' ')[-1]
+            building['building'] = 'empty'
 
-        position['name'] = decodeUnicodeEscape(position['name'])
-        position['positionAndName'] = "[#{}] {}".format(position['position'], position['name'])
+        building['name'] = decodeUnicodeEscape(building['name'])
+        building['positionAndName'] = "[#{}] {}".format(building['position'], building['name'])
 
     city['id'] = str(city['id'])
     city['isOwnCity'] = True
@@ -137,5 +142,18 @@ def getCity(html):
     city['freeSpaceForResources'] = []
     for i in range(5):
         city['freeSpaceForResources'].append(city['storageCapacity'] - city['availableResources'][i] - city['resourcesListedForSale'][i])
+
+    city['producedTradegood'] = extract_tradegood(html)
+    city['tradegood'] = city['producedTradegood']
+    city['tradegoodProductionPerSecond'] = extract_tradegood_production(html)
+    city['resourceProductionPerSeconds'] = extract_resource_production(html)
+
+    production_per_second = [0] * len(city['availableResources'])
+    production_per_second[0] = city['resourceProductionPerSeconds']
+    if city['producedTradegood'] is not None:
+        production_per_second[city['producedTradegood']] = city['tradegoodProductionPerSecond']
+
+    city['productionPerSecond'] = production_per_second
+    city['productionPerHour'] = [int(r*SECONDS_IN_HOUR) for r in production_per_second]
 
     return city

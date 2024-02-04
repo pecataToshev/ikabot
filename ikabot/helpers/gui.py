@@ -16,7 +16,7 @@ def enter():
     """Wait for the user to press Enter
     """
     try:
-        if config.has_params:
+        if len(config.predetermined_input) > 0:
             return
     except Exception:
         pass
@@ -86,6 +86,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
         'title': str -> title of the column in the printed table
         'fmt': None/lambda -> if the value has to be transformed before print
         'align': char -> align character of the column values
+        'setColor': None/lambda -> set color to the cell (uses value before transformation)
     }
 
     :param table_config: list[dict[]] -> table columns config
@@ -103,27 +104,34 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
         return
 
     _max_len = [len(tc['title']) for tc in table_config]
-    _table = [[tc['title'] for tc in table_config]]
+    _table = [[{'data': tc['title'], 'color': ''} for tc in table_config]]
     for row_index, row_data in enumerate(table_data):
         _row = []
         for column_index, column_config in enumerate(table_config):
-            _v = row_data.get(column_config['key'], None)
+            _raw_column_data = row_data.get(column_config['key'], None)
+            _v = _raw_column_data
             if 'fmt' in column_config and _v is not None:
                 _v = column_config['fmt'](_v)
             if 'useDataRowIndexForValue' in column_config:
                 _v = column_config['useDataRowIndexForValue'](row_index)
-            _row.append(_v or missing_value)
-            _max_len[column_index] = max(_max_len[column_index], len(str(_v or missing_value)))
+            _v = str(_v or missing_value)
+            _max_len[column_index] = max(_max_len[column_index], len(_v))
+            _color = ''
+            if 'setColor' in column_config:
+                _color = column_config['setColor'](_raw_column_data)
+            _row.append({'data': _v, 'color': _color})
         _table.append(_row)
 
     for tri, tr in enumerate(_table):
-        print(row_color(tri) + row_additional_indentation + ' | '.join(
-            ['{column: {align}{len}}'.format(
-                column=c,
+        row_clr = row_color(tri)
+        print(row_clr + row_additional_indentation + (row_clr + ' | ').join(
+            ['{color}{data: {align}{len}}'.format(
                 align=table_config[ci].get('align', column_align),
-                len=_max_len[ci])
+                len=_max_len[ci],
+                **c,
+            )
              for ci, c in enumerate(tr)]
-        ))
+        ) + bcolors.ENDC)
 
     print()
 
@@ -147,11 +155,11 @@ def addThousandSeparator(num, character='.', include_sign=False):
     return format(int(num), sign+',').replace(',', character)
 
 
-def daysHoursMinutes(totalSeconds):
+def daysHoursMinutes(total_seconds):
     """Formats the total number of seconds into days hours minutes (eg. 321454 -> 3D 17H)
     Parameters
     ----------
-    totalSeconds : int
+    total_seconds : int
         total number of seconds
 
     Returns
@@ -159,33 +167,26 @@ def daysHoursMinutes(totalSeconds):
     text : str
         formatted string (D H M S)
     """
-    if totalSeconds == 0:
-        return '0 s'
-    dias = int(totalSeconds / Decimal(86400))
-    totalSeconds -= dias * Decimal(86400)
-    horas = int(totalSeconds / Decimal(3600))
-    totalSeconds -= horas * Decimal(3600)
-    minutos = int(totalSeconds / Decimal(60))
-    seconds = int(totalSeconds % 60)
+    total_seconds = int(total_seconds)
+    if total_seconds == 0:
+        return '0S'
+    days = int(total_seconds / Decimal(86400))
+    total_seconds -= days * Decimal(86400)
+    hours = int(total_seconds / Decimal(3600))
+    total_seconds -= hours * Decimal(3600)
+    minutes = int(total_seconds / Decimal(60))
+    seconds = int(total_seconds % 60)
     texto = ''
-    if dias > 0:
-        texto = str(dias) + 'D '
-    if horas > 0:
-        texto = texto + str(horas) + 'H '
-    if minutos > 0 and dias == 0:
-        texto = texto + str(minutos) + 'M '
-    if dias == 0 and horas == 0 and seconds > 0:
+    if days > 0:
+        texto = str(days) + 'D '
+    if hours > 0:
+        texto = texto + str(hours) + 'H '
+    if days == 0 and minutes > 0:
+        texto = texto + str(minutes) + 'M '
+    if days == 0 and hours == 0 and seconds > 0:
         texto = texto + str(seconds) + 'S '
     return texto[:-1]
 
-def getCurrentCityId(session):
-    """
-    Parameters
-    ----------
-    session : ikabot.web.session.Session
-    """
-    html = session.get()
-    return re.search(r'currentCityId:\s(\d+),', html).group(1)
 
 def getDateTime(timestamp = None):
     """Returns a string of the current date and time in the YYYY-mm-dd_HH-MM-SS, if `timestamp` is provided then it converts it into the given format.

@@ -3,11 +3,9 @@
 
 import json
 import re
-from decimal import Decimal, getcontext
+from decimal import Decimal
 
 from ikabot.config import actionRequest
-
-getcontext().prec = 30
 
 
 def getAvailableResources(html, num=False):
@@ -55,11 +53,32 @@ def getWineConsumptionPerHour(html):
     return 0
 
 
+def extract_tradegood(html: str):
+    res = re.search(r'producedTradegood:\s"(\d+)",', html)
+    if res:
+        return int(res.group(1))
+    return None
+
+
+def extract_tradegood_production(html: str):
+    res = re.search(r'tradegoodProduction:\s(\d+(\.\d+)?),', html)
+    if res:
+        return Decimal(res.group(1))
+    return Decimal(0)
+
+
+def extract_resource_production(html: str):
+    res = re.search(r'resourceProduction:\s(\d+(\.\d+)?),', html)
+    if res:
+        return Decimal(res.group(1))
+    return Decimal(0)
+
+
 def getProductionPerSecond(session, city_id):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city_id : int
 
     Returns

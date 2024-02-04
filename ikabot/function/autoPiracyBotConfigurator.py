@@ -1,29 +1,23 @@
-import os
 import re
-import sys
 
-from ikabot import config
-from ikabot.bot.autoPirateBot import startAutoPirateBot
+from ikabot.bot.autoPirateBot import AutoPirateBot
 from ikabot.config import isWindows
 from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, decodeUnicodeEscape, enter, \
     printTable
-from ikabot.helpers.pedirInfo import askUserYesNo, read
+from ikabot.helpers.ikabotProcessListManager import run
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
     getPiracyTemplateData
-from ikabot.helpers.process import run
 
 
-def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
+def autoPiracyBotConfigurator(ikariam_service, db, telegram):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
-    event : multiprocessing.Event
-    stdin_fd: int
-    predetermined_input : multiprocessing.managers.SyncManager.list
+    ikariam_service : ikabot.web.ikariamService.IkariamService
+    db: ikabot.helpers.database.Database
+    telegram: ikabot.helpers.telegram.Telegram
     """
-    sys.stdin = os.fdopen(stdin_fd)
-    config.predetermined_input = predetermined_input
     banner()
 
     if not isWindows:
@@ -32,7 +26,6 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
         if is_installed is False:
             print('you must first install nslookup')
             enter()
-            event.set()
             return
 
     print(bcolors.WARNING)
@@ -40,14 +33,13 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
     print(bcolors.ENDC)
     print()
 
-    great_pirate_city_id = findCityWithTheBiggestPiracyFortress(session)
+    great_pirate_city_id = findCityWithTheBiggestPiracyFortress(ikariam_service)
     if great_pirate_city_id is None:
         print("Well, no pirate fortress found. Sorry.")
         enter()
-        event.set()
         return
 
-    template_data = getPiracyTemplateData(session, great_pirate_city_id)
+    template_data = getPiracyTemplateData(ikariam_service, great_pirate_city_id)
 
     bot_config = {
         'cityId': great_pirate_city_id
@@ -96,25 +88,31 @@ def autoPiracyBotConfigurator(session, event, stdin_fd, predetermined_input):
     if askUserYesNo("Would you like to convert some capture points after each mission"):
         _all = 'all'
         _mission = 'mission'
+        _over = 'over'
         print("Type {} for all available capture points".format(_all))
         print("Type {} for capture points from the executed mission".format(_mission))
+        print("Type {} to convert all the capture points above certain threshold".format(_over))
         print('Type any number, to convert exact amount')
-        bot_config['convertPoints'] = read(min=1, additionalValues=[_all, _mission], digit=True)
+        bot_config['convertPoints'] = read(min=1, additionalValues=[_all, _mission, _over], digit=True)
+        if bot_config['convertPoints'] == _over:
+            _default_over = 7000
+            bot_config['convertPoints'] = '{}-{}'.format(
+                _over,
+                read(min=1, digit=True, default=_default_over,
+                     msg='Enter the minimum pirate points that you must have after (default: {})'.format(_default_over))
+            )
 
     print()
     bot_config['maxBreakTime'] = read(min=0, digit=True, msg="Enter the maximum additional waiting time between consecutive missions in seconds. (min = 0) ")
 
     print('YAAAAAR!')
 
-    session.setProcessObjective(
+    AutoPirateBot(ikariam_service, bot_config).start(
         action='Auto Pirating',
         objective=objective
     )
 
     enter()
-    event.set()
-
-    startAutoPirateBot(session, bot_config)
 
 
 def __select_piracy_mission(template_data, additional_select_message=''):

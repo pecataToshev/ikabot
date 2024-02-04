@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="ikabot",
-    version='2024.0108.114931',
+    version='2024.0204.dev160549',
     author="Petar Toshev",
     author_email="pecata.toshev+ikabot@gmail.com",
     license='MIT',
@@ -13,12 +13,12 @@ setuptools.setup(
     install_requires=[
         'requests',
         'requests[socks]',
-        'cryptography',
         'psutil',
         'beautifulsoup4',
+        'yoyo-migrations',
     ],
     entry_points={
-        'console_scripts': ['ikabot=ikabot.command_line:main'],
+        'console_scripts': ['ikabot=ikabot.__main__:main'],
     },
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -3,7 +3,7 @@ import logging
 
 from ikabot.config import city_url, actionRequest
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.pedirInfo import getIdsOfCities
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
 
 
 def getPiracyTemplateData(session, city_id):
@@ -29,17 +29,17 @@ def getPiracyTemplateData(session, city_id):
     return json.loads(_template_data, strict=False)
 
 
-def findCityWithTheBiggestPiracyFortress(session):
+def findCityWithTheBiggestPiracyFortress(ikariam_service):
     """
     Finds and returns the id of the city with the biggest pirate fortress.
-    :param session: ikabot.web.session.Session
+    :param ikariam_service: ikabot.web.session.Session
     :return: int
     """
-    [cities_ids, _] = getIdsOfCities(session)
+    [cities_ids, _] = getIdsOfCities(ikariam_service)
     pirate_city = None
     max_level = 0
     for city_id in cities_ids:
-        city = getCity(session.get(city_url + city_id))
+        city = getCity(ikariam_service.get(city_url + city_id))
         for building in city['position']:
             if building['building'] == 'pirateFortress' and building['level'] > max_level:
                 pirate_city = city_id
@@ -52,7 +52,7 @@ def convertCapturePoints(session, pirate_city_id, conversion_points):
     """Converts capture points into crew strength
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     pirate_city_id: int -> city id with a pirate fortress
     conversion_points: int/'all' -> how many points to convert
     :return bool: is successful
@@ -62,6 +62,9 @@ def convertCapturePoints(session, pirate_city_id, conversion_points):
 
     if conversion_points == 'all':
         conversion_points = captured_points
+    elif type(conversion_points) is str and conversion_points.startswith('over-'):
+        minimum_threshold = int(conversion_points.replace('over-', ''))
+        conversion_points = max(0, captured_points - minimum_threshold)
     else:
         conversion_points = min(int(conversion_points), captured_points)
 
@@ -69,13 +72,17 @@ def convertCapturePoints(session, pirate_city_id, conversion_points):
         logging.info("Found ongoing conversion. Will will skip this one")
         return False
 
-    if conversion_points == 0:
+    if not isinstance(conversion_points, int):
+        logging.error("Wrong value for conversion_points: %s (type: %s)", conversion_points, type(conversion_points))
+        return False
+
+    if conversion_points <= 0:
         logging.info("No points to convert")
         return False
 
     crew_strength = int(conversion_points / template_data['crewConversionFactor'])
 
-    logging.info("Will start conversion of %d capture points into %d crew strenght",
+    logging.info("Will start conversion of %d capture points into %d crew strength",
                  conversion_points, crew_strength)
 
     session.post(params={

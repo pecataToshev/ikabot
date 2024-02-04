@@ -1,17 +1,13 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import json
 import math
-import os
-import sys
+import time
 from decimal import Decimal
 
-from ikabot import config
-from ikabot.config import actionRequest, materials_names, materials_names_tec
-from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter, \
-    getCurrentCityId
-from ikabot.helpers.naval import getAvailableShips, getTotalShips
+from ikabot.config import materials_names, materials_names_tec
+from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter
+from ikabot.helpers.naval import get_military_and_see_movements, getAvailableShips, getTotalShips
 
 
 def isHostile(movement):
@@ -32,81 +28,72 @@ def isHostile(movement):
     return False
 
 
-def shipMovements(session, event, stdin_fd, predetermined_input):
+def shipMovements(ikariam_service, db, telegram):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
-    event : multiprocessing.Event
-    stdin_fd: int
-    predetermined_input : multiprocessing.managers.SyncManager.list
+    ikariam_service : ikabot.web.ikariamService.IkariamService
+    db: ikabot.helpers.database.Database
+    telegram: ikabot.helpers.telegram.Telegram
     """
-    sys.stdin = os.fdopen(stdin_fd)
-    config.predetermined_input = predetermined_input
-    try:
-        banner()
+    banner()
 
-        print('Ships {:d}/{:d}\n'.format(getAvailableShips(session), getTotalShips(session)))
+    # TODO: FIX multiple calls to the get
+    print('Ships {:d}/{:d}\n'.format(getAvailableShips(ikariam_service), getTotalShips(ikariam_service)))
 
-        cityId = getCurrentCityId(session)
-        url = 'view=militaryAdvisor&oldView=city&oldBackgroundView=city&backgroundView=city&currentCityId={}&actionRequest={}&ajax=1'.format(cityId, actionRequest)
-        resp = session.post(url)
-        resp = json.loads(resp, strict=False)
-        movements = resp[1][1][2]['viewScriptParams']['militaryAndFleetMovements']
-        time_now = int(resp[0][1]['time'])
+    movements = get_military_and_see_movements(ikariam_service)
+    time_now = int(time.time())
 
-        if len(movements) == 0:
-            print('There are no movements')
-            enter()
-            event.set()
-            return
-
-        for movement in movements:
-
-            color = ''
-            if movement['isHostile']:
-                color = bcolors.RED + bcolors.BOLD
-            elif movement['isOwnArmyOrFleet']:
-                color = bcolors.BLUE + bcolors.BOLD
-            elif movement['isSameAlliance']:
-                color = bcolors.GREEN + bcolors.BOLD
-
-            origin = '{} ({})'.format(movement['origin']['name'], movement['origin']['avatarName'])
-            destination = '{} ({})'.format(movement['target']['name'], movement['target']['avatarName'])
-            arrow = '<-' if movement['event']['isFleetReturning'] else '->'
-            time_left = int(movement['eventTime']) - time_now
-            print('{}{} {} {}: {} ({}) {}'.format(color, origin, arrow, destination, movement['event']['missionText'], daysHoursMinutes(time_left), bcolors.ENDC))
-
-            if movement['isHostile']:
-                troops = movement['army']['amount']
-                fleets = movement['fleet']['amount']
-                print('Troops:{}\nFleets:{}'.format(addThousandSeparator(troops), addThousandSeparator(fleets)))
-            elif isHostile(movement):
-                troops = movement['army']['amount']
-                ships = 0
-                fleets = 0
-                for mov in movement['fleet']['ships']:
-                    if mov['cssClass'] == 'ship_transport':
-                        ships += int(mov['amount'])
-                    else:
-                        fleets += int(mov['amount'])
-                print('Troops:{}\nFleets:{}\n Ships:{}'.format(addThousandSeparator(troops), addThousandSeparator(fleets), addThousandSeparator(ships)))
-            else:
-                assert len(materials_names) == 5
-                total_load = 0
-                for resource in movement['resources']:
-                    amount = resource['amount']
-                    tradegood = resource['cssClass'].split()[1]
-                    # gold won't be translated
-                    if tradegood != 'gold':
-                        index = materials_names_tec.index(tradegood)
-                        tradegood = materials_names[index]
-                    total_load += int(amount.replace(',', '').replace('.', ''))
-                    print('{} of {}'.format(amount, tradegood))
-                ships = int(math.ceil((Decimal(total_load) / Decimal(500))))
-                print('{:d} Ships'.format(ships))
+    if len(movements) == 0:
+        print('There are no movements')
         enter()
-        event.set()
-    except KeyboardInterrupt:
-        event.set()
         return
+
+    for movement in movements:
+
+        color = ''
+        if movement['isHostile']:
+            color = bcolors.RED + bcolors.BOLD
+        elif movement['isOwnArmyOrFleet']:
+            color = bcolors.BLUE + bcolors.BOLD
+        elif movement['isSameAlliance']:
+            color = bcolors.GREEN + bcolors.BOLD
+
+        origin = '{} ({})'.format(movement['origin']['name'], movement['origin']['avatarName'])
+        destination = '{} ({})'.format(movement['target']['name'], movement['target']['avatarName'])
+        arrow = '<-' if movement['event']['isFleetReturning'] else '->'
+        time_left = int(movement['eventTime']) - time_now
+        print('{}{} {} {}: {} ({}) {}'.format(color, origin, arrow, destination,
+                                              movement['event']['missionText'], daysHoursMinutes(time_left),
+                                              bcolors.ENDC))
+
+        if movement['isHostile']:
+            troops = movement['army']['amount']
+            fleets = movement['fleet']['amount']
+            print('Troops:{}\nFleets:{}'.format(addThousandSeparator(troops), addThousandSeparator(fleets)))
+        elif isHostile(movement):
+            troops = movement['army']['amount']
+            ships = 0
+            fleets = 0
+            for mov in movement['fleet']['ships']:
+                if mov['cssClass'] == 'ship_transport':
+                    ships += int(mov['amount'])
+                else:
+                    fleets += int(mov['amount'])
+            print('Troops:{}\nFleets:{}\n Ships:{}'.format(addThousandSeparator(troops), addThousandSeparator(fleets), addThousandSeparator(ships)))
+        else:
+            assert len(materials_names) == 5
+            total_load = 0
+            for resource in movement['resources']:
+                amount = resource['amount']
+                tradegood = resource['cssClass'].split()[1]
+                # gold won't be translated
+                if tradegood != 'gold':
+                    index = materials_names_tec.index(tradegood)
+                    tradegood = materials_names[index]
+                total_load += int(amount.replace(',', '').replace('.', ''))
+                print('{} of {}'.format(amount, tradegood))
+            ships = int(math.ceil((Decimal(total_load) / Decimal(500))))
+            print('{:d} Ships'.format(ships))
+
+    enter()

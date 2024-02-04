@@ -1,49 +1,45 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-import multiprocessing
-import os
+import logging
 import sys
 import time
+import traceback
 
-import ikabot.config as config
-from ikabot.config import isWindows
-from ikabot.function.activateMiracle import activateMiracle
-from ikabot.function.alertAttacks import alertAttacks
-from ikabot.function.alertLowWine import alertLowWine
-from ikabot.function.attackBarbarians import attackBarbarians
+from ikabot.function.activateMiracleBotConfigurator import activate_miracle_bot_configurator
+from ikabot.function.attackBarbariansBotConfigurator import attack_barbarians_bot_configurator
+from ikabot.function.attacksMonitoringBotConfigurator import configure_alert_attacks_monitoring_bot
 from ikabot.function.autoPiracyBotConfigurator import autoPiracyBotConfigurator
-from ikabot.function.buyResources import buyResources
-from ikabot.function.checkForUpdate import checkForUpdate
+from ikabot.function.buyResourcesBotConfigurator import buy_resources_bot_configurator
+from ikabot.function.conductExperimentBotConfigurator import configure_conduct_experiment_bot
 from ikabot.function.constructBuilding import constructBuilding
-from ikabot.function.constructionList import constructionList
 from ikabot.function.decaptchaConf import decaptchaConf
-from ikabot.function.distributeResources import distributeResources
-from ikabot.function.donationBot import donationBot
-from ikabot.function.dumpWorld import dumpWorld
+from ikabot.function.distributeResourcesBotConfigurator import distribute_resources_bot_configurator
+from ikabot.function.donationBotConfigurator import donation_bot_configurator
+from ikabot.function.dumpWorld import dump_world_bot_configurator, view_dump
 from ikabot.function.getStatus import getStatus
 from ikabot.function.getStatusImproved import getStatusForAllCities
-from ikabot.function.importExportCookie import importExportCookie
-from ikabot.function.investigate import investigate
+from ikabot.function.importExportCookie import exportCookie, importCookie
+from ikabot.function.islandMonitoringBotConfigurator import island_monitoring_bot_configurator
 from ikabot.function.islandWorkplaces import islandWorkplaces
-from ikabot.function.killTasks import killTasks
-from ikabot.function.loginDaily import loginDaily
+from ikabot.function.killTasks import kill_tasks
+from ikabot.function.loginDailyBotConfigurator import login_daily_bot_configurator
 from ikabot.function.proxyConf import proxyConf, show_proxy
-from ikabot.function.searchForIslandSpaces import searchForIslandSpaces
-from ikabot.function.sellResources import sellResources
-from ikabot.function.sendResources import sendResources
+from ikabot.function.sellResourcesBotConfigurator import sell_resources_bot_configurator
 from ikabot.function.shipMovements import shipMovements
 from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.function.stationArmy import stationArmy
-from ikabot.function.testTelegramBot import testTelegramBot
-from ikabot.function.trainArmy import trainArmy
+from ikabot.function.studies import study
+from ikabot.function.telegramFunctions import test_telegram_bot, update_telegram_bot
+from ikabot.function.trainArmyBotConfigurator import train_army_bot_configurator
+from ikabot.function.transportGoodsBotConfigurator import transport_goods_bot_configurator
 from ikabot.function.update import update
+from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_bot_configurator
 from ikabot.function.vacationMode import vacationMode
-from ikabot.helpers.botComm import updateTelegramData
-from ikabot.helpers.gui import banner, enter, clear, formatTimestamp
-from ikabot.helpers.logs import setup_logging
-from ikabot.helpers.pedirInfo import read
-from ikabot.helpers.process import IkabotProcessListManager
-from ikabot.web.session import Session
+from ikabot.function.wineMonitoringBotConfigurator import configure_wine_monitoring_bot
+from ikabot.helpers.checkForUpdate import checkForUpdate
+from ikabot.helpers.gui import banner, clear, enter, formatTimestamp
+from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
+from ikabot.helpers.userInput import read
 
 __function_refresh = 'refresh'
 __function_exit = 'exit'
@@ -55,15 +51,15 @@ _global_menu = [
     ['Refresh process info', __function_refresh],
     ['Construction', [
         __command_back,
-        ['Building Upgrades', constructionList],
+        ['Building Upgrades', upgrade_building_bot_configurator],
         ['Construct building', constructBuilding],
     ]],
     ['Resources & Donations', [
         __command_back,
-        ['Send resources', sendResources],
-        ['Distribute resources', distributeResources],
+        ['Send resources', transport_goods_bot_configurator],
+        ['Distribute resources', distribute_resources_bot_configurator],
         ['Donate once', islandWorkplaces],
-        ['Donate automatically', donationBot],
+        ['Donate automatically', donation_bot_configurator],
     ]],
     ['Cities Status', [
         __command_back,
@@ -72,21 +68,21 @@ _global_menu = [
     ]],
     ['Alerts / Monitoring', [
         __command_back,
-        ['Alert attacks', alertAttacks],
-        ['Alert wine running out', alertLowWine],
-        ['Monitor islands', searchForIslandSpaces],
+        ['Alert attacks', configure_alert_attacks_monitoring_bot],
+        ['Alert wine running out', configure_wine_monitoring_bot],
+        ['Monitor islands', island_monitoring_bot_configurator],
     ]],
     ['Marketplace', [
         __command_back,
-        ['Buy resources', buyResources],
-        ['Sell resources', sellResources],
+        ['Buy resources', buy_resources_bot_configurator],
+        ['Sell resources', sell_resources_bot_configurator],
     ]],
-    ['Activate miracle', activateMiracle],
+    ['Activate miracle', activate_miracle_bot_configurator],
     ['Military actions', [
         __command_back,
-        ['Train Army', trainArmy],
+        ['Train Army', train_army_bot_configurator],
         ['Send Troops/Ships', stationArmy],
-        ['Attack barbarians', attackBarbarians],
+        ['Attack barbarians', attack_barbarians_bot_configurator],
     ]],
     ['See movements', shipMovements],
     ['Piracy', [
@@ -94,24 +90,36 @@ _global_menu = [
         ['Show Piracy Stats', showPiracyInfo],
         ['Configure Auto-Pirate Bot', autoPiracyBotConfigurator],
     ]],
-    ['Academy & Studies', investigate],
+    ['Academy', [
+        __command_back,
+        ['Study', study],
+        ['Conduct Experiments', configure_conduct_experiment_bot],
+    ]],
     ['Game Account Functions', [
         __command_back,
-        ['Login daily', loginDaily],
+        ['Login daily', login_daily_bot_configurator],
         ['Activate vacation mode', vacationMode],
-        ['Dump / View world', dumpWorld],
+        ['Dump / View world', [
+            __command_back,
+            ['Create new dump', dump_world_bot_configurator],
+            ['Load existing dump', view_dump],
+        ]],
     ]],
     ['Options / Settings', [
         __command_back,
         ['Configure Proxy', proxyConf],
         ['Telegram Bot', [
             __command_back,
-            ['Change bot data', updateTelegramData],
-            ['Test message the bot', testTelegramBot],
+            ['Change bot data', update_telegram_bot],
+            ['Test message the bot', test_telegram_bot],
         ]],
-        ['Kill tasks', killTasks],
+        ['Kill tasks', kill_tasks],
         ['Configure captcha resolver', decaptchaConf],
-        ['Import / Export cookie', importExportCookie],
+        ['Cookies', [
+            __command_back,
+            ['Import', importCookie],
+            ['Export', exportCookie],
+        ]],
         ['Update Ikabot', update],
     ]],
 ]
@@ -131,15 +139,18 @@ def choose_from_menu(menu_options, prefix=''):
     return fn
 
 
-def menu(session):
+def menu(ikariam_service, db, telegram):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    ikariam_service : ikabot.web.ikariamService.IkariamService
+    db: ikabot.helpers.database.Database
+    telegram: ikabot.helpers.telegram.Telegram
     """
     checkForUpdate()
-    show_proxy(session)
-    process_list_manager = IkabotProcessListManager(session)
+    show_proxy(db)
+    process_list_manager = IkabotProcessListManager(db)
+    consecutive_keyboard_interruptions = False
 
     while True:
         banner()
@@ -149,83 +160,41 @@ def menu(session):
 
         try:
             selected = choose_from_menu(_global_menu)
+            logging.debug('Selected from the menu: %s',
+                          selected.__name__ if type(selected) is not str else selected)
+            consecutive_keyboard_interruptions = False
 
             if selected == __function_exit:
                 # Perform exit of the app
-                    if isWindows:
-                        # in unix, you can exit ikabot and close the terminal and the processes will continue to execute
-                        # in windows, you can exit ikabot but if you close the terminal, the processes will die
-                        print('Closing this console will kill the processes.')
-                        enter()
-                    clear()
-                    os._exit(0)  # kills the process which executes this statement, but it does not kill it's child processes
+                break
 
             if selected == __function_refresh:
                 # we just need to refresh the menu
                 continue
 
             # we've selected a function, let's execute it
-            event = multiprocessing.Event()  # creates a new event
-            config.has_params = len(config.predetermined_input) > 0
-            process = multiprocessing.Process(
-                target=selected,
-                args=(session, event, sys.stdin.fileno(), config.predetermined_input),
-                name=selected.__name__
-            )
-
-            process.start()
-            process_list_manager.upsert_process({
-                'pid': process.pid,
-                'action': selected.__name__,
-                'status': 'started'
-            })
-
-            # waits for the process to fire the event that's been given to it.
-            # When it does  this process gets back control of the command line
-            # and asks user for more input
-            event.wait()
+            selected(ikariam_service, db, telegram)
         except KeyboardInterrupt:
-            pass
+            logging.debug('Received keyboard interruption in command line, consecutive_keyboard_interruptions: %s',
+                          consecutive_keyboard_interruptions)
+            if consecutive_keyboard_interruptions:
+                break
+            # First time. We're going to refresh the menu
+            consecutive_keyboard_interruptions = True
+            continue
 
-def init():
-    home = 'USERPROFILE' if isWindows else 'HOME'
-    os.chdir(os.getenv(home))
-    if not os.path.isfile(config.ikaFile):
-        open(config.ikaFile, 'w')
-        os.chmod(config.ikaFile, 0o600)
+        except Exception as e:
+            msg = 'Error...\nMessage: {}\nCause: {}'.format(
+                str(e), traceback.format_exc()
+            )
+            print(msg)
+            logging.error(msg)
+            enter()
 
+    if consecutive_keyboard_interruptions:
+        logging.debug('Forcefully quiting the command centre')
+        sys.exit(1)
 
-def start():
-    init()
-    config.has_params = len(sys.argv) > 1
-    for arg in sys.argv:
-        try:
-            config.predetermined_input.append(int(arg))
-        except ValueError:
-            config.predetermined_input.append(arg)
-    config.predetermined_input.pop(0)
-
-    session = Session()
-    try:
-        menu(session)
-    finally:
-        clear()
-        session.logout()
-
-
-def main():
-    setup_logging()
-    manager = multiprocessing.Manager()
-    predetermined_input = manager.list()
-    config.predetermined_input = predetermined_input
-    try:
-        start()
-    except KeyboardInterrupt:
-        clear()
-
-
-if __name__ == '__main__':
-    # On Windows calling this function is necessary.
-    if sys.platform.startswith('win'):
-        multiprocessing.freeze_support()
-    main()
+    clear()
+    logging.debug('Gracefully exiting the command centre')
+    sys.exit(0)

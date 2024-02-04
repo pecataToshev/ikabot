@@ -21,11 +21,11 @@ LOG_DIR = os.path.join(LOG_DIR, 'ikabot')
 LOG_FILE = os.path.join(LOG_DIR, 'ikabot.log')
 
 do_ssl_verify = True
-has_params = False
 
+BOT_NAME = ''
 infoUser = ''
 
-ikaFile = '.ikabot'
+DB_FILE = os.path.join(os.path.expanduser("~"), '.ikabot.db')
 
 city_url = 'view=city&cityId='
 island_url = 'view=island&islandId='
@@ -40,6 +40,7 @@ ConnectionError_wait = 5 * 60
 actionRequest = 'REQUESTID'
 
 predetermined_input = []
+application_params = {}
 
 MAXIMUM_CITY_NAME_LENGTH = 20
 SECONDS_IN_HOUR = 60 * 60

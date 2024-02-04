@@ -6,7 +6,7 @@ import json
 
 from ikabot.config import actionRequest, city_url
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.pedirInfo import getIdsOfCities
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from bs4 import BeautifulSoup
 
 
@@ -14,7 +14,7 @@ def getCommercialCities(session):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
 
     Returns
     -------
@@ -25,9 +25,9 @@ def getCommercialCities(session):
     for city_id in cities_ids:
         html = session.get(city_url + city_id)
         city = getCity(html)
-        for pos, building in enumerate(city['position']):
+        for building in city['position']:
             if building['building'] == 'branchOffice':
-                city['pos'] = pos
+                city['marketPosition'] = building['position']
                 html = getMarketHtml(session, city)
                 positions = re.findall(r'<option.*?>(\d+)</option>', html)
                 city['rango'] = int(positions[-1])
@@ -40,10 +40,10 @@ def getMarketHtml(session, city):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city : dict
     """
-    url = 'view=branchOffice&cityId={}&position={:d}&currentCityId={}&backgroundView=city&actionRequest={}&ajax=1'.format(city['id'], city['pos'], city['id'], actionRequest)
+    url = 'view=branchOffice&cityId={}&position={:d}&currentCityId={}&backgroundView=city&actionRequest={}&ajax=1'.format(city['id'], city['marketPosition'], city['id'], actionRequest)
     data = session.post(url)
     json_data = json.loads(data, strict=False)
     return json_data[1][1][1]
@@ -79,7 +79,7 @@ def getGold(session, city_id):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city_id : int
     Returns
     -------
@@ -120,3 +120,22 @@ def printGoldForAllCities(session, city_id):
     for html_table in html_tables:
         print_table(html_table)
         print('-' * 85)  # Add a separator between tables
+
+
+def getMarketInfo(session, city):
+    """
+    Parameters
+    ----------
+    session : ikabot.web.ikariamService.IkariamService
+    city : dict
+
+    Returns
+    -------
+    response : dict
+    """
+    params = {'view': 'branchOfficeOwnOffers', 'activeTab': 'tab_branchOfficeOwnOffers', 'cityId': city['id'],
+              'position': city['marketPosition'], 'backgroundView': 'city', 'currentCityId': city['id'],
+              'templateView': 'branchOfficeOwnOffers', 'currentTab': 'tab_branchOfficeOwnOffers',
+              'actionRequest': actionRequest, 'ajax': '1'}
+    resp = session.post(params=params, noIndex=True)
+    return json.loads(resp, strict=False)[1][1][1]

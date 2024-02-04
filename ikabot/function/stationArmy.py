@@ -7,14 +7,15 @@ from ikabot import config
 from ikabot.config import actionRequest
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.naval import getAvailableShips
-from ikabot.helpers.pedirInfo import chooseCity, getIdsOfCities, read
+from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
+from ikabot.helpers.userInput import read
 
 
 def getCityMilitaryData(session, city_id):
     """
     Parameters
     ----------
-    session : ikabot.web.session.Session
+    session : ikabot.web.ikariamService.IkariamService
     city_id : int
     
     returns
