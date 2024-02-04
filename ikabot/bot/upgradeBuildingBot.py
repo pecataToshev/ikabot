@@ -128,7 +128,7 @@ class UpgradeBuildingBot(Bot):
                 continue
 
             failed_consecutive_wait_times = 0
-            self._wait(waiting_times[0] + 30, waiting_times[1], 30)
+            self._wait(int(waiting_times[0] + 30), str(waiting_times[1]), 30)
 
     def __get_waiting_time_with_reason(self, building_in_construction):
         """
@@ -140,18 +140,11 @@ class UpgradeBuildingBot(Bot):
         if building_upgrade_time_left > 0:
             # if there is a building, that is expanding, we can do nothing. So we have to wait for it!
             return [
-                building_upgrade_time_left,
+                int(building_upgrade_time_left),
                 'Waiting {} to get to level {}'.format(
                     building_in_construction['positionAndName'],
                     self.get_building_level(building_in_construction)
                 )
-            ]
-
-        minimal_fleet_arriving_time = getMinimumWaitingTime(self.ikariam_service)
-        if minimal_fleet_arriving_time > 0:
-            return [
-                minimal_fleet_arriving_time,
-                'Waiting some fleet to arrive'
             ]
 
         if self.transport_resources_pid is not None:
@@ -163,15 +156,22 @@ class UpgradeBuildingBot(Bot):
                 next_action_time = _process[0].get('nextActionTime', None)
                 if next_action_time is not None:
                     return [
-                        next_action_time - time.time(),
-                        'Waiting next action of transporting resources (pid: {})'.format(self.transport_resources_pid)
+                        int(next_action_time - time.time()),
+                        'Waiting for transporting resources (pid: {})'.format(self.transport_resources_pid)
                     ]
                 else:
                     return [
                         30,
-                        "We're in race condition with the process for"
-                        " transporting resources (pid: {})".format(self.transport_resources_pid)
+                        "Race condition with transporting resources (pid: {})".format(self.transport_resources_pid)
                     ]
+
+        minimal_fleet_arriving_time = getMinimumWaitingTime(self.ikariam_service)
+        if minimal_fleet_arriving_time > 0:
+            return [
+                int(minimal_fleet_arriving_time),
+                'Waiting some fleet to arrive'
+            ]
+
         return None
 
     def __validate_building(self, building):
