@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 from decimal import Decimal
 
-from ikabot import config
+from ikabot import __version__, config
 from ikabot.config import isWindows
 
 
@@ -48,7 +48,7 @@ def banner():
       MM      MM `Mb.   8M   MM          MM    ,9   YA.   ,A9     MM
     .JMML.  .JMML. YA.  `Moo9^Yo.      .JMMmmmd9     `Ybmd9'      `Mbmo
     """
-    print('\n{}\n\n{}\n{}'.format(bner, config.infoUser, config.update_msg))
+    print('\n{}\nversion {}\n\n{}\n{}'.format(bner, __version__, config.infoUser, config.update_msg))
 
 
 def printProgressBar(msg, current, total):
