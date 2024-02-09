@@ -5,7 +5,7 @@ from typing import List
 from ikabot.bot.bot import Bot
 from ikabot.config import city_url, SECONDS_IN_HOUR
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import bcolors, daysHoursMinutes
+from ikabot.helpers.gui import Colours, daysHoursMinutes
 from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.resources import getProductionPerSecond
 
@@ -47,7 +47,7 @@ class WineMonitoringBot(Bot):
     
                 if consumption_per_hour == 0:
                     logging.debug('No wine consumption in %s', city['name'])
-                    __problems.append([bcolors.WARNING, city['name'], 'noConsumption'])
+                    __problems.append([Colours.Text.Light.YELLOW, city['name'], 'noConsumption'])
                     if not was_alerted:
                         msg = 'The city {} is not consuming wine!'.format(city['name'])
                         self.telegram.send_message(msg)
@@ -62,7 +62,7 @@ class WineMonitoringBot(Bot):
 
                 if seconds_left < self.minimum_available_wine_seconds:
                     time_left = daysHoursMinutes(int(seconds_left))
-                    __problems.append([bcolors.RED, city['name'], time_left])
+                    __problems.append([Colours.Text.Light.RED, city['name'], time_left])
                     if was_alerted is False:
                         msg = 'In {}, the wine will run out in {}'.format(time_left, city['name'])
                         self.telegram.send_message(msg)
@@ -72,13 +72,13 @@ class WineMonitoringBot(Bot):
 
             self._set_process_info('Finished checking for low wine', target_city='')
 
-            __msg = bcolors.GREEN + 'No alerts'
+            __msg = Colours.Text.Light.GREEN + 'No alerts'
             if len(__problems) > 0:
                 __msg = '{}Alerts{}: [{}{}]'.format(
-                    bcolors.WARNING,
-                    bcolors.ENDC,
-                    bcolors.ENDC + ', '.join("{}{}: {}".format(*p) for p in __problems),
-                    bcolors.ENDC,
+                    Colours.Text.Light.YELLOW,
+                    Colours.Text.RESET,
+                    Colours.Text.RESET + ', '.join("{}{}: {}".format(*p) for p in __problems),
+                    Colours.Text.RESET,
                 )
 
-            self._wait(20*60, __msg + bcolors.ENDC)
+            self._wait(20*60, __msg + Colours.Text.RESET)

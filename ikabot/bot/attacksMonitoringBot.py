@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 
 from ikabot.bot.bot import Bot
-from ikabot.helpers.gui import bcolors, daysHoursMinutes
+from ikabot.helpers.gui import Colours, daysHoursMinutes
 from ikabot.helpers.naval import get_military_and_see_movements
 
 
@@ -41,7 +41,7 @@ class AttacksMonitoringBot(Bot):
                 if event_id not in current_attacks:
                     known_attacks.pop(event_id)
 
-            __attacks = bcolors.GREEN + 'No'
+            __attacks = Colours.Text.Light.GREEN + 'No'
             __suffix = ''
             if len(known_attacks) > 0:
                 __data = {}
@@ -49,12 +49,12 @@ class AttacksMonitoringBot(Bot):
                     __t = __data.get(a['event']['type'], [])
                     __t.append(a['target']['name'])
                     __data.update({a['event']['type']: __t})
-                __attacks = bcolors.RED + str(len(known_attacks))
+                __attacks = Colours.Text.Light.RED + str(len(known_attacks))
                 __suffix = ': ' + str(__data)
 
             self._wait(
                 seconds=self.seconds_between_checks,
-                info='{} attacks coming{}{}'.format(__attacks, __suffix, bcolors.ENDC),
+                info='{} attacks coming{}{}'.format(__attacks, __suffix, Colours.Text.RESET),
                 max_random=10,
             )
 

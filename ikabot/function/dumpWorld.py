@@ -9,7 +9,7 @@ import os
 from ikabot.bot.dumpWorldBot import DumpWorldBot
 from ikabot.config import isWindows
 from ikabot.helpers.database import Database
-from ikabot.helpers.gui import banner, bcolors, enter, getDateTime
+from ikabot.helpers.gui import banner, Colours, enter, getDateTime
 from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
@@ -22,7 +22,7 @@ home = 'USERPROFILE' if isWindows else 'HOME'
 
 def dump_world_bot_configurator(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     banner()
-    print('{}⚠️ BEWARE - THE RESULTING DUMP CONTAINS ACCOUNT IDENTIFYING INFORMATION ⚠️{}\n'.format(bcolors.WARNING, bcolors.ENDC))
+    print('{}⚠️ BEWARE - THE RESULTING DUMP CONTAINS ACCOUNT IDENTIFYING INFORMATION ⚠️{}\n'.format(Colours.Text.YELLOW, Colours.Text.RESET))
     if not askUserYesNo('This action will take a couple of hours to complete. Are you sure you want to initiate a data dump now'):
         return
 
@@ -159,22 +159,22 @@ def print_map(islands, selected_islands):
         List of island objects to be displayed
     """
 
-    map = [[bcolors.DARK_BLUE + '██' + bcolors.ENDC for j in range(100)] for i in range(100)] # 100x100 matrix of dark blue ██
+    map = [[Colours.Text.BLUE + '██' + Colours.Text.RESET for j in range(100)] for i in range(100)] # 100x100 matrix of dark blue ██
     selected_island_coords = []
 
     for island in islands:
         if int(island['id']) in selected_islands:
-            map[int(island['x'])-1][int(island['y'])-1] = bcolors.DARK_RED + '◉ ' + bcolors.ENDC 
+            map[int(island['x'])-1][int(island['y'])-1] = Colours.Text.RED + '◉ ' + Colours.Text.RESET 
             selected_island_coords.append((int(island['x']),int(island['y'])))
         else:
-            map[int(island['x'])-1][int(island['y'])-1] = bcolors.DARK_GREEN + '◉ ' + bcolors.ENDC
+            map[int(island['x'])-1][int(island['y'])-1] = Colours.Text.GREEN + '◉ ' + Colours.Text.RESET
 
     for row in reversed(map):
         print(''.join(row))
 
-    print(bcolors.DARK_BLUE + '██' + bcolors.ENDC + ' - Water, ' + \
-          bcolors.DARK_GREEN + '◉' + bcolors.ENDC + ' - Island, '+ \
-          bcolors.DARK_RED + '◉' + bcolors.ENDC + ' - Selected\n'
+    print(Colours.Text.BLUE + '██' + Colours.Text.RESET + ' - Water, ' + \
+          Colours.Text.GREEN + '◉' + Colours.Text.RESET + ' - Island, '+ \
+          Colours.Text.RED + '◉' + Colours.Text.RESET + ' - Selected\n'
         )
 
     print('Selected islands: ' + str(selected_island_coords))

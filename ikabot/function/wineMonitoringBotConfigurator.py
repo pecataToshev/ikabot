@@ -17,12 +17,13 @@ def configure_wine_monitoring_bot(ikariam_service: IkariamService, db: Database,
         enter()
         return
 
-    hours = read(msg='How many hours should be left until the wine runs out in a city so that it\'s alerted?',
+    hours = read(msg='How many hours should be left until the wine runs out in a city so that it\'s alerted? ',
                  min=1, digit=True)
-    print("You'll will be alerted when the wine runs out in less than {:d} hours in any city".format(hours))
-    enter()
 
     WineMonitoringBot(ikariam_service, {'minimumWineHours': hours}).start(
         action='Monitor Wine',
         objective='Wine Hours {}'.format(hours),
     )
+
+    print("You'll will be alerted when the wine runs out in less than {:d} hours in any city".format(hours))
+    enter()

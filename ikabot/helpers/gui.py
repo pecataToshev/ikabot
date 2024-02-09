@@ -76,7 +76,7 @@ def rightAlign(data, length):
 
 
 def printTable(table_config, table_data, missing_value='', column_align='>',
-               row_additional_indentation='', row_color=lambda i: bcolors.ENDC):
+               row_additional_indentation='', row_color=lambda i: Colours.Text.RESET):
     """
     Formats table and prints it
 
@@ -108,7 +108,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
     for row_index, row_data in enumerate(table_data):
         _row = []
         for column_index, column_config in enumerate(table_config):
-            _raw_column_data = row_data.get(column_config['key'], None)
+            _raw_column_data = row_data.get(column_config.get('key', ''), None)
             _v = _raw_column_data
             if 'fmt' in column_config and _v is not None:
                 _v = column_config['fmt'](_v)
@@ -131,7 +131,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
                 **c,
             )
              for ci, c in enumerate(tr)]
-        ) + bcolors.ENDC)
+        ) + Colours.Text.RESET)
 
     print()
 
@@ -225,18 +225,56 @@ def formatTimestamp(seconds):
     return datetime.fromtimestamp(seconds).strftime('%b %d %H:%M:%S')
 
 
-class bcolors:
-    HEADER = '\033[95m'
-    STONE = '\033[37m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    WARNING = '\033[93m'
-    RED = '\033[91m'
-    BLACK = '\033[90m'
-    ENDC = '\033[0m'
-    WOOD = '\033[0;33m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    DARK_RED = '\033[31m'
-    DARK_BLUE = '\033[34m'
-    DARK_GREEN = '\033[32m'
+class Colours:
+    class Text:
+        RESET = '\033[0m'
+        BLACK = '\033[0;30m'
+        RED = '\033[0;31m'
+        GREEN = '\033[0;32m'
+        YELLOW = '\033[0;33m'
+        BLUE = '\033[0;34m'
+        MAGENTA = '\033[0;35m'
+        CYAN = '\033[0;36m'
+        WHITE = '\033[0;37m'
+
+        class Format:
+            BOLD = '\033[1m'
+            DIM = '\033[2m'
+            UNDERLINED = '\033[4m'
+            BLINK = '\033[5m'
+            REVERSE = '\033[7m'
+            HIDDEN = '\033[8m'
+
+        class Light:
+            BLACK = '\033[90m'
+            RED = '\033[91m'
+            GREEN = '\033[92m'
+            YELLOW = '\033[93m'
+            BLUE = '\033[94m'
+            MAGENTA = '\033[95m'
+            CYAN = '\033[96m'
+            WHITE = '\033[97m'
+
+    class Background:
+        RESET = '\033[49m'
+        BLACK = '\033[40m'
+        RED = '\033[41m'
+        GREEN = '\033[42m'
+        YELLOW = '\033[43m'
+        BLUE = '\033[44m'
+        MAGENTA = '\033[45m'
+        CYAN = '\033[46m'
+        WHITE = '\033[47m'
+
+        class Light:
+            BLACK = '\033[100m'
+            RED = '\033[101m'
+            GREEN = '\033[102m'
+            YELLOW = '\033[103m'
+            BLUE = '\033[104m'
+            MAGENTA = '\033[105m'
+            CYAN = '\033[106m'
+            WHITE = '\033[107m'
+
+    MATERIALS = [Text.YELLOW, Text.Light.MAGENTA, Text.Light.WHITE, Text.Light.BLUE, Text.Light.YELLOW]
+

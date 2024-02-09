@@ -2,7 +2,7 @@ import re
 
 from ikabot.bot.autoPirateBot import AutoPirateBot
 from ikabot.config import isWindows
-from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, decodeUnicodeEscape, enter, \
+from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, decodeUnicodeEscape, enter, \
     printTable
 from ikabot.helpers.ikabotProcessListManager import run
 from ikabot.helpers.userInput import askUserYesNo, read
@@ -28,9 +28,9 @@ def autoPiracyBotConfigurator(ikariam_service, db, telegram):
             enter()
             return
 
-    print(bcolors.WARNING)
+    print(Colours.Text.Light.YELLOW)
     print('⚠️ USING THIS FEATURE WILL EXPOSE YOUR IP ADDRESS TO A THIRD PARTY FOR CAPTCHA SOLVING ⚠️')
-    print(bcolors.ENDC)
+    print(Colours.Text.RESET)
     print()
 
     great_pirate_city_id = findCityWithTheBiggestPiracyFortress(ikariam_service)
