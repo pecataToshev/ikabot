@@ -76,7 +76,7 @@ def rightAlign(data, length):
 
 
 def printTable(table_config, table_data, missing_value='', column_align='>',
-               row_additional_indentation='', row_color=lambda i: Colours.Text.RESET):
+               row_additional_indentation='', row_color=lambda i, row: Colours.Text.RESET):
     """
     Formats table and prints it
 
@@ -95,8 +95,8 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
     :param column_align: str -> default align of all table columns
     :param row_additional_indentation: str -> add some prefix data before
                                               printing the row
-    :param row_color: lambda int -> str: determine row color by row index
-                                        starting with 0 for table headers
+    :param row_color: lambda int, dict -> str: determine row color by row index
+                                               starting with 0 for table headers
     :return: void
     """
     print()
@@ -123,7 +123,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
         _table.append(_row)
 
     for tri, tr in enumerate(_table):
-        row_clr = row_color(tri)
+        row_clr = row_color(tri, None if tri == 0 else table_data[tri - 1])
         print(row_clr + row_additional_indentation + (row_clr + ' | ').join(
             ['{color}{data: {align}{len}}'.format(
                 align=table_config[ci].get('align', column_align),
