@@ -277,4 +277,11 @@ class Colours:
             WHITE = '\033[107m'
 
     MATERIALS = [Text.YELLOW, Text.Light.MAGENTA, Text.Light.WHITE, Text.Light.BLUE, Text.Light.YELLOW]
+    SATISFACTION = {
+        "ecstatic": Text.GREEN,
+        "happy": Text.YELLOW,
+        "neutral": Text.WHITE,
+        "sad": Text.BLUE,
+        "outraged": Text.RED
+    }
 

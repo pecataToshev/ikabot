@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-import logging
-import re
+from typing import List
 
 from bs4 import BeautifulSoup
 
@@ -15,6 +14,13 @@ from ikabot.helpers.citiesAndIslands import chooseCity
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
+
+
+def get_satisfaction_level(satisfaction_classes: List[str], class_values: List[int], satisfaction: float) -> str:
+    for ind, sat_class in enumerate(satisfaction_classes):
+        if class_values[ind] <= satisfaction:
+            return satisfaction_classes[ind]
+    return satisfaction_classes[-1]
 
 
 def setWineConsumption(ikariam_service: IkariamService, db: Database, telegram: Telegram):
@@ -51,7 +57,6 @@ def setWineConsumption(ikariam_service: IkariamService, db: Database, telegram: 
             'ajax': '1'
         }
     )
-    logging.debug("data: %s", data)
     data = json.loads(data, strict=False)
 
     change_view_data = data[1][1][1]
@@ -60,9 +65,15 @@ def setWineConsumption(ikariam_service: IkariamService, db: Database, telegram: 
     template_data = data[2][1]
     template_params = json.loads(template_data['load_js']['params'], strict=False)
 
+    start_satisfaction = template_params['startSatisfaction']
+
     table_data = [{'level': o['value'], 'name': o.text.strip(),
-                   'sat': sat,
-                   'saved': saved
+                   'wineSatisfaction': sat,
+                   'saved': saved.replace('&nbsp;', ''),
+                   'totalSatisfaction': start_satisfaction + sat,
+                   'satisfactionClass': get_satisfaction_level(template_params['classNamePerSatisfaction'],
+                                                               template_params['classValuePerSatisfaction'],
+                                                               start_satisfaction + sat)
                    } for o, sat, saved in zip(options,
                                               template_params['satPerWine'],
                                               template_params['savedWine'])]
@@ -71,17 +82,19 @@ def setWineConsumption(ikariam_service: IkariamService, db: Database, telegram: 
         table_config=[
             {'key': 'level', 'title': 'Level'},
             {'key': 'name', 'title': 'Wine Consumption', 'fmt': decodeUnicodeEscape},
-            {'key': 'sat', 'title': 'Satisfaction per Wine'},
             {'key': 'saved', 'title': 'Saved Wine'},
+            {'key': 'wineSatisfaction', 'title': 'Wine Satisfaction'},
+            {'key': 'totalSatisfaction', 'title': 'Total Satisfaction'},
+            {'key': 'satisfactionClass', 'title': 'Satisfaction Class', 'setColor': lambda x: Colours.SATISFACTION[x]},
         ],
         table_data=table_data,
         row_color=lambda row_id, row_data: (
-            Colours.Text.Light.YELLOW if 'wineServeLevel' in template_params
-                                         and row_data is not None
-                                         and row_data['level'] == template_params['wineServeLevel']
-            else Colours.Text.RESET),
-        row_additional_indentation='  '
-
+            Colours.Text.Light.YELLOW
+            if row_data is not None and row_data['level'] == template_params['wineServeLevel']
+            else ''
+        ),
+        row_additional_indentation='  ',
+        missing_value='0'
     )
 
     wine_level = read(0, len(table_data) - 1, msg='Choose wine consumption level: ')
