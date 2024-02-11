@@ -83,11 +83,11 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
 
     possible column specification:
     {
-        'key': str -> how to get the value from the data dict[]
-        'title': str -> title of the column in the printed table
-        'fmt': None/lambda -> if the value has to be transformed before print
-        'align': char -> align character of the column values
-        'setColour': None/lambda -> set colour to the cell (uses value before transformation)
+        'key': str => how to get the value from the data dict[]
+        'title': str => title of the column in the printed table
+        'fmt': None/lambda any -> any => if the value has to be transformed before print
+        'align': char => align character of the column values
+        'setColour': None/lambda any, dict -> str => set colour to the cell (uses value before transformation)
     }
 
     :param table_config: list[dict[]] -> table columns config
@@ -121,7 +121,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
             _max_len[column_index] = max(_max_len[column_index], len(_v))
             colour = ''
             if 'setColour' in column_config:
-                colour = column_config['setColour'](_raw_column_data)
+                colour = column_config['setColour'](_raw_column_data, row_data)
             _row.append({'data': _v, 'colour': colour})
         _table.append(_row)
 

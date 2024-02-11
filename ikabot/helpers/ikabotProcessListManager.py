@@ -34,7 +34,7 @@ class ProcessStatus:
     ERROR = 'error'
 
     @staticmethod
-    def get_colour(status):
+    def get_colour(status, row):
         if status in [ProcessStatus.ERROR, ProcessStatus.FORCE_KILLED]:
             return Colours.Text.Light.RED
         if status in [ProcessStatus.TERMINATED, ProcessStatus.ZOMBIE]:
