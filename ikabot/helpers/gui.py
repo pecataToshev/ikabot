@@ -76,7 +76,8 @@ def rightAlign(data, length):
 
 
 def printTable(table_config, table_data, missing_value='', column_align='>',
-               row_additional_indentation='', row_colour=lambda i, row: Colours.Text.RESET):
+               row_additional_indentation='', row_colour=lambda i, row: Colours.Text.RESET,
+               print_row_separator=lambda row_index: False, column_separator=' | '):
     """
     Formats table and prints it
 
@@ -97,6 +98,8 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
                                               printing the row
     :param row_colour: lambda int, dict -> str: determine row colour by row index
                                                starting with 0 for table headers
+    :param print_row_separator: lambda int -> bool: print row separator after printing the row
+    :param column_separator: str: separator between table columns
     :return: void
     """
     print()
@@ -124,7 +127,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
 
     for tri, tr in enumerate(_table):
         row_clr = row_colour(tri, None if tri == 0 else table_data[tri - 1])
-        print(row_clr + row_additional_indentation + (row_clr + ' | ').join(
+        print(row_clr + row_additional_indentation + (row_clr + column_separator).join(
             ['{colour}{data: {align}{len}}'.format(
                 align=table_config[ci].get('align', column_align),
                 len=_max_len[ci],
@@ -132,6 +135,8 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
             )
              for ci, c in enumerate(tr)]
         ) + Colours.Text.RESET)
+        if print_row_separator(tri):
+            print(row_additional_indentation + '-' * (sum(_max_len) + (len(_max_len) - 1) * len(column_separator)))
 
     print()
 
