@@ -62,7 +62,7 @@ def tavern(ikariam_service: IkariamService, db: Database, telegram: Telegram):
 
     table_data = [{'level': o['value'], 'name': o.text.strip(),
                    'wineSatisfaction': sat,
-                   'saved': saved.replace('&nbsp;', ''),
+                   'saved': saved if isinstance(saved, (int, float)) else 0,
                    'totalSatisfaction': start_satisfaction + sat,
                    'satisfactionClass': get_satisfaction_level(template_params['classNamePerSatisfaction'],
                                                                template_params['classValuePerSatisfaction'],
