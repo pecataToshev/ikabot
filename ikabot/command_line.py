@@ -25,7 +25,7 @@ from ikabot.function.killTasks import kill_tasks
 from ikabot.function.loginDailyBotConfigurator import login_daily_bot_configurator
 from ikabot.function.proxyConf import proxyConf, show_proxy
 from ikabot.function.sellResourcesBotConfigurator import sell_resources_bot_configurator
-from ikabot.function.tavern import tavern
+from ikabot.function.tavern import use_tavern
 from ikabot.function.shipMovements import shipMovements
 from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.function.stationArmy import stationArmy
@@ -96,7 +96,7 @@ _global_menu = [
         ['Study', study],
         ['Conduct Experiments', configure_conduct_experiment_bot],
     ]],
-    ['Taverns', tavern],
+    ['Taverns', use_tavern],
     ['Game Account Functions', [
         __command_back,
         ['Login daily', login_daily_bot_configurator],

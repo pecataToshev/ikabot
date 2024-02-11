@@ -12,6 +12,10 @@ from ikabot.helpers.resources import extract_resource_production, extract_tradeg
     getWineConsumptionPerHour
 
 
+def parse_int(num: str) -> int:
+    return int(num.replace(',', '').replace('.', ''))
+
+
 def getFreeCitizens(html):
     """This function is used in the ``getCity`` function to determine the amount of free (idle) citizens in the given city.
     Parameters

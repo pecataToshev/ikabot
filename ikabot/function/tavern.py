@@ -5,52 +5,26 @@ import json
 
 from bs4 import BeautifulSoup
 
-from ikabot.config import actionRequest, city_url
+from ikabot.config import actionRequest
+from ikabot.helpers.buildings import choose_city_with_building
 from ikabot.helpers.database import Database
-from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, Colours, decodeUnicodeEscape, enter, printTable
-from ikabot.helpers.citiesAndIslands import chooseCity
 from ikabot.helpers.satisfaction import get_satisfaction_level
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
 
 
-def tavern(ikariam_service: IkariamService, db: Database, telegram: Telegram):
-    def __get_tavern(_city):
-        for _building in _city['position']:
-            if _building['building'] == 'tavern':
-                return _building
-        return None
-
+def use_tavern(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     banner()
-
-    print('City where manipulate wine consumption:')
-    city = chooseCity(ikariam_service)
-    city = getCity(ikariam_service.get(city_url + city['id']))
-
-    tavern = __get_tavern(city)
-    if tavern is None:
-        print('There is no tavern in ' + city['name'])
-        enter()
+    _selected_building_data = choose_city_with_building(ikariam_service, 'tavern')
+    if _selected_building_data is None:
         return
+
+    (city, tavern, data) = _selected_building_data
 
     banner()
     print(city['name'])
-
-    data = ikariam_service.post(
-        noIndex=True,
-        params={
-            'view': 'tavern',
-            'cityId': city['id'],
-            'position': tavern['position'],
-            'backgroundView': 'city',
-            'currentCityId': city['id'],
-            'actionRequest': actionRequest,
-            'ajax': '1'
-        }
-    )
-    data = json.loads(data, strict=False)
 
     change_view_data = data[1][1][1]
     options = BeautifulSoup(change_view_data, 'html.parser').find_all('option')
