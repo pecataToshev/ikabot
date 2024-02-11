@@ -193,7 +193,7 @@ def getStatusForAllCities(ikariam_service: IkariamService, db: Database, telegra
         print("(4) Send resources")
         print("(5) Workplaces")
         print("(6) Show gold")
-        action = read(min=0, max=5, digit=True)
+        action = read(min=0, max=6, digit=True)
         if action == 0:
             break
         elif action == 1:
