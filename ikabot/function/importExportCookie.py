@@ -3,7 +3,7 @@
 
 import json
 
-from ikabot.helpers.gui import banner, bcolors, enter
+from ikabot.helpers.gui import banner, Colours, enter
 from ikabot.helpers.userInput import read
 
 
@@ -16,7 +16,7 @@ def importCookie(ikariam_service, db, telegram):
     telegram: ikabot.helpers.telegram.Telegram
     """
     banner()
-    print('{}⚠️ INSERTING AN INVALID COOKIE WILL LOG YOU OUT OF YOUR OTHER SESSIONS ⚠️{}\n\n'.format(bcolors.WARNING, bcolors.ENDC))
+    print('{}⚠️ INSERTING AN INVALID COOKIE WILL LOG YOU OUT OF YOUR OTHER SESSIONS ⚠️{}\n\n'.format(Colours.Text.Light.YELLOW, Colours.Text.RESET))
     print('Go ahead and export the cookie from another ikabot instance now and then')
     print('type your "ikariam" cookie below:')
     newcookie = read()
@@ -32,10 +32,10 @@ def importCookie(ikariam_service, db, telegram):
     html = ikariam_service.s.get(ikariam_service.urlBase).text
 
     if ikariam_service.isExpired(html):
-        print('{}Failure!{} All your other sessions have just been invalidated!'.format(bcolors.RED, bcolors.ENDC))
+        print('{}Failure!{} All your other sessions have just been invalidated!'.format(Colours.Text.Light.RED, Colours.Text.RESET))
         enter()
     else:
-        print('{}Success!{} This ikabot session will now use the cookie you provided'.format(bcolors.GREEN, bcolors.ENDC))
+        print('{}Success!{} This ikabot session will now use the cookie you provided'.format(Colours.Text.Light.GREEN, Colours.Text.RESET))
         cookies = db.get_stored_value('cookies') or {}
         cookies['ikariam'] = newcookie
         db.store_value('cookies', cookies)

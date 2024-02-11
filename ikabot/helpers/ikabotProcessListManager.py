@@ -12,7 +12,7 @@ import psutil
 
 from ikabot.config import isWindows
 from ikabot.helpers.database import Database
-from ikabot.helpers.gui import bcolors, formatTimestamp, printTable
+from ikabot.helpers.gui import Colours, formatTimestamp, printTable
 
 
 def run(command):
@@ -34,14 +34,14 @@ class ProcessStatus:
     ERROR = 'error'
 
     @staticmethod
-    def get_color(status):
+    def get_colour(status, row):
         if status in [ProcessStatus.ERROR, ProcessStatus.FORCE_KILLED]:
-            return bcolors.RED
+            return Colours.Text.Light.RED
         if status in [ProcessStatus.TERMINATED, ProcessStatus.ZOMBIE]:
-            return bcolors.WARNING
+            return Colours.Text.Light.YELLOW
         if status in [ProcessStatus.DONE]:
-            return bcolors.GREEN
-        return bcolors.ENDC
+            return Colours.Text.Light.GREEN
+        return Colours.Text.RESET
 
 
 class _ProcessSpecialAction(Enum):
@@ -194,7 +194,6 @@ class IkabotProcessListManager:
         additional_columns = []
         if add_process_numbers:
             additional_columns.append({
-                'key': 'no-data',
                 'title': '#',
                 'useDataRowIndexForValue': lambda data_index: "{})".format(data_index + 1)
             })
@@ -206,7 +205,7 @@ class IkabotProcessListManager:
             table_config=additional_columns + [
                 {'key': 'pid', 'title': 'pid'},
                 {'key': 'action', 'title': 'Action'},
-                {'key': 'status', 'title': 'Status', 'setColor': ProcessStatus.get_color},
+                {'key': 'status', 'title': 'Status', 'setColour': ProcessStatus.get_colour},
                 {'key': 'lastActionTime', 'title': 'Last Action', 'fmt': formatTimestamp},
                 {'key': 'nextActionTime', 'title': 'Next Action', 'fmt': __fmt_next_action},
                 {'key': 'targetCity', 'title': 'Target City'},

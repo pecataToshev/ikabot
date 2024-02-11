@@ -1,9 +1,11 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import logging
 import time
+from datetime import datetime
 
 from ikabot.bot.bot import Bot
-from ikabot.helpers.gui import daysHoursMinutes
+from ikabot.helpers.gui import Colours, daysHoursMinutes
 from ikabot.helpers.naval import get_military_and_see_movements
 
 
@@ -22,45 +24,59 @@ class AttacksMonitoringBot(Bot):
             # get the militaryMovements
             military_movements = get_military_and_see_movements(self.ikariam_service)
 
-            for military_movement in [mov for mov in military_movements if mov['isHostile']]:
+            for military_movement in military_movements:
+                if not military_movement['isHostile']:
+                    continue
+
                 event_id = military_movement['event']['id']
                 current_attacks.append(event_id)
 
                 # if we already alerted this, do nothing
                 if event_id not in known_attacks:
-                    arrival_time = self.__notify_attack_coming(military_movement)
-                    known_attacks[event_id] = arrival_time
+                    self.__notify_attack_coming(military_movement)
+                    known_attacks[event_id] = military_movement
 
             # remove old attacks from knownAttacks
             for event_id in dict(known_attacks):  # prevents RuntimeError: dictionary changed size during iteration
                 if event_id not in current_attacks:
                     known_attacks.pop(event_id)
 
+            __attacks = Colours.Text.Light.GREEN + 'No'
+            __suffix = ''
+            if len(known_attacks) > 0:
+                __data = {}
+                for a in known_attacks.values():
+                    __t = __data.get(a['event']['type'], [])
+                    __t.append(a['target']['name'])
+                    __data.update({a['event']['type']: __t})
+                __attacks = Colours.Text.Light.RED + str(len(known_attacks))
+                __suffix = ': ' + str(__data)
+
             self._wait(
                 seconds=self.seconds_between_checks,
-                info='{} attacks coming'.format(len(known_attacks)),
+                info='{} attacks coming{}{}'.format(__attacks, __suffix, Colours.Text.RESET),
                 max_random=10,
             )
 
-    def __notify_attack_coming(self, military_movement):
-        arrival_time = int(military_movement['eventTime'])
+    def __notify_attack_coming(self, attack):
+        logging.debug('Found attack: {}'.format(attack))
+        arrival_time = int(attack['eventTime'])
 
         # get information about the attack
-        mission_text = military_movement['event']['missionText']
-        origin = military_movement['origin']
-        target = military_movement['target']
-        amount_troops = military_movement['army']['amount']
-        amount_fleets = military_movement['fleet']['amount']
-        time_left = arrival_time - time.time()
+        __type = attack['event']['type']
+        origin = attack['origin']
+        target = attack['target']
 
         # send alert
-        msg = '-- ALERT --\n'
-        msg += mission_text + '\n'
-        msg += 'from the city {} of {}\n'.format(origin['name'], origin['avatarName'])
-        msg += 'a {}\n'.format(target['name'])
-        msg += '{} units\n'.format(amount_troops)
-        msg += '{} fleet\n'.format(amount_fleets)
-        msg += 'arrival in: {}\n'.format(daysHoursMinutes(int(time_left)))
-        self.telegram.send_message(msg)
+        msg = '-- ATTACK ALERT --\n'
+        msg += '{}: {}\n'.format(__type, attack['event']['missionText'])
+        msg += '{} ({}) -> {}\n'.format(origin['name'], origin['avatarName'], target['name'])
+        if __type != 'piracy':
+            msg += '{} units; {} fleet\n'.format(attack['army']['amount'], attack['fleet']['amount'])
 
-        return arrival_time
+        msg += 'Arrival: {} (in {})'.format(
+            datetime.fromtimestamp(arrival_time).strftime('%Y-%m-%d %H:%M:%S'),
+            daysHoursMinutes(int(arrival_time - time.time()))
+        )
+
+        self.telegram.send_message(msg)

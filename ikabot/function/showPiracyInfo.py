@@ -1,6 +1,6 @@
 import math
 
-from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, decodeUnicodeEscape, enter, \
+from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, decodeUnicodeEscape, enter, \
     printTable
 from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
     getPiracyTemplateData
@@ -67,10 +67,11 @@ def showPiracyInfo(ikariam_service, db, telegram):
             {'key': 'distance', 'title': 'Distance', 'fmt': math.ceil},
         ],
         table_data=template_data['highscore'],
-        row_color=lambda row_id: (
-            bcolors.WARNING if 'highscorePlayerPosition' in template_data
-                               and row_id - 1 == template_data['highscorePlayerPosition']
-            else bcolors.ENDC),
+        row_colour=lambda row_id, row_data: (
+            Colours.Text.Light.YELLOW if 'highscorePlayerPosition' in template_data
+                                         and row_data is not None
+                                         and row_id - 1 == template_data['highscorePlayerPosition']
+            else Colours.Text.RESET),
         row_additional_indentation='  '
     )
 

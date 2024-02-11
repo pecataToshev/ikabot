@@ -1,8 +1,10 @@
 import setuptools
 
+from ikabot import __version__
+
 setuptools.setup(
     name="ikabot",
-    version='2024.0204.163251',
+    version=__version__,
     author="Petar Toshev",
     author_email="pecata.toshev+ikabot@gmail.com",
     license='MIT',

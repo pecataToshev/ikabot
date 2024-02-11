@@ -4,7 +4,7 @@ import base64
 
 import requests
 
-from ikabot.helpers.gui import banner, bcolors, enter
+from ikabot.helpers.gui import banner, Colours, enter
 from ikabot.helpers.userInput import askUserYesNo, read
 
 decaptcha_test_pictures = [
@@ -110,7 +110,7 @@ def __configure_9kweu(db):
     response = requests.get("https://www.9kw.eu/index.cgi?action=usercaptchaguthaben&apikey={}".format(api_key_9kw)).text
 
     if 'API key not found' in response:
-        print("{}Failure!{} Wrong API key!".format(bcolors.RED, bcolors.ENDC))
+        print("{}Failure!{} Wrong API key!".format(Colours.Text.Light.RED, Colours.Text.RESET))
 
     else:
         db.store_value('decaptcha', {
@@ -120,7 +120,7 @@ def __configure_9kweu(db):
                 'apiKey': api_key_9kw
             }
         })
-        print("{}Success!{} You currently have {} credits".format(bcolors.GREEN, bcolors.ENDC, response))
+        print("{}Success!{} You currently have {} credits".format(Colours.Text.Light.GREEN, Colours.Text.RESET, response))
 
     return True
 
@@ -142,10 +142,10 @@ def __configure_telegram(db, telegram):
     )
 
     if captcha is not None and captcha.lower() == decaptcha_test_pictures[0]['ground_truth'].lower():
-        print('{}Success!{} Captcha is correct!'.format(bcolors.GREEN, bcolors.ENDC))
+        print('{}Success!{} Captcha is correct!'.format(Colours.Text.Light.GREEN, Colours.Text.RESET))
         return True
     else:
-        print('{}Failure!{} Captcha is incorrect, try again!'.format(bcolors.GREEN, bcolors.ENDC))
+        print('{}Failure!{} Captcha is incorrect, try again!'.format(Colours.Text.Light.GREEN, Colours.Text.RESET))
         return True
 
 def testCustomDecaptcha(ground_truth, picture, address):

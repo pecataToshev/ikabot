@@ -25,6 +25,7 @@ from ikabot.function.killTasks import kill_tasks
 from ikabot.function.loginDailyBotConfigurator import login_daily_bot_configurator
 from ikabot.function.proxyConf import proxyConf, show_proxy
 from ikabot.function.sellResourcesBotConfigurator import sell_resources_bot_configurator
+from ikabot.function.tavern import use_tavern
 from ikabot.function.shipMovements import shipMovements
 from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.function.stationArmy import stationArmy
@@ -36,6 +37,7 @@ from ikabot.function.update import update
 from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_bot_configurator
 from ikabot.function.vacationMode import vacationMode
 from ikabot.function.wineMonitoringBotConfigurator import configure_wine_monitoring_bot
+from ikabot.function.workshop import use_workshop
 from ikabot.helpers.checkForUpdate import checkForUpdate
 from ikabot.helpers.gui import banner, clear, enter, formatTimestamp
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
@@ -61,7 +63,7 @@ _global_menu = [
         ['Donate once', islandWorkplaces],
         ['Donate automatically', donation_bot_configurator],
     ]],
-    ['Cities Status', [
+    ['Cities & Status', [
         __command_back,
         ['Simplified', getStatus],
         ['Combined', getStatusForAllCities],
@@ -95,6 +97,8 @@ _global_menu = [
         ['Study', study],
         ['Conduct Experiments', configure_conduct_experiment_bot],
     ]],
+    ['Taverns', use_tavern],
+    ['Workshops', use_workshop],
     ['Game Account Functions', [
         __command_back,
         ['Login daily', login_daily_bot_configurator],

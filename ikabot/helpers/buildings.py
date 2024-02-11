@@ -1,6 +1,10 @@
 import json
+from typing import Tuple, Union
 
-from ikabot.config import actionRequest
+from ikabot.config import actionRequest, city_url
+from ikabot.helpers.citiesAndIslands import chooseCity
+from ikabot.helpers.getJson import getCity
+from ikabot.helpers.gui import enter
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -11,7 +15,7 @@ def extract_target_building(city: dict, building_type: str):
     return None
 
 
-def get_building_info(ikariam_service:IkariamService, city_id: int, building: dict):
+def get_building_info(ikariam_service: IkariamService, city_id: int, building: dict):
     data = ikariam_service.post(
         params={
             'view': building['building'],
@@ -24,3 +28,20 @@ def get_building_info(ikariam_service:IkariamService, city_id: int, building: di
         }
     )
     return json.loads(data, strict=False)
+
+
+def choose_city_with_building(ikariam_service: IkariamService, building_type: str) \
+        -> Union[None, Tuple[dict, dict, dict]]:
+
+    print('Choose city with {}:'.format(building_type))
+    city = chooseCity(ikariam_service)
+    city = getCity(ikariam_service.get(city_url + city['id']))
+
+    building = extract_target_building(city, building_type)
+    if building is None:
+        print('There is no {} in {}'.format(building_type, city['name']))
+        enter()
+        return None
+
+    data = get_building_info(ikariam_service, city['id'], building)
+    return city, building, data

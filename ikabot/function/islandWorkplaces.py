@@ -8,7 +8,7 @@ from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter, printProgressBar, \
+from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, enter, printProgressBar, \
     rightAlign
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import read
@@ -43,13 +43,6 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
         'Upgrade wood required',
     ]
     column_length = [3, config.MAXIMUM_CITY_NAME_LENGTH, 17, 8, 10, 13, 11, 5, 23]
-    resource_colors = [
-        '\033[0;33m',
-        bcolors.HEADER,
-        bcolors.STONE,
-        bcolors.BLUE,
-        bcolors.WARNING
-    ]
     
     def get_view(material_ind):
         return 'resource' if material_ind == 0 else 'tradegood'
@@ -188,27 +181,27 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
             free_citizens = workplace['freeCitizens']
             gold_per_hour = workplace['goldPerHour']
 
-            city_stats_color = ''
+            city_stats_colour = ''
             if print_city_name:
                 if free_citizens > 0:
-                    city_stats_color = bcolors.GREEN
+                    city_stats_colour = Colours.Text.Light.GREEN
             else:
                 if gold_per_hour < 0:
-                    city_stats_color = bcolors.RED
+                    city_stats_colour = Colours.Text.Light.RED
                 else:
-                    city_stats_color = bcolors.WARNING
+                    city_stats_colour = Colours.Text.Light.YELLOW
 
-            # Construct colors for data
-            colors = [
+            # Construct colours for data
+            colours = [
                 '',
-                '' if print_city_name else resource_colors[0],
-                city_stats_color,
-                resource_colors[material],
+                '' if print_city_name else Colours.MATERIALS[0],
+                city_stats_colour,
+                Colours.MATERIALS[material],
                 '',
-                bcolors.GREEN if total_workers >= max_workers else bcolors.RED,
-                bcolors.WARNING if total_workers > max_workers else '',
-                bcolors.GREEN if upgrading else '',
-                bcolors.WARNING if upgrading else '',
+                Colours.Text.Light.GREEN if total_workers >= max_workers else Colours.Text.Light.RED,
+                Colours.Text.Light.YELLOW if total_workers > max_workers else '',
+                Colours.Text.Light.GREEN if upgrading else '',
+                Colours.Text.Light.YELLOW if upgrading else '',
             ]
 
             city_column = workplace['cityName']
@@ -245,8 +238,8 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
 
             # Combine and print
             print(column_separator.join([
-                (color + rightAlign(data, length) + bcolors.ENDC)
-                for color, data, length in zip(colors, row, column_length)
+                (colour + rightAlign(data, length) + Colours.Text.RESET)
+                for colour, data, length in zip(colours, row, column_length)
             ]))
 
     def wait_for_action(workplaces_length):

@@ -11,10 +11,9 @@ import requests
 from ikabot import config
 from ikabot.bot.transportGoodsBot import TransportGoodsBot, TransportJob
 from ikabot.bot.upgradeBuildingBot import UpgradeBuildingBot
-from ikabot.config import actionRequest, city_url, materials_names, materials_names_tec, \
-    MAXIMUM_CITY_NAME_LENGTH
+from ikabot.config import actionRequest, city_url, materials_names, materials_names_tec, MAXIMUM_CITY_NAME_LENGTH
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, decodeUnicodeEscape, enter
+from ikabot.helpers.gui import addThousandSeparator, banner, Colours, decodeUnicodeEscape, enter
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
 from ikabot.helpers.userInput import askUserYesNo, read
@@ -141,8 +140,7 @@ def getResourcesNeeded(session, city, building, current_level, final_level):
             #get hash from CDN images to identify the resource type
             resource_type = checkhash("https:" + resources_types[i] + ".png")
 
-            for j in range(len(materials_names_tec)):
-                name = materials_names_tec[j]
+            for j, name in enumerate(materials_names_tec):
                 if resource_type == name:
                     resource_index = j
                     break
@@ -163,10 +161,8 @@ def getResourcesNeeded(session, city, building, current_level, final_level):
 
     if levels_to_upgrade < final_level - current_level:
         print('This building only allows you to expand {:d} more levels'.format(levels_to_upgrade))
-        msg = 'Expand {:d} levels? [Y/n]:'.format(levels_to_upgrade)
-        rta = read(msg=msg, values=['Y', 'y', 'N', 'n', ''])
-        if rta.lower() == 'n':
-            return [-1, -1, -1, -1, -1]
+        if not askUserYesNo('Expand {:d} levels'.format(levels_to_upgrade)):
+            return [-1]
 
     return final_costs
 
@@ -243,7 +239,7 @@ def sendResourcesMenu(ikariam_service, beneficent_city_id, missing):
     ----------
     ikariam_service : ikabot.web.ikariamService.IkariamService
     beneficent_city_id : int
-    missing : list[int, int]
+    missing : list[int]
     """
     cities_ids, _ = getIdsOfCities(ikariam_service)
     cities = [getCity(ikariam_service.get(city_url + str(city_id))) for city_id in cities_ids]
@@ -254,15 +250,15 @@ def sendResourcesMenu(ikariam_service, beneficent_city_id, missing):
     enough_resources = True
     all_routes = []
     # for each missing resource, choose providers
-    for resource in range(len(missing)):
-        if missing[resource] <= 0:
+    for resource, resource_missing in enumerate(missing):
+        if resource_missing <= 0:
             continue
 
         enough_resource, send_resources, expand_anyway, routes = chooseResourceProviders(
             cities=cities,
             beneficent_city=beneficent_city,
             resource=resource,
-            missing=missing[resource],
+            missing=resource_missing,
             send_resources=send_resources,
             expand_anyway=expand_anyway
         )
@@ -307,22 +303,22 @@ def getBuildingToExpand(city):
     buildings = [buildings[0]] + sorted(buildings[1:], key=lambda b: b['name'])
     for i, building in enumerate(buildings):
         if building['isMaxLevel'] is True:
-            color = bcolors.BLACK
+            colour = Colours.Text.Light.BLACK
         elif building['canUpgrade'] is True:
-            color = bcolors.GREEN
+            colour = Colours.Text.Light.GREEN
         else:
-            color = bcolors.RED
+            colour = Colours.Text.Light.RED
 
         upgrading = '+' if building['isBusy'] is True else ' '
         position_prefix = ' ' if building['position'] < 10 else ''
         print("{}{:>2}) lvl {: >2}{}  {}{}{}".format(
-            color,
+            colour,
             i+1,
             building['level'],
             upgrading,
             position_prefix,
             building['positionAndName'],
-            bcolors.ENDC)
+            Colours.Text.RESET)
         )
 
     selected_building_id = read(min=0, max=len(buildings))

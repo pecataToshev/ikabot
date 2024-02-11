@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 from decimal import Decimal
 
-from ikabot import config
+from ikabot import __version__, config
 from ikabot.config import isWindows
 
 
@@ -48,7 +48,7 @@ def banner():
       MM      MM `Mb.   8M   MM          MM    ,9   YA.   ,A9     MM
     .JMML.  .JMML. YA.  `Moo9^Yo.      .JMMmmmd9     `Ybmd9'      `Mbmo
     """
-    print('\n{}\n\n{}\n{}'.format(bner, config.infoUser, config.update_msg))
+    print('\n{}\nversion {}\n\n{}\n{}'.format(bner, __version__, config.infoUser, config.update_msg))
 
 
 def printProgressBar(msg, current, total):
@@ -76,17 +76,18 @@ def rightAlign(data, length):
 
 
 def printTable(table_config, table_data, missing_value='', column_align='>',
-               row_additional_indentation='', row_color=lambda i: bcolors.ENDC):
+               row_additional_indentation='', row_colour=lambda i, row: Colours.Text.RESET,
+               print_row_separator=lambda row_index: False, column_separator=' | '):
     """
     Formats table and prints it
 
     possible column specification:
     {
-        'key': str -> how to get the value from the data dict[]
-        'title': str -> title of the column in the printed table
-        'fmt': None/lambda -> if the value has to be transformed before print
-        'align': char -> align character of the column values
-        'setColor': None/lambda -> set color to the cell (uses value before transformation)
+        'key': str => how to get the value from the data dict[]
+        'title': str => title of the column in the printed table
+        'fmt': None/lambda any -> any => if the value has to be transformed before print
+        'align': char => align character of the column values
+        'setColour': None/lambda any, dict -> str => set colour to the cell (uses value before transformation)
     }
 
     :param table_config: list[dict[]] -> table columns config
@@ -95,8 +96,10 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
     :param column_align: str -> default align of all table columns
     :param row_additional_indentation: str -> add some prefix data before
                                               printing the row
-    :param row_color: lambda int -> str: determine row color by row index
-                                        starting with 0 for table headers
+    :param row_colour: lambda int, dict -> str: determine row colour by row index
+                                               starting with 0 for table headers
+    :param print_row_separator: lambda int -> bool: print row separator after printing the row
+    :param column_separator: str: separator between table columns
     :return: void
     """
     print()
@@ -104,11 +107,11 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
         return
 
     _max_len = [len(tc['title']) for tc in table_config]
-    _table = [[{'data': tc['title'], 'color': ''} for tc in table_config]]
+    _table = [[{'data': tc['title'], 'colour': ''} for tc in table_config]]
     for row_index, row_data in enumerate(table_data):
         _row = []
         for column_index, column_config in enumerate(table_config):
-            _raw_column_data = row_data.get(column_config['key'], None)
+            _raw_column_data = row_data.get(column_config.get('key', ''), None)
             _v = _raw_column_data
             if 'fmt' in column_config and _v is not None:
                 _v = column_config['fmt'](_v)
@@ -116,22 +119,24 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
                 _v = column_config['useDataRowIndexForValue'](row_index)
             _v = str(_v or missing_value)
             _max_len[column_index] = max(_max_len[column_index], len(_v))
-            _color = ''
-            if 'setColor' in column_config:
-                _color = column_config['setColor'](_raw_column_data)
-            _row.append({'data': _v, 'color': _color})
+            colour = ''
+            if 'setColour' in column_config:
+                colour = column_config['setColour'](_raw_column_data, row_data)
+            _row.append({'data': _v, 'colour': colour})
         _table.append(_row)
 
     for tri, tr in enumerate(_table):
-        row_clr = row_color(tri)
-        print(row_clr + row_additional_indentation + (row_clr + ' | ').join(
-            ['{color}{data: {align}{len}}'.format(
+        row_clr = row_colour(tri, None if tri == 0 else table_data[tri - 1])
+        print(row_clr + row_additional_indentation + (row_clr + column_separator).join(
+            ['{colour}{data: {align}{len}}'.format(
                 align=table_config[ci].get('align', column_align),
                 len=_max_len[ci],
                 **c,
             )
              for ci, c in enumerate(tr)]
-        ) + bcolors.ENDC)
+        ) + Colours.Text.RESET)
+        if print_row_separator(tri):
+            print(row_additional_indentation + '-' * (sum(_max_len) + (len(_max_len) - 1) * len(column_separator)))
 
     print()
 
@@ -225,18 +230,63 @@ def formatTimestamp(seconds):
     return datetime.fromtimestamp(seconds).strftime('%b %d %H:%M:%S')
 
 
-class bcolors:
-    HEADER = '\033[95m'
-    STONE = '\033[37m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    WARNING = '\033[93m'
-    RED = '\033[91m'
-    BLACK = '\033[90m'
-    ENDC = '\033[0m'
-    WOOD = '\033[0;33m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    DARK_RED = '\033[31m'
-    DARK_BLUE = '\033[34m'
-    DARK_GREEN = '\033[32m'
+class Colours:
+    class Text:
+        RESET = '\033[0m'
+        BLACK = '\033[0;30m'
+        RED = '\033[0;31m'
+        GREEN = '\033[0;32m'
+        YELLOW = '\033[0;33m'
+        BLUE = '\033[0;34m'
+        MAGENTA = '\033[0;35m'
+        CYAN = '\033[0;36m'
+        WHITE = '\033[0;37m'
+
+        class Format:
+            BOLD = '\033[1m'
+            DIM = '\033[2m'
+            UNDERLINED = '\033[4m'
+            BLINK = '\033[5m'
+            REVERSE = '\033[7m'
+            HIDDEN = '\033[8m'
+
+        class Light:
+            BLACK = '\033[90m'
+            RED = '\033[91m'
+            GREEN = '\033[92m'
+            YELLOW = '\033[93m'
+            BLUE = '\033[94m'
+            MAGENTA = '\033[95m'
+            CYAN = '\033[96m'
+            WHITE = '\033[97m'
+
+    class Background:
+        RESET = '\033[49m'
+        BLACK = '\033[40m'
+        RED = '\033[41m'
+        GREEN = '\033[42m'
+        YELLOW = '\033[43m'
+        BLUE = '\033[44m'
+        MAGENTA = '\033[45m'
+        CYAN = '\033[46m'
+        WHITE = '\033[47m'
+
+        class Light:
+            BLACK = '\033[100m'
+            RED = '\033[101m'
+            GREEN = '\033[102m'
+            YELLOW = '\033[103m'
+            BLUE = '\033[104m'
+            MAGENTA = '\033[105m'
+            CYAN = '\033[106m'
+            WHITE = '\033[107m'
+
+    MATERIALS = [Text.YELLOW, Text.Light.MAGENTA, Text.Light.WHITE, Text.Light.BLUE, Text.Light.YELLOW]
+    SATISFACTION = {
+        "ecstatic": Text.GREEN,
+        "happy": Text.YELLOW,
+        "neutral": Text.WHITE,
+        "sad": Text.BLUE,
+        "outraged": Text.RED
+    }
+

@@ -6,7 +6,7 @@ import time
 from decimal import Decimal
 
 from ikabot.config import materials_names, materials_names_tec
-from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter
+from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, enter
 from ikabot.helpers.naval import get_military_and_see_movements, getAvailableShips, getTotalShips
 
 
@@ -51,21 +51,21 @@ def shipMovements(ikariam_service, db, telegram):
 
     for movement in movements:
 
-        color = ''
+        colour = ''
         if movement['isHostile']:
-            color = bcolors.RED + bcolors.BOLD
+            colour = Colours.Text.Light.RED + Colours.Text.Format.BOLD
         elif movement['isOwnArmyOrFleet']:
-            color = bcolors.BLUE + bcolors.BOLD
+            colour = Colours.Text.Light.BLUE + Colours.Text.Format.BOLD
         elif movement['isSameAlliance']:
-            color = bcolors.GREEN + bcolors.BOLD
+            colour = Colours.Text.Light.GREEN + Colours.Text.Format.BOLD
 
         origin = '{} ({})'.format(movement['origin']['name'], movement['origin']['avatarName'])
         destination = '{} ({})'.format(movement['target']['name'], movement['target']['avatarName'])
         arrow = '<-' if movement['event']['isFleetReturning'] else '->'
         time_left = int(movement['eventTime']) - time_now
-        print('{}{} {} {}: {} ({}) {}'.format(color, origin, arrow, destination,
+        print('{}{} {} {}: {} ({}) {}'.format(colour, origin, arrow, destination,
                                               movement['event']['missionText'], daysHoursMinutes(time_left),
-                                              bcolors.ENDC))
+                                              Colours.Text.RESET))
 
         if movement['isHostile']:
             troops = movement['army']['amount']

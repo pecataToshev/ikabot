@@ -5,9 +5,9 @@ import json
 from decimal import Decimal
 
 from ikabot.config import materials_names
-from ikabot.helpers.database import Database
-from ikabot.helpers.gui import addThousandSeparator, banner, bcolors, daysHoursMinutes, enter
 from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
+from ikabot.helpers.database import Database
+from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, enter
 from ikabot.helpers.resources import getProductionPerSecond
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
@@ -16,7 +16,6 @@ from ikabot.web.ikariamService import IkariamService
 def getStatus(ikariam_service: IkariamService, db: Database, telegram: Telegram):
 
     banner()
-    color_arr = [bcolors.ENDC, bcolors.HEADER, bcolors.STONE, bcolors.BLUE, bcolors.WARNING]
 
     (ids, __) = getIdsOfCities(ikariam_service)
     total_resources = [0] * len(materials_names)
@@ -77,22 +76,22 @@ def getStatus(ikariam_service: IkariamService, db: Database, telegram: Telegram)
     banner()
 
     (wood, good, typeGood) = getProductionPerSecond(ikariam_service, city['id'])
-    print('\033[1m{}{}{}'.format(color_arr[int(typeGood)], city['cityName'], color_arr[0]))
+    print('{}{}{}{}'.format(Colours.Text.Format.BOLD, Colours.MATERIALS[int(typeGood)], city['cityName'], Colours.Text.RESET))
 
     resources = city['availableResources']
     storageCapacity = city['storageCapacity']
-    color_resources = []
+    colour_resources = []
     for i in range(len(materials_names)):
         if resources[i] == storageCapacity:
-            color_resources.append(bcolors.RED)
+            colour_resources.append(Colours.Text.Light.RED)
         else:
-            color_resources.append(bcolors.ENDC)
+            colour_resources.append(Colours.Text.RESET)
     print('Population:')
     print('{}: {} {}: {}'.format('Housing space', addThousandSeparator(housing_space), 'Citizens', addThousandSeparator(citizens)))
     print('Storage: {}'.format(addThousandSeparator(storageCapacity)))
     print('Resources:')
     for i in range(len(materials_names)):
-        print('{} {}{}{} '.format(materials_names[i], color_resources[i], addThousandSeparator(resources[i]), bcolors.ENDC), end='')
+        print('{} {}{}{} '.format(materials_names[i], colour_resources[i], addThousandSeparator(resources[i]), Colours.Text.RESET), end='')
     print('')
 
     print('Production:')
@@ -102,7 +101,7 @@ def getStatus(ikariam_service: IkariamService, db: Database, telegram: Telegram)
     if hasTavern:
         consumption_per_hour = city['wineConsumptionPerHour']
         if consumption_per_hour == 0:
-            print('{}{}Does not consume wine!{}'.format(bcolors.RED, bcolors.BOLD, bcolors.ENDC))
+            print('{}{}Does not consume wine!{}'.format(Colours.Text.Light.RED, Colours.Text.Format.BOLD, Colours.Text.RESET))
         else:
             if typeGood == 1 and (good*3600) > consumption_per_hour:
                 elapsed_time_run_out = '∞'
@@ -114,11 +113,11 @@ def getStatus(ikariam_service: IkariamService, db: Database, telegram: Telegram)
 
     for building in [building for building in city['position'] if building['name'] != 'empty']:
         if building['isMaxLevel'] is True:
-            color = bcolors.BLACK
+            colour = Colours.Text.Light.BLACK
         elif building['canUpgrade'] is True:
-            color = bcolors.GREEN
+            colour = Colours.Text.Light.GREEN
         else:
-            color = bcolors.RED
+            colour = Colours.Text.Light.RED
 
         level = building['level']
         if level < 10:
@@ -128,6 +127,6 @@ def getStatus(ikariam_service: IkariamService, db: Database, telegram: Telegram)
         if building['isBusy'] is True:
             level = level + '+'
 
-        print('lv:{}\t{}{}{}'.format(level, color, building['name'], bcolors.ENDC))
+        print('lv:{}\t{}{}{}'.format(level, colour, building['name'], Colours.Text.RESET))
 
     enter()
