@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import json
-from typing import List
 
 from bs4 import BeautifulSoup
 
@@ -11,19 +10,13 @@ from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, Colours, decodeUnicodeEscape, enter, printTable
 from ikabot.helpers.citiesAndIslands import chooseCity
+from ikabot.helpers.satisfaction import get_satisfaction_level
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
 
 
-def get_satisfaction_level(satisfaction_classes: List[str], class_values: List[int], satisfaction: float) -> str:
-    for ind, sat_class in enumerate(satisfaction_classes):
-        if class_values[ind] <= satisfaction:
-            return satisfaction_classes[ind]
-    return satisfaction_classes[-1]
-
-
-def setWineConsumption(ikariam_service: IkariamService, db: Database, telegram: Telegram):
+def tavern(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     def __get_tavern(_city):
         for _building in _city['position']:
             if _building['building'] == 'tavern':
