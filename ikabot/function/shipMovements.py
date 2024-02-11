@@ -51,19 +51,19 @@ def shipMovements(ikariam_service, db, telegram):
 
     for movement in movements:
 
-        color = ''
+        colour = ''
         if movement['isHostile']:
-            color = Colours.Text.Light.RED + Colours.Text.Format.BOLD
+            colour = Colours.Text.Light.RED + Colours.Text.Format.BOLD
         elif movement['isOwnArmyOrFleet']:
-            color = Colours.Text.Light.BLUE + Colours.Text.Format.BOLD
+            colour = Colours.Text.Light.BLUE + Colours.Text.Format.BOLD
         elif movement['isSameAlliance']:
-            color = Colours.Text.Light.GREEN + Colours.Text.Format.BOLD
+            colour = Colours.Text.Light.GREEN + Colours.Text.Format.BOLD
 
         origin = '{} ({})'.format(movement['origin']['name'], movement['origin']['avatarName'])
         destination = '{} ({})'.format(movement['target']['name'], movement['target']['avatarName'])
         arrow = '<-' if movement['event']['isFleetReturning'] else '->'
         time_left = int(movement['eventTime']) - time_now
-        print('{}{} {} {}: {} ({}) {}'.format(color, origin, arrow, destination,
+        print('{}{} {} {}: {} ({}) {}'.format(colour, origin, arrow, destination,
                                               movement['event']['missionText'], daysHoursMinutes(time_left),
                                               Colours.Text.RESET))
 

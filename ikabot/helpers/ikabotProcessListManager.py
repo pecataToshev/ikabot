@@ -34,7 +34,7 @@ class ProcessStatus:
     ERROR = 'error'
 
     @staticmethod
-    def get_color(status):
+    def get_colour(status):
         if status in [ProcessStatus.ERROR, ProcessStatus.FORCE_KILLED]:
             return Colours.Text.Light.RED
         if status in [ProcessStatus.TERMINATED, ProcessStatus.ZOMBIE]:
@@ -205,7 +205,7 @@ class IkabotProcessListManager:
             table_config=additional_columns + [
                 {'key': 'pid', 'title': 'pid'},
                 {'key': 'action', 'title': 'Action'},
-                {'key': 'status', 'title': 'Status', 'setColor': ProcessStatus.get_color},
+                {'key': 'status', 'title': 'Status', 'setColour': ProcessStatus.get_colour},
                 {'key': 'lastActionTime', 'title': 'Last Action', 'fmt': formatTimestamp},
                 {'key': 'nextActionTime', 'title': 'Next Action', 'fmt': __fmt_next_action},
                 {'key': 'targetCity', 'title': 'Target City'},

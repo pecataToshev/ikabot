@@ -52,10 +52,10 @@ def use_tavern(ikariam_service: IkariamService, db: Database, telegram: Telegram
             {'key': 'saved', 'title': 'Saved Wine'},
             {'key': 'wineSatisfaction', 'title': 'Wine Satisfaction'},
             {'key': 'totalSatisfaction', 'title': 'Total Satisfaction'},
-            {'key': 'satisfactionClass', 'title': 'Satisfaction Class', 'setColor': lambda x: Colours.SATISFACTION[x]},
+            {'key': 'satisfactionClass', 'title': 'Satisfaction Class', 'setColour': lambda x: Colours.SATISFACTION[x]},
         ],
         table_data=table_data,
-        row_color=lambda row_id, row_data: (
+        row_colour=lambda row_id, row_data: (
             Colours.Text.Light.YELLOW
             if row_data is not None and row_data['level'] == template_params['wineServeLevel']
             else ''

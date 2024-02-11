@@ -303,16 +303,16 @@ def getBuildingToExpand(city):
     buildings = [buildings[0]] + sorted(buildings[1:], key=lambda b: b['name'])
     for i, building in enumerate(buildings):
         if building['isMaxLevel'] is True:
-            color = Colours.Text.Light.BLACK
+            colour = Colours.Text.Light.BLACK
         elif building['canUpgrade'] is True:
-            color = Colours.Text.Light.GREEN
+            colour = Colours.Text.Light.GREEN
         else:
-            color = Colours.Text.Light.RED
+            colour = Colours.Text.Light.RED
 
         upgrading = '+' if building['isBusy'] is True else ' '
         position_prefix = ' ' if building['position'] < 10 else ''
         print("{}{:>2}) lvl {: >2}{}  {}{}{}".format(
-            color,
+            colour,
             i+1,
             building['level'],
             upgrading,

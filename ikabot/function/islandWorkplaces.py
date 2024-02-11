@@ -181,21 +181,21 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
             free_citizens = workplace['freeCitizens']
             gold_per_hour = workplace['goldPerHour']
 
-            city_stats_color = ''
+            city_stats_colour = ''
             if print_city_name:
                 if free_citizens > 0:
-                    city_stats_color = Colours.Text.Light.GREEN
+                    city_stats_colour = Colours.Text.Light.GREEN
             else:
                 if gold_per_hour < 0:
-                    city_stats_color = Colours.Text.Light.RED
+                    city_stats_colour = Colours.Text.Light.RED
                 else:
-                    city_stats_color = Colours.Text.Light.YELLOW
+                    city_stats_colour = Colours.Text.Light.YELLOW
 
-            # Construct colors for data
-            colors = [
+            # Construct colours for data
+            colours = [
                 '',
                 '' if print_city_name else Colours.MATERIALS[0],
-                city_stats_color,
+                city_stats_colour,
                 Colours.MATERIALS[material],
                 '',
                 Colours.Text.Light.GREEN if total_workers >= max_workers else Colours.Text.Light.RED,
@@ -238,8 +238,8 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
 
             # Combine and print
             print(column_separator.join([
-                (color + rightAlign(data, length) + Colours.Text.RESET)
-                for color, data, length in zip(colors, row, column_length)
+                (colour + rightAlign(data, length) + Colours.Text.RESET)
+                for colour, data, length in zip(colours, row, column_length)
             ]))
 
     def wait_for_action(workplaces_length):

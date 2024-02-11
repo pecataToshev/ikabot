@@ -76,7 +76,7 @@ def rightAlign(data, length):
 
 
 def printTable(table_config, table_data, missing_value='', column_align='>',
-               row_additional_indentation='', row_color=lambda i, row: Colours.Text.RESET):
+               row_additional_indentation='', row_colour=lambda i, row: Colours.Text.RESET):
     """
     Formats table and prints it
 
@@ -86,7 +86,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
         'title': str -> title of the column in the printed table
         'fmt': None/lambda -> if the value has to be transformed before print
         'align': char -> align character of the column values
-        'setColor': None/lambda -> set color to the cell (uses value before transformation)
+        'setColour': None/lambda -> set colour to the cell (uses value before transformation)
     }
 
     :param table_config: list[dict[]] -> table columns config
@@ -95,7 +95,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
     :param column_align: str -> default align of all table columns
     :param row_additional_indentation: str -> add some prefix data before
                                               printing the row
-    :param row_color: lambda int, dict -> str: determine row color by row index
+    :param row_colour: lambda int, dict -> str: determine row colour by row index
                                                starting with 0 for table headers
     :return: void
     """
@@ -104,7 +104,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
         return
 
     _max_len = [len(tc['title']) for tc in table_config]
-    _table = [[{'data': tc['title'], 'color': ''} for tc in table_config]]
+    _table = [[{'data': tc['title'], 'colour': ''} for tc in table_config]]
     for row_index, row_data in enumerate(table_data):
         _row = []
         for column_index, column_config in enumerate(table_config):
@@ -116,16 +116,16 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
                 _v = column_config['useDataRowIndexForValue'](row_index)
             _v = str(_v or missing_value)
             _max_len[column_index] = max(_max_len[column_index], len(_v))
-            _color = ''
-            if 'setColor' in column_config:
-                _color = column_config['setColor'](_raw_column_data)
-            _row.append({'data': _v, 'color': _color})
+            colour = ''
+            if 'setColour' in column_config:
+                colour = column_config['setColour'](_raw_column_data)
+            _row.append({'data': _v, 'colour': colour})
         _table.append(_row)
 
     for tri, tr in enumerate(_table):
-        row_clr = row_color(tri, None if tri == 0 else table_data[tri - 1])
+        row_clr = row_colour(tri, None if tri == 0 else table_data[tri - 1])
         print(row_clr + row_additional_indentation + (row_clr + ' | ').join(
-            ['{color}{data: {align}{len}}'.format(
+            ['{colour}{data: {align}{len}}'.format(
                 align=table_config[ci].get('align', column_align),
                 len=_max_len[ci],
                 **c,

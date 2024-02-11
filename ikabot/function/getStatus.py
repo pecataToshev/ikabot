@@ -80,18 +80,18 @@ def getStatus(ikariam_service: IkariamService, db: Database, telegram: Telegram)
 
     resources = city['availableResources']
     storageCapacity = city['storageCapacity']
-    color_resources = []
+    colour_resources = []
     for i in range(len(materials_names)):
         if resources[i] == storageCapacity:
-            color_resources.append(Colours.Text.Light.RED)
+            colour_resources.append(Colours.Text.Light.RED)
         else:
-            color_resources.append(Colours.Text.RESET)
+            colour_resources.append(Colours.Text.RESET)
     print('Population:')
     print('{}: {} {}: {}'.format('Housing space', addThousandSeparator(housing_space), 'Citizens', addThousandSeparator(citizens)))
     print('Storage: {}'.format(addThousandSeparator(storageCapacity)))
     print('Resources:')
     for i in range(len(materials_names)):
-        print('{} {}{}{} '.format(materials_names[i], color_resources[i], addThousandSeparator(resources[i]), Colours.Text.RESET), end='')
+        print('{} {}{}{} '.format(materials_names[i], colour_resources[i], addThousandSeparator(resources[i]), Colours.Text.RESET), end='')
     print('')
 
     print('Production:')
@@ -113,11 +113,11 @@ def getStatus(ikariam_service: IkariamService, db: Database, telegram: Telegram)
 
     for building in [building for building in city['position'] if building['name'] != 'empty']:
         if building['isMaxLevel'] is True:
-            color = Colours.Text.Light.BLACK
+            colour = Colours.Text.Light.BLACK
         elif building['canUpgrade'] is True:
-            color = Colours.Text.Light.GREEN
+            colour = Colours.Text.Light.GREEN
         else:
-            color = Colours.Text.Light.RED
+            colour = Colours.Text.Light.RED
 
         level = building['level']
         if level < 10:
@@ -127,6 +127,6 @@ def getStatus(ikariam_service: IkariamService, db: Database, telegram: Telegram)
         if building['isBusy'] is True:
             level = level + '+'
 
-        print('lv:{}\t{}{}{}'.format(level, color, building['name'], Colours.Text.RESET))
+        print('lv:{}\t{}{}{}'.format(level, colour, building['name'], Colours.Text.RESET))
 
     enter()

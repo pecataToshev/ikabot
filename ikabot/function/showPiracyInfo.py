@@ -67,7 +67,7 @@ def showPiracyInfo(ikariam_service, db, telegram):
             {'key': 'distance', 'title': 'Distance', 'fmt': math.ceil},
         ],
         table_data=template_data['highscore'],
-        row_color=lambda row_id, row_data: (
+        row_colour=lambda row_id, row_data: (
             Colours.Text.Light.YELLOW if 'highscorePlayerPosition' in template_data
                                          and row_data is not None
                                          and row_id - 1 == template_data['highscorePlayerPosition']

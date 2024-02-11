@@ -152,7 +152,7 @@ def view_dump(ikariam_service: IkariamService, db: Database, telegram: Telegram)
 
 
 def print_map(islands, selected_islands):
-    """Prints out a 100x100 matrix with all world islands on it. Selected islands are colored red.
+    """Prints out a 100x100 matrix with all world islands on it. Selected islands are coloured red.
     Parameters
     ----------
     islands : [object]

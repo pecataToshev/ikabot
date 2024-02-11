@@ -29,9 +29,9 @@ def getStatusForAllCities(ikariam_service: IkariamService, db: Database, telegra
     def get_increment(incr):
         if incr == 0:
             return " " * RESOURCE_COLUMN_MAX_LENGTH
-        color = Colours.Text.Light.GREEN if incr > 0 else Colours.Text.Light.RED
+        colour = Colours.Text.Light.GREEN if incr > 0 else Colours.Text.Light.RED
         res_incr = "{: >{len}}".format(str(format(incr, '+,')), len=RESOURCE_COLUMN_MAX_LENGTH)
-        return color + res_incr + Colours.Text.RESET
+        return colour + res_incr + Colours.Text.RESET
 
     def get_storage(capacity, available):
         res = "{: >{len}}".format(str(format(available, ',')), len=RESOURCE_COLUMN_MAX_LENGTH)
@@ -107,14 +107,14 @@ def getStatusForAllCities(ikariam_service: IkariamService, db: Database, telegra
                     continue
 
                 if building['isMaxLevel'] is True:
-                    color = Colours.Text.Light.BLACK
+                    colour = Colours.Text.Light.BLACK
                 elif building['canUpgrade'] is True:
-                    color = Colours.Text.Light.GREEN
+                    colour = Colours.Text.Light.GREEN
                 else:
-                    color = Colours.Text.Light.RED
+                    colour = Colours.Text.Light.RED
 
                 additional = '+' if building['isBusy'] is True else ' '
-                row.append("{}{: >2}{}{}".format(color, building['level'], additional, Colours.Text.RESET))
+                row.append("{}{: >2}{}{}".format(colour, building['level'], additional, Colours.Text.RESET))
 
             buildings_in_city_count.update({building_name: encounters})
             print(COLUMN_SEPARATOR.join(row))
