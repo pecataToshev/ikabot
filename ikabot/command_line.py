@@ -37,6 +37,7 @@ from ikabot.function.update import update
 from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_bot_configurator
 from ikabot.function.vacationMode import vacationMode
 from ikabot.function.wineMonitoringBotConfigurator import configure_wine_monitoring_bot
+from ikabot.function.workshop import use_workshop
 from ikabot.helpers.checkForUpdate import checkForUpdate
 from ikabot.helpers.gui import banner, clear, enter, formatTimestamp
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
@@ -97,6 +98,7 @@ _global_menu = [
         ['Conduct Experiments', configure_conduct_experiment_bot],
     ]],
     ['Taverns', use_tavern],
+    ['Workshops', use_workshop],
     ['Game Account Functions', [
         __command_back,
         ['Login daily', login_daily_bot_configurator],
