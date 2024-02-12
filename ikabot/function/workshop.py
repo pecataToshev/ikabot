@@ -126,6 +126,7 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
     if _selected_improvement == 0:
         return
 
+    _selected_improvement -= 1  # move to index
     _selected_unit = units[_selected_improvement]
 
     if has_upgrade:
