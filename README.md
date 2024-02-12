@@ -1,6 +1,6 @@
 
 # <img src="https://user-images.githubusercontent.com/54487782/236309220-b257d870-6846-4740-a855-dba89deeacaf.png" width="65" height="65"> Ikabot - (Ikariam Bot)
-[![Downloads](https://static.pepy.tech/badge/ikabot)](https://pepy.tech/project/ikabot) ![stars](https://img.shields.io/github/stars/physics-sec/ikabot) ![licence](https://img.shields.io/github/license/physics-sec/ikabot)
+[![Downloads](https://static.pepy.tech/badge/ikabot)](https://pepy.tech/project/ikabot) ![stars](https://img.shields.io/github/stars/pecata/ikabot) ![licence](https://img.shields.io/github/license/pecata/ikabot)
 
 Ikabot is a cross-platform program written in python that grants equal or even more functionality than a premium account in ikariam, without spending ambrosia!
 
@@ -43,7 +43,7 @@ Ikabot is a cross-platform program written in python that grants equal or even m
 
 ## Pre-built Windows binary
 
-You can use the pre-built _ikabot_ binary for Windows in the ikabot.zip file for a certain version [here](https://github.com/physics-sp/ikabot/releases)!
+You can use the pre-built _ikabot_ binary for Windows in the ikabot.zip file for a certain version [here](https://github.com/pecataToshev/ikabot/releases)!
 
 ## Using pip
 
@@ -85,7 +85,7 @@ rm get-pip.py
 
 If you want to have the lastest features, install from sources:
 ```
-git clone https://github.com/physics-sp/ikabot
+git clone https://github.com/pecataToshev/ikabot
 cd ikabot
 python3 -m pip install --user -e .
 ```
@@ -93,7 +93,7 @@ Any change you make to that directory now will be reflected once you run _ikabot
 
 Alternatively, if you simply wish to install _ikabot_ from github without creating a specific directory for it and without installing git, you can do so using the following one-liner:
 ```
-python3 -m pip install https://github.com/physics-sec/ikabot/archive/refs/heads/master.zip
+python3 -m pip install https://github.com/pecata/ikabot/archive/refs/heads/master.zip
 ```
 
 # <img src="https://user-images.githubusercontent.com/54487782/236309220-b257d870-6846-4740-a855-dba89deeacaf.png" width="30" height="30"> Uninstall
