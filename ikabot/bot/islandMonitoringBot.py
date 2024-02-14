@@ -109,6 +109,12 @@ class IslandMonitoringBot(Bot):
             msg = 'Player {player} created a new city {cityName}' + __island_info
             self.telegram.send_message(msg.format(**cities_now[colonized_id]))
 
+        # notify new colony is useful
+        for city_id, city in cities_before:
+            if city_id in cities_now and city['level'] == 0 and cities_now[city_id]['level'] > 0:
+                msg = 'The city {cityName} of {player} is now {level} level' + __island_info
+                self.telegram.send_message(msg.format(**cities_now[city_id]))
+
         if self.inform_inactive in self.inform_list:
             for city, state_before, state_now in self.__search_state_change(
                     cities_before,
