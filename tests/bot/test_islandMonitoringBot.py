@@ -164,3 +164,15 @@ class IslandMonitoringBot_TestMonitorPiracy(unittest.TestCase):
         # Assert the expected result
         expected_result = {1: [CityStatusUpdate.PIRACY_REMOVED]}
         self.assertEqual(result, expected_result)
+
+    def test_monitor_piracy_actions_parsing(self):
+        # Create test data for piracy removed
+        cities_before = {1: {'id': 1, 'actions': []}, 2: {'id': 2, 'actions': []}}
+        cities_now = {1: {'id': 1, 'actions': {'piracy_raid': 0}}, 2: {'id': 2, 'actions': {'piracy_raid': 1}}}
+
+        # Call the method
+        result = IslandMonitoringBot.monitor_piracy(cities_before, cities_now)
+
+        # Assert the expected result
+        expected_result = {2: [CityStatusUpdate.PIRACY_CREATED]}
+        self.assertEqual(result, expected_result)

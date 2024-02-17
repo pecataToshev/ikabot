@@ -205,7 +205,7 @@ class IslandMonitoringBot(Bot):
         for city, _before_piracy, _now_piracy in search_value_change_in_dict(
                 cities_before,
                 cities_now,
-                lambda c: c.get('actions', {}).get('piracy_raid', 0)
+                lambda c: 0 if not isinstance(c.get('actions'), dict) else c['actions'].get('piracy_raid', 0)
         ):
             _stat = None
             if _before_piracy == 0:
