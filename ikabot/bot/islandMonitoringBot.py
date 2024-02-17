@@ -1,17 +1,37 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+from enum import Enum
+from math import ceil
+from typing import Dict, List
 
 from ikabot.bot.bot import Bot
 from ikabot.config import island_url, materials_names
+from ikabot.helpers.dicts import combine_dicts_with_lists, search_additional_keys_in_dict, search_value_change_in_dict
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import decodeUnicodeEscape
 from ikabot.helpers.citiesAndIslands import getIslandsIds
 
 
+class CityStatusUpdate(Enum):
+    COLONY_STARTED_INITIALIZING = 'colony-started-initializing'
+    COLONY_INITIALIZED = 'colony-initialized'
+    COLONY_LEVEL_UP = 'colony-level-up'
+
+    DISAPPEARED = 'disappeared'
+    INACTIVATED = 'inactivated'
+    RE_ACTIVATED = 're-activated'
+
+    VACATION_WENT = 'vacation-went'
+    VACATION_RETURNED = 'vacation-returned'
+
+    FIGHT_STARTED = 'fight-started'
+    FIGHT_STOPPED = 'fight-stopped'
+
+    PIRACY_CREATED = 'piracy-created'
+    PIRACY_REMOVED = 'piracy-removed'
+
+
 class IslandMonitoringBot(Bot):
-    inform_fights = 'inform-fights'
-    inform_inactive = 'inform-inactive'
-    inform_vacation = 'inform-vacation'
     __state_inactive = 'inactive'
     __state_vacation = 'vacation'
 
@@ -40,22 +60,26 @@ class IslandMonitoringBot(Bot):
             for island_id in islands_ids:
                 island = getIsland(self.ikariam_service.get(island_url + island_id))
                 # cities in the current island
-                cities_now = self.__extract_cities(island)
+                _cities_now = self.extract_cities(island)
 
                 if island_id in cities_before_per_island:
-                    self.__compare_island_cities(
-                        cities_before=cities_before_per_island[island_id],
-                        cities_now=cities_now,
+                    _cities_before = dict(cities_before_per_island[island_id])
+                    _updates = self.compare_island_cities(
+                        cities_before=_cities_before,
+                        cities_now=_cities_now,
                     )
+                    _cities_before.update(_cities_now)
+                    self.notify_updates(_updates, _cities_before)
+
 
                 # update cities_before_per_island for the current island
-                cities_before_per_island[island_id] = dict(cities_now)
+                cities_before_per_island[island_id] = dict(_cities_now)
 
             self._wait(self.waiting_minutes * 60,
                        f'Checked islands {str([int(i) for i in islands_ids]).replace(" ", "")}')
 
     @staticmethod
-    def __extract_cities(island):
+    def extract_cities(island):
         """
         Extract the cities from island
         :param island: dict[]
@@ -84,121 +108,168 @@ class IslandMonitoringBot(Bot):
                 city['hasAlliance'] = False
                 city['player'] = city['ownerName']
 
+            if 'avatarScores' in island and str(city['Id']) in island['avatarScores']:
+                _ranking = island['avatarScores'][str(city['Id'])]
+                city['playerPlace'] = _ranking['place']
+                city['playerPoints'] = sum(ceil(int(x.replace(',', '')) / 100) for x in [
+                    _ranking['building_score_main'],
+                    _ranking['research_score_main'],
+                    _ranking['army_score_main'],
+                    _ranking['trader_score_secondary'] + '0',  # trader_score_secondary is more accurate when /10
+                ])
+                city['player'] = "{} (#{}, {})".format(
+                    city['player'],
+                    city['playerPlace'],
+                    (str(city['playerPoints'] // 1000) + 'k') if city['playerPoints'] > 1000 else city['playerPoints']
+                )
+
             _res[city['id']] = city
 
         return _res
 
-    def __compare_island_cities(self, cities_before, cities_now):
-        """
-        Parameters
-        ----------
-        cities_before : dict[dict]
-            A dict of cities on the island on the previous check
-        cities_now : dict[dict]
-            A dict of cities on the island on the current check
-        """
-        __island_info = ' on [{islandX}:{islandY}] {islandName} ({material})'
-
-        # someone disappeared
-        for disappeared_id in self.__search_additional_keys(cities_before, cities_now):
-            msg = 'The city {cityName} of {player} disappeared' + __island_info
-            self.telegram.send_message(msg.format(**cities_before[disappeared_id]))
-
-        # someone colonised
-        for colonized_id in self.__search_additional_keys(cities_now, cities_before):
-            msg = 'Player {player} created a new city {cityName}' + __island_info
-            self.telegram.send_message(msg.format(**cities_now[colonized_id]))
-
-        # notify new colony is useful
-        for city_id, city in cities_before:
-            if city_id in cities_now and city['level'] == 0 and cities_now[city_id]['level'] > 0:
-                msg = 'The city {cityName} of {player} is now {level} level' + __island_info
-                self.telegram.send_message(msg.format(**cities_now[city_id]))
-
-        if self.inform_inactive in self.inform_list:
-            for city, state_before, state_now in self.__search_state_change(
-                    cities_before,
-                    cities_now,
-                    lambda c: c['state']
-            ):
-                if state_before == self.__state_inactive:
-                    _status = 'active again'
-                elif state_now == self.__state_inactive:
-                    _status = 'inactive'
-                else:
-                    continue
-
-                msg = ('The player {player} with the city {cityName} '
-                       'became {status}!') + __island_info
-                self.telegram.send_message(msg.format(status=_status, **city))
-
-        if self.inform_vacation in self.inform_list:
-            for city, state_before, state_now in self.__search_state_change(
-                    cities_before,
-                    cities_now,
-                    lambda c: c['state']
-            ):
-                if state_before == self.__state_vacation:
-                    _status = 'returned from'
-                elif state_now == self.__state_vacation:
-                    _status = 'went on'
-                else:
-                    continue
-
-                msg = ('The player {player} with the city {cityName} '
-                       '{status} vacation!') + __island_info
-
-                self.telegram.send_message(msg.format(status=_status, **city))
-
-        if self.inform_fights in self.inform_list:
-            for city, _before_army_action, _now_army_action in self.__search_state_change(
-                    cities_before,
-                    cities_now,
-                    lambda c: c.get('infos', {}).get('armyAction', None)
-            ):
-
-                if _now_army_action == 'fight':
-                    _fight_status = 'started'
-                elif _before_army_action == 'fight':
-                    _fight_status = 'stopped'
-                else:
-                    continue
-
-                msg = ('A fight {fightStatus} in the city {cityName} '
-                       'of the player {player}') + __island_info
-                self.telegram.send_message(msg.format(fightStatus=_fight_status, **city))
-
     @staticmethod
-    def __search_additional_keys(source, target):
-        """
-        Search for keys that were in source but are not in the target dictionary
-        :param source: dict[dict]
-        :param target: dict[dict]
-        :return: list[int] ids of the additional keys in the source
-        """
-        return [k for k in source.keys() if k not in target]
-
-    @staticmethod
-    def __search_state_change(cities_before, cities_now, state_getter):
-        """
-        Searches for change in state between cities_before and cities_now with the
-        state_getter function.
-        Returns list of changes (city, old_state, new_state)
-        !!!IMPORTANT!!! old_state != new_state
-        :param cities_before: dict[dict[]]
-        :param cities_now:    dict[dict[]]
-        :param state_getter:  dict[] -> string
-        :return: list[[city_now, old_state, new_state]]
-        """
-        _res = []
-        for city_id, city_before in cities_before.items():
-            city_now = cities_now.get(city_id, None)
-            if city_now is None:
+    def monitor_level_up(
+            cities_before: Dict[int, dict],
+            cities_now: Dict[int, dict]
+    ) -> Dict[int, List[CityStatusUpdate]]:
+        res = {}
+        for city_id, cn in cities_now.items():
+            _was_there = city_id in cities_before
+            if _was_there and cities_before[city_id]['level'] == cn['level']:
                 continue
 
-            _state_before = state_getter(city_before)
-            _state_now = state_getter(city_now)
-            if _state_before != _state_now:
-                _res.append([city_now, _state_before, _state_now])
+            _stat = CityStatusUpdate.COLONY_LEVEL_UP
+            if cn['level'] == 0:
+                _stat = CityStatusUpdate.COLONY_STARTED_INITIALIZING
+            elif (not _was_there or cities_before[city_id]['level'] == 0) and cn['level'] > 0:
+                _stat = CityStatusUpdate.COLONY_INITIALIZED
+
+            res[city_id] = [_stat]
+
+        return res
+
+    @staticmethod
+    def monitor_status_change(
+            cities_before: Dict[int, dict],
+            cities_now: Dict[int, dict]
+    ) -> Dict[int, List[CityStatusUpdate]]:
+        res = {}
+        for city, state_before, state_now in search_value_change_in_dict(
+                cities_before,
+                cities_now,
+                lambda c: c['state']
+        ):
+            _stat = []
+            if state_before == IslandMonitoringBot.__state_vacation:
+                _stat.append(CityStatusUpdate.VACATION_RETURNED)
+            elif state_now == IslandMonitoringBot.__state_vacation:
+                _stat.append(CityStatusUpdate.VACATION_WENT)
+
+            if state_before == IslandMonitoringBot.__state_inactive:
+                _stat.append(CityStatusUpdate.RE_ACTIVATED)
+            elif state_now == IslandMonitoringBot.__state_inactive:
+                _stat.append(CityStatusUpdate.INACTIVATED)
+
+            res[city['id']] = _stat
+
+        return res
+
+    @staticmethod
+    def monitor_fights(
+            cities_before: Dict[int, dict],
+            cities_now: Dict[int, dict]
+    ) -> Dict[int, List[CityStatusUpdate]]:
+        res = {}
+        for city, _before_army_action, _now_army_action in search_value_change_in_dict(
+                cities_before,
+                cities_now,
+                lambda c: c.get('infos', {}).get('armyAction', None)
+        ):
+            _stat = None
+            if _now_army_action == 'fight':
+                _stat = CityStatusUpdate.FIGHT_STARTED
+            elif _before_army_action == 'fight':
+                _stat = CityStatusUpdate.FIGHT_STOPPED
+
+            if _stat is not None:
+                res[city['id']] = [_stat]
+
+        return res
+
+    @staticmethod
+    def monitor_piracy(
+            cities_before: Dict[int, dict],
+            cities_now: Dict[int, dict]
+    ) -> Dict[int, List[CityStatusUpdate]]:
+        res = {}
+        for city, _before_piracy, _now_piracy in search_value_change_in_dict(
+                cities_before,
+                cities_now,
+                lambda c: c.get('actions', {}).get('piracy_raid', 0)
+        ):
+            _stat = None
+            if _before_piracy == 0:
+                _stat = CityStatusUpdate.PIRACY_CREATED
+            elif _now_piracy == 0:
+                _stat = CityStatusUpdate.PIRACY_REMOVED
+
+            if _stat is not None:
+                res[city['id']] = [_stat]
+
+        return res
+
+    @staticmethod
+    def compare_island_cities(
+            cities_before: Dict[int, dict],
+            cities_now: Dict[int, dict]
+    ) -> Dict[int, List[CityStatusUpdate]]:
+
+        return combine_dicts_with_lists([
+            {cid: [CityStatusUpdate.DISAPPEARED] for cid in search_additional_keys_in_dict(cities_before, cities_now)},
+            IslandMonitoringBot.monitor_level_up(cities_before, cities_now),
+            IslandMonitoringBot.monitor_status_change(cities_before, cities_now),
+            IslandMonitoringBot.monitor_fights(cities_before, cities_now),
+            IslandMonitoringBot.monitor_piracy(cities_before, cities_now),
+        ])
+
+    def notify_updates(self, updates: Dict[int, List[CityStatusUpdate]], cities: Dict[int, dict]) -> None:
+        for city_id, status_updates in updates.items():
+            _messages = self.prepare_messages(status_updates)
+            for _msg in _messages:
+                _msg += ' on [{islandX}:{islandY}] {islandName} ({material})'
+                self.telegram.send_message(_msg.format(**cities[city_id]))
+
+    @staticmethod
+    def prepare_messages(status_updates: List[CityStatusUpdate]) -> List[str]:
+        if CityStatusUpdate.DISAPPEARED in status_updates:
+            return ['The city {cityName} of {player} disappeared']
+
+        _res = []
+
+        # missing the level up notification
+        if CityStatusUpdate.COLONY_INITIALIZED in status_updates:
+            _res.append('The city {cityName} of {player} has reached level 1')
+        elif CityStatusUpdate.COLONY_STARTED_INITIALIZING in status_updates:
+            _res.append('{player} has reserved city spot')
+
+        if CityStatusUpdate.VACATION_RETURNED in status_updates:
+            _res.append('{player} has returned from vacation with the city {cityName}')
+        elif CityStatusUpdate.VACATION_WENT in status_updates:
+            _res.append('{player} went on vacation with the city {cityName}')
+
+        if CityStatusUpdate.RE_ACTIVATED in status_updates:
+            _res.append('{player} became active again with the city {cityName}')
+        elif CityStatusUpdate.INACTIVATED in status_updates:
+            _res.append('{player} became INACTIVE with the city {cityName}')
+
+        if CityStatusUpdate.FIGHT_STARTED in status_updates:
+            _res.append('A fight has started in the city {cityName} of the {player}')
+        elif CityStatusUpdate.FIGHT_STOPPED in status_updates:
+            _res.append('The fight has ended in the city {cityName} of the {player}')
+
+        if CityStatusUpdate.PIRACY_CREATED in status_updates:
+            _res.append('The city {cityName} of {player} can pirate now')
+        elif CityStatusUpdate.PIRACY_REMOVED in status_updates:
+            _res.append('The city {cityName} of {player} can no longer pirate')
 
         return _res
