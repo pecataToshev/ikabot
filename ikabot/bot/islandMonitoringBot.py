@@ -1,14 +1,12 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 from enum import Enum
-from math import ceil
 from typing import Dict, List
 
 from ikabot.bot.bot import Bot
-from ikabot.config import island_url, materials_names
+from ikabot.config import island_url
 from ikabot.helpers.dicts import combine_dicts_with_lists, search_additional_keys_in_dict, search_value_change_in_dict
 from ikabot.helpers.getJson import getIsland
-from ikabot.helpers.gui import decodeUnicodeEscape
 from ikabot.helpers.citiesAndIslands import getIslandsIds
 
 
@@ -71,7 +69,6 @@ class IslandMonitoringBot(Bot):
                     _cities_before.update(_cities_now)
                     self.notify_updates(_updates, _cities_before)
 
-
                 # update cities_before_per_island for the current island
                 cities_before_per_island[island_id] = dict(_cities_now)
 
@@ -85,47 +82,7 @@ class IslandMonitoringBot(Bot):
         :param island: dict[]
         :return: dict[dict] cityId -> city
         """
-        _res = {}
-
-        _island_name = decodeUnicodeEscape(island['name'])
-        for city in island['cities']:
-            if city['type'] != 'city':
-                continue
-
-            city['islandX'] = island['x']
-            city['islandY'] = island['y']
-            city['tradegood'] = island['tradegood']
-            city['material'] = materials_names[island['tradegood']]
-            city['islandName'] = _island_name
-            city['cityName'] = decodeUnicodeEscape(city['name'])
-            city['ownerName'] = decodeUnicodeEscape(city['Name'])
-            if city['AllyId'] > 0:
-                city['allianceName'] = decodeUnicodeEscape(city['AllyTag'])
-                city['hasAlliance'] = True
-                city['player'] = "{} [{}]".format(city['ownerName'], city['allianceName'])
-            else:
-                city['alliance'] = ''
-                city['hasAlliance'] = False
-                city['player'] = city['ownerName']
-
-            if 'avatarScores' in island and str(city['Id']) in island['avatarScores']:
-                _ranking = island['avatarScores'][str(city['Id'])]
-                city['playerPlace'] = _ranking['place']
-                city['playerPoints'] = sum(ceil(int(x.replace(',', '')) / 100) for x in [
-                    _ranking['building_score_main'],
-                    _ranking['research_score_main'],
-                    _ranking['army_score_main'],
-                    _ranking['trader_score_secondary'] + '0',  # trader_score_secondary is more accurate when /10
-                ])
-                city['player'] = "{} (#{}, {})".format(
-                    city['player'],
-                    city['playerPlace'],
-                    (str(city['playerPoints'] // 1000) + 'k') if city['playerPoints'] > 1000 else city['playerPoints']
-                )
-
-            _res[city['id']] = city
-
-        return _res
+        return {city['id']: city for city in island['cities'] if city['type'] == 'city'}
 
     @staticmethod
     def monitor_level_up(

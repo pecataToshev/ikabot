@@ -3,8 +3,9 @@
 
 import json
 import re
+from math import ceil
 
-from ikabot.config import SECONDS_IN_HOUR
+from ikabot.config import materials_names, SECONDS_IN_HOUR
 from ikabot.helpers.gui import decodeUnicodeEscape
 from ikabot.helpers.resources import extract_resource_production, extract_tradegood, extract_tradegood_production, \
     getAvailableResources, \
@@ -66,6 +67,57 @@ def getResourcesListedForSale(html):
         return [0, 0, 0, 0, 0]
 
 
+def format_points(num):
+    if num >= 1000000000:
+        return str(num // 1000000000) + "kkk"
+    elif num >= 1000000:
+        return str(num // 1000000) + "kk"
+    elif num >= 1000:
+        return str(num // 1000) + "k"
+    else:
+        return str(num)
+
+
+def populate_island_city(island: dict, city: dict):
+    if city['type'] != 'city':
+        return
+
+    city['islandX'] = island['x']
+    city['islandY'] = island['y']
+    city['tradegood'] = island['tradegood']
+    city['material'] = materials_names[island['tradegood']]
+    city['islandName'] = island['name']
+    city['cityName'] = decodeUnicodeEscape(city['name'])
+    city['ownerName'] = decodeUnicodeEscape(city['ownerName'])
+    city['isNoob'] = city.get('state', '') == 'noob'
+    if city['ownerAllyId'] > 0:
+        city['allianceName'] = decodeUnicodeEscape(city['ownerAllyTag'])
+        city['hasAlliance'] = True
+        city['player'] = "{} [{}]".format(city['ownerName'], city['allianceName'])
+    else:
+        city['alliance'] = ''
+        city['hasAlliance'] = False
+        city['player'] = city['ownerName']
+
+    _stats = []
+    if city['isNoob']:
+        _stats.append('noob')
+
+    if 'avatarScores' in island and str(city['ownerId']) in island['avatarScores']:
+        _ranking = island['avatarScores'][str(city['ownerId'])]
+        city['playerRanking'] = _ranking
+        city['playerPlace'] = _ranking['place']
+        city['playerPointsWithoutCitizens'] = sum(ceil(int(x.replace(',', '')) / 100) for x in [
+            _ranking['building_score_main'],
+            _ranking['research_score_main'],
+            _ranking['army_score_main'],
+        ])
+        _stats.append('#' + str(city['playerPlace']))
+        _stats.append('>' + format_points(city['playerPointsWithoutCitizens']))
+
+    city['player'] = "{} ({})".format(city['player'], ", ".join(_stats))
+
+
 def getIsland(html):
     """This function uses the html passed to it as a string to extract, parse and return an Island object
     Parameters
@@ -81,15 +133,16 @@ def getIsland(html):
     isla = re.search(r'\[\["updateBackgroundData",([\s\S]*?),"specialServerBadges', html).group(1) + '}'
 
     isla = isla.replace('buildplace', 'empty')
-    isla = isla.replace('xCoord', 'x')
-    isla = isla.replace('yCoord', 'y')
-    isla = isla.replace(',"owner', ',"')
 
     # {"id":idIsla,"name":nombreIsla,"x":,"y":,"good":numeroBien,"woodLv":,"goodLv":,"wonder":numeroWonder, "wonderName": "nombreDelMilagro","wonderLv":"5","cities":[{"type":"city","name":cityName,"id":cityId,"level":lvIntendencia,"Id":playerId,"Name":playerName,"AllyId":,"AllyTag":,"state":"vacation"},...}}
     isla = json.loads(isla, strict=False)
     isla['tipo'] = re.search(r'"tradegood":(\d)', html).group(1)
-    isla['x'] = int(isla['x'])
-    isla['y'] = int(isla['y'])
+    isla['x'] = int(isla['xCoord'])
+    isla['y'] = int(isla['yCoord'])
+    isla['name'] = decodeUnicodeEscape(isla['name'])
+
+    for city in isla['cities']:
+        populate_island_city(isla, city)
 
     return isla
 
@@ -110,10 +163,9 @@ def getCity(html):
     city = re.search(r'"updateBackgroundData",\s?([\s\S]*?)\],\["updateTemplateData"', html).group(1)
     city = json.loads(city, strict=False)
 
-    city['ownerId'] = city.pop('ownerId')
     city['ownerName'] = decodeUnicodeEscape(city.pop('ownerName'))
-    city['x'] = int(city.pop('islandXCoord'))
-    city['y'] = int(city.pop('islandYCoord'))
+    city['x'] = int(city['islandXCoord'])
+    city['y'] = int(city['islandYCoord'])
     city['name'] = decodeUnicodeEscape(city['name'])
     city['cityName'] = city['name']
 
