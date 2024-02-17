@@ -49,13 +49,13 @@ def island_monitoring_bot_configurator(ikariam_service: IkariamService, db: Data
 
     print('Do you wish to be notified if on these islands')
     inform_list = []
-    for val, msg in [
-        [IslandMonitoringBot.inform_fights, 'A fight breaks out or stops'],
-        [IslandMonitoringBot.inform_inactive, 'A player becomes active/inactive'],
-        [IslandMonitoringBot.inform_vacation, 'A player activates/deactivates vacation'],
-    ]:
-        if askUserYesNo(' - ' + msg):
-            inform_list.append(val)
+    # for val, msg in [
+    #     [IslandMonitoringBot.inform_fights, 'A fight breaks out or stops'],
+    #     [IslandMonitoringBot.inform_inactive, 'A player becomes active/inactive'],
+    #     [IslandMonitoringBot.inform_vacation, 'A player activates/deactivates vacation'],
+    # ]:
+    #     if askUserYesNo(' - ' + msg):
+    #         inform_list.append(val)
 
     IslandMonitoringBot(ikariam_service, {
         'islandsToMonitor': island_ids,
@@ -63,8 +63,9 @@ def island_monitoring_bot_configurator(ikariam_service: IkariamService, db: Data
         'informList': inform_list,
     }).start(
         action='Monitor Islands',
-        objective='{} @{}m'.format(
-            '/'.join([i.replace('inform-', '') for i in inform_list]),
+        objective='{}@{}m'.format(
+            "",
+            # ' ' + '/'.join([i.replace('inform-', '') for i in inform_list]),
             waiting_minutes
         )
     )
