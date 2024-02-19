@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from ikabot.bot.islandMonitoringBot import IslandMonitoringBot
+from ikabot.helpers.citiesAndIslands import chooseCity
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import banner, enter
@@ -47,7 +48,10 @@ def island_monitoring_bot_configurator(ikariam_service: IkariamService, db: Data
     print('How frequently should the islands be searched in minutes (minimum is 3)?')
     waiting_minutes = int(read(min=3, digit=True))
 
-    print('Do you wish to be notified if on these islands')
+    print('Which city you want to perform the monitoring (might affect the pirate availability)')
+    city = chooseCity(ikariam_service)
+
+    # print('Do you wish to be notified if on these islands')
     inform_list = []
     # for val, msg in [
     #     [IslandMonitoringBot.inform_fights, 'A fight breaks out or stops'],
@@ -61,6 +65,7 @@ def island_monitoring_bot_configurator(ikariam_service: IkariamService, db: Data
         'islandsToMonitor': island_ids,
         'waitingMinutes': waiting_minutes,
         'informList': inform_list,
+        'city': city
     }).start(
         action='Monitor Islands',
         objective='{}@{}m'.format(

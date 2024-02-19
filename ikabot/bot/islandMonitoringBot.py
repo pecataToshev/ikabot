@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Dict, List
 
 from ikabot.bot.bot import Bot
-from ikabot.config import island_url
+from ikabot.config import city_url, island_url
 from ikabot.helpers.dicts import combine_dicts_with_lists, search_additional_keys_in_dict, search_value_change_in_dict
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.citiesAndIslands import getIslandsIds
@@ -38,6 +38,7 @@ class IslandMonitoringBot(Bot):
         self.specified_island_ids = bot_config['islandsToMonitor']
         self.waiting_minutes = bot_config['waitingMinutes']
         self.inform_list = bot_config['informList']
+        self.monitoring_city = bot_config['city']
 
     def _get_process_info(self) -> str:
         return 'I monitor islands each {} minutes'.format(self.waiting_minutes)
@@ -54,6 +55,10 @@ class IslandMonitoringBot(Bot):
                 # this is done inside the loop because the user may have colonized
                 # a city in a new island
                 islands_ids = getIslandsIds(self.ikariam_service)
+
+            if not self.monitoring_city:
+                # open the monitoring city before loading the islands
+                self.ikariam_service.get(city_url + self.monitoring_city['id'])
 
             for island_id in islands_ids:
                 island = getIsland(self.ikariam_service.get(island_url + island_id))
