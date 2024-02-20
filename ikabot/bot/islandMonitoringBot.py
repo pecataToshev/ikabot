@@ -29,6 +29,13 @@ class CityStatusUpdate(Enum):
     PIRACY_REMOVED = 'piracy-removed'
 
 
+class IslandMonitoringNotifications(Enum):
+    VACATION = 'vacation'
+    INACTIVE = 'inactive'
+    FIGHT = 'fight'
+    PIRACY = 'piracy'
+
+
 class IslandMonitoringBot(Bot):
     __state_inactive = 'inactive'
     __state_vacation = 'vacation'
@@ -196,13 +203,16 @@ class IslandMonitoringBot(Bot):
 
     def notify_updates(self, updates: Dict[int, List[CityStatusUpdate]], cities: Dict[int, dict]) -> None:
         for city_id, status_updates in updates.items():
-            _messages = self.prepare_messages(status_updates)
+            _messages = self.prepare_messages(status_updates, self.inform_list)
             for _msg in _messages:
                 _msg += ' on [{islandX}:{islandY}] {islandName} ({material})'
                 self.telegram.send_message(_msg.format(**cities[city_id]))
 
     @staticmethod
-    def prepare_messages(status_updates: List[CityStatusUpdate]) -> List[str]:
+    def prepare_messages(
+            status_updates: List[CityStatusUpdate],
+            notifications: List[IslandMonitoringNotifications]
+    ) -> List[str]:
         if CityStatusUpdate.DISAPPEARED in status_updates:
             return ['The city {cityName} of {player} disappeared']
 
@@ -229,9 +239,10 @@ class IslandMonitoringBot(Bot):
         elif CityStatusUpdate.FIGHT_STOPPED in status_updates:
             _res.append('The fight has ended in the city {cityName} of the {player}')
 
-        if CityStatusUpdate.PIRACY_CREATED in status_updates:
-            _res.append('The city {cityName} of {player} can pirate now')
-        elif CityStatusUpdate.PIRACY_REMOVED in status_updates:
-            _res.append('The city {cityName} of {player} can no longer pirate')
+        if IslandMonitoringNotifications.PIRACY in notifications:
+            if CityStatusUpdate.PIRACY_CREATED in status_updates:
+                _res.append('The city {cityName} of {player} can pirate now')
+            elif CityStatusUpdate.PIRACY_REMOVED in status_updates:
+                _res.append('The city {cityName} of {player} can no longer pirate')
 
         return _res

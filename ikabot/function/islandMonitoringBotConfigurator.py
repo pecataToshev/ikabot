@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from ikabot.bot.islandMonitoringBot import IslandMonitoringBot
+from ikabot.bot.islandMonitoringBot import IslandMonitoringBot, IslandMonitoringNotifications
 from ikabot.helpers.citiesAndIslands import chooseCity
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getIsland
@@ -53,13 +53,14 @@ def island_monitoring_bot_configurator(ikariam_service: IkariamService, db: Data
 
     # print('Do you wish to be notified if on these islands')
     inform_list = []
-    # for val, msg in [
+    for val, msg in [
+        [IslandMonitoringNotifications.PIRACY, 'Piracy cities'],
     #     [IslandMonitoringBot.inform_fights, 'A fight breaks out or stops'],
     #     [IslandMonitoringBot.inform_inactive, 'A player becomes active/inactive'],
     #     [IslandMonitoringBot.inform_vacation, 'A player activates/deactivates vacation'],
-    # ]:
-    #     if askUserYesNo(' - ' + msg):
-    #         inform_list.append(val)
+    ]:
+        if askUserYesNo(' - ' + msg):
+            inform_list.append(val)
 
     IslandMonitoringBot(ikariam_service, {
         'islandsToMonitor': island_ids,
