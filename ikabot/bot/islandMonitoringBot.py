@@ -5,7 +5,7 @@ from typing import Dict, List
 
 from ikabot.bot.bot import Bot
 from ikabot.config import city_url, island_url
-from ikabot.helpers.dicts import combine_dicts_with_lists, search_additional_keys_in_dict, search_value_change_in_dict
+from ikabot.helpers.dicts import combine_dicts_with_lists, search_additional_keys_in_dict, search_value_change_in_dict_for_presented_values_in_now
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.citiesAndIslands import getIslandsIds
 
@@ -116,7 +116,7 @@ class IslandMonitoringBot(Bot):
             cities_now: Dict[int, dict]
     ) -> Dict[int, List[CityStatusUpdate]]:
         res = {}
-        for city, state_before, state_now in search_value_change_in_dict(
+        for city, state_before, state_now in search_value_change_in_dict_for_presented_values_in_now(
                 cities_before,
                 cities_now,
                 lambda c: c['state']
@@ -142,7 +142,7 @@ class IslandMonitoringBot(Bot):
             cities_now: Dict[int, dict]
     ) -> Dict[int, List[CityStatusUpdate]]:
         res = {}
-        for city, _before_army_action, _now_army_action in search_value_change_in_dict(
+        for city, _before_army_action, _now_army_action in search_value_change_in_dict_for_presented_values_in_now(
                 cities_before,
                 cities_now,
                 lambda c: c.get('infos', {}).get('armyAction', None)
@@ -164,7 +164,7 @@ class IslandMonitoringBot(Bot):
             cities_now: Dict[int, dict]
     ) -> Dict[int, List[CityStatusUpdate]]:
         res = {}
-        for city, _before_piracy, _now_piracy in search_value_change_in_dict(
+        for city, _before_piracy, _now_piracy in search_value_change_in_dict_for_presented_values_in_now(
                 cities_before,
                 cities_now,
                 lambda c: 0 if not isinstance(c.get('actions'), dict) else c['actions'].get('piracy_raid', 0)

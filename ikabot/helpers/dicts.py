@@ -11,24 +11,23 @@ def search_additional_keys_in_dict(source, target):
     return [k for k in source.keys() if k not in target]
 
 
-def search_value_change_in_dict(
+def search_value_change_in_dict_for_presented_values_in_now(
         dict_before: Dict[int, dict],
         dict_now: Dict[int, dict],
         state_getter: Callable[[dict], any]
 ) -> List[Tuple[dict, any, any]]:
     """
     Searches for change in state between two dicts of dicts with the state_getter function.
-    Returns list of changes (new_dict, old_state, new_state)
+    Returns list of changes (new_dict_value, old_state, new_state)
     !!!IMPORTANT!!! old_state != new_state
     """
     _res = []
-    for _id, _before in dict_before.items():
-        _now = dict_now.get(_id, None)
-        if _now is None:
-            continue
+    for _id, _now in dict_now.items():
+        _before = dict_before.get(_id, dict())
 
         _state_before = state_getter(_before)
         _state_now = state_getter(_now)
+
         if _state_before != _state_now:
             _res.append((_now, _state_before, _state_now))
 
