@@ -143,8 +143,8 @@ class IslandMonitoringBot_TestMonitorFights(unittest.TestCase):
 class IslandMonitoringBot_TestMonitorPiracy(unittest.TestCase):
     def test_monitor_piracy_piracy_created(self):
         # Create test data for piracy created
-        cities_before = {1: {'id': 1, 'actions': {'piracy_raid': 0}}, 2: {'id': 2, 'actions': {'piracy_raid': 1}}}
-        cities_now = {1: {'id': 1, 'actions': {'piracy_raid': 1}}, 2: {'id': 2, 'actions': {'piracy_raid': 1}}}
+        cities_before = {1: {'id': 1}, 2: {'id': 2, 'actions': {'piracy_raid': 1}}}
+        cities_now = {1: {'id': 1, 'actions': {'piracy_raid': 0}}, 2: {'id': 2, 'actions': {'piracy_raid': 1}}}
 
         # Call the method
         result = IslandMonitoringBot.monitor_piracy(cities_before, cities_now)
@@ -156,7 +156,7 @@ class IslandMonitoringBot_TestMonitorPiracy(unittest.TestCase):
     def test_monitor_piracy_piracy_removed(self):
         # Create test data for piracy removed
         cities_before = {1: {'id': 1, 'actions': {'piracy_raid': 1}}, 2: {'id': 2, 'actions': {'piracy_raid': 1}}}
-        cities_now = {1: {'id': 1, 'actions': {'piracy_raid': 0}}, 2: {'id': 2, 'actions': {'piracy_raid': 1}}}
+        cities_now = {1: {'id': 1, 'actions': {}}, 2: {'id': 2, 'actions': {'piracy_raid': 1}}}
 
         # Call the method
         result = IslandMonitoringBot.monitor_piracy(cities_before, cities_now)
@@ -174,5 +174,17 @@ class IslandMonitoringBot_TestMonitorPiracy(unittest.TestCase):
         result = IslandMonitoringBot.monitor_piracy(cities_before, cities_now)
 
         # Assert the expected result
-        expected_result = {2: [CityStatusUpdate.PIRACY_CREATED]}
+        expected_result = {1: [CityStatusUpdate.PIRACY_CREATED], 2: [CityStatusUpdate.PIRACY_CREATED]}
+        self.assertEqual(result, expected_result)
+
+    def test_monitor_piracy_no_change(self):
+        # Create test data for piracy removed
+        cities_before = {1: {'id': 1, 'actions': {'piracy_raid': 1}}, 2: {'id': 2, 'actions': {'piracy_raid': 0}}}
+        cities_now = {1: {'id': 1, 'actions': {'piracy_raid': 0}}, 2: {'id': 2, 'actions': {'piracy_raid': 1}}}
+
+        # Call the method
+        result = IslandMonitoringBot.monitor_piracy(cities_before, cities_now)
+
+        # Assert the expected result
+        expected_result = {}
         self.assertEqual(result, expected_result)
