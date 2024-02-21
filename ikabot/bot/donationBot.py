@@ -111,6 +111,7 @@ class DonationBot(Bot):
                                 'ajax': '1'})
                     logging.info("I donated %d wood to the %s on island %s", to_donate, donation_type, island_id)
 
+            self._set_process_info('Done donating', '')
             self._wait(
                 self.waiting_time * 60,
                 info='Collecting wood for the next donation',
