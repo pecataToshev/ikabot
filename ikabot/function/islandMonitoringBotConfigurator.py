@@ -66,7 +66,7 @@ def island_monitoring_bot_configurator(ikariam_service: IkariamService, db: Data
         'islandsToMonitor': island_ids,
         'waitingMinutes': waiting_minutes,
         'informList': inform_list,
-        'city': city
+        'monitoringCityId': city['id']
     }).start(
         action='Monitor Islands',
         objective='{}@{}m'.format(
