@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import logging
 from enum import Enum
 from typing import Dict, List
 
@@ -114,6 +115,7 @@ class IslandMonitoringBot(Bot):
                 _stat = CityStatusUpdate.COLONY_INITIALIZED
 
             res[city_id] = [_stat]
+            logging.debug("Level change found: newStat: %s, city: %s", _stat, cn)
 
         return res
 
@@ -126,7 +128,7 @@ class IslandMonitoringBot(Bot):
         for city, state_before, state_now in search_value_change_in_dict_for_presented_values_in_now(
                 cities_before,
                 cities_now,
-                lambda c: c['state']
+                lambda c: c.get('state', None)
         ):
             _stat = []
             if state_before == IslandMonitoringBot.__state_vacation:
@@ -139,7 +141,10 @@ class IslandMonitoringBot(Bot):
             elif state_now == IslandMonitoringBot.__state_inactive:
                 _stat.append(CityStatusUpdate.INACTIVATED)
 
-            res[city['id']] = _stat
+            if len(_stat) > 0:
+                res[city['id']] = _stat
+                logging.debug("Status change found: newStat: %s, beforeState: %s, nowState: %s, city: %s",
+                              _stat, state_before, state_now, city)
 
         return res
 
@@ -162,6 +167,8 @@ class IslandMonitoringBot(Bot):
 
             if _stat is not None:
                 res[city['id']] = [_stat]
+                logging.debug("Figths change found: newStat: %s, beforeArmyAction: %s, nowArmyAction: %s, city: %s",
+                              _stat, _before_army_action, _now_army_action, city)
 
         return res
 
@@ -184,6 +191,8 @@ class IslandMonitoringBot(Bot):
 
             if _stat is not None:
                 res[city['id']] = [_stat]
+                logging.debug("Piracy change found: newStat: %s, beforePiracy: %s, nowPiracy: %s, city: %s",
+                              _stat, _before_piracy, _now_piracy, city)
 
         return res
 
