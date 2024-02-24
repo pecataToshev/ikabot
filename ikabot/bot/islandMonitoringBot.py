@@ -73,13 +73,14 @@ class IslandMonitoringBot(Bot):
 
             for island_id in islands_ids:
                 self._set_process_info('Scanning island ' + island_id)
+
                 _island_html = self.ikariam_service.get(island_url + island_id)
                 _city_name = bs4.BeautifulSoup(_island_html, 'html.parser').select_one(
                     '#js_homeCitySelect option[selected]').text
                 island = getIsland(_island_html)
 
                 self._set_process_info(
-                    'Scanning island {} [{}:{}]'.format(island_id, island['xCoord'], island['xCoord']),
+                    'Scanning island {} [{}:{}]'.format(island_id, island['xCoord'], island['yCoord']),
                     target_city=_city_name
                 )
 
