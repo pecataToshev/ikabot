@@ -4,9 +4,12 @@ import logging
 from enum import Enum
 from typing import Dict, List
 
+import bs4
+
 from ikabot.bot.bot import Bot
 from ikabot.config import city_url, island_url
-from ikabot.helpers.dicts import combine_dicts_with_lists, search_additional_keys_in_dict, search_value_change_in_dict_for_presented_values_in_now
+from ikabot.helpers.dicts import combine_dicts_with_lists, search_additional_keys_in_dict, \
+    search_value_change_in_dict_for_presented_values_in_now
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.citiesAndIslands import getIslandsIds
 
@@ -69,7 +72,17 @@ class IslandMonitoringBot(Bot):
                 self.ikariam_service.get(city_url + self.monitoring_city_id)
 
             for island_id in islands_ids:
-                island = getIsland(self.ikariam_service.get(island_url + island_id))
+                self._set_process_info('Scanning island ' + island_id)
+                _island_html = self.ikariam_service.get(island_url + island_id)
+                _city_name = bs4.BeautifulSoup(_island_html, 'html.parser').select_one(
+                    '#js_homeCitySelect option[selected]').text
+                island = getIsland(_island_html)
+
+                self._set_process_info(
+                    'Scanning island {} [{}:{}]'.format(island_id, island['xCoord'], island['xCoord']),
+                    target_city=_city_name
+                )
+
                 # cities in the current island
                 _cities_now = self.extract_cities(island)
 
@@ -85,8 +98,10 @@ class IslandMonitoringBot(Bot):
                 # update cities_before_per_island for the current island
                 cities_before_per_island[island_id] = dict(_cities_now)
 
+            _island_ids_text = str([int(i) for i in islands_ids]).replace(" ", "")
+            self._set_process_info(f'Done with {_island_ids_text}', target_city='')
             self._wait(self.waiting_minutes * 60,
-                       f'Checked islands {str([int(i) for i in islands_ids]).replace(" ", "")}')
+                       f'Checked islands {_island_ids_text}')
 
     @staticmethod
     def extract_cities(island):
