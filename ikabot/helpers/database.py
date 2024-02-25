@@ -14,7 +14,7 @@ class Database:
     def __init__(self, bot_name):
         logging.debug('Creating db connection; botName=%s', bot_name)
         self.__bot_name = bot_name
-        self.__conn = sqlite3.connect(config.DB_FILE, )
+        self.__conn = sqlite3.connect(config.DB_FILE, timeout=11.0)
 
     def close_db_conn(self):
         logging.debug('Closing db connection')
