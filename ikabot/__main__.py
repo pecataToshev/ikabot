@@ -22,6 +22,8 @@ def main():
     logging.debug("Named Parameters: %s", config.application_params)
     logging.debug("Arguments: %s", config.predetermined_input)
 
+    config.DB_FILE = config.application_params.get('dbFile', config.DB_FILE)
+    logging.info("Database file: %s", config.DB_FILE)
     apply_migrations()
 
     config.BOT_NAME = read(msg='Please provide the unique bot identifier for this account: ')
