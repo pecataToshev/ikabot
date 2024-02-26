@@ -17,7 +17,10 @@ class TestInitParameters(unittest.TestCase):
             "--isTrue=true",
             "--isFalse=false",
             "--isOn=On",
-            "--isOff=off"
+            "--isOff=off",
+            "--isTrueNoValue",
+            "--dbFile=~/.ikabot.db",
+            "--valueWithStrangeCharacters=\\ala-bala/*.-+@#$%^&*(){}[]|<>?~`"
         ]
         result_dict, other_values = init_parameters(input_args)
 
@@ -30,7 +33,10 @@ class TestInitParameters(unittest.TestCase):
             'isTrue': True,
             'isFalse': False,
             'isOn': True,
-            'isOff': False
+            'isOff': False,
+            'isTrueNoValue': True,
+            'dbFile': '~/.ikabot.db',
+            'valueWithStrangeCharacters': '\\ala-bala/*.-+@#$%^&*(){}[]|<>?~`'
         }
         expected_other_values = [5, 'otherInput', 'wq']
 

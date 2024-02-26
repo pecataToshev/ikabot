@@ -56,7 +56,7 @@ def init_parameters(input_args: List[str]):
     named_params = {}
     positional_params = []
 
-    pattern = re.compile(r'--(\w+)(?:=(\w+))?')
+    pattern = re.compile(r'--(\w+)(?:=(\S+))?')
     for element in input_args:
         match = pattern.match(element)
         if match:
