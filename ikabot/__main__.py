@@ -23,6 +23,7 @@ def main():
     logging.debug("Arguments: %s", config.predetermined_input)
 
     config.DB_FILE = config.application_params.get('dbFile', config.DB_FILE)
+    print('Using database file: %s' % config.DB_FILE)
     logging.info("Database file: %s", config.DB_FILE)
     apply_migrations()
 
