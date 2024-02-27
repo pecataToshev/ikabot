@@ -67,8 +67,9 @@ class IslandMonitoringBot(Bot):
                 # a city in a new island
                 islands_ids = getIslandsIds(self.ikariam_service)
 
-            if not self.monitoring_city_id:
+            if self.monitoring_city_id:
                 # open the monitoring city before loading the islands
+                logging.debug('Open monitoring city: ' + self.monitoring_city_id)
                 self.ikariam_service.get(city_url + self.monitoring_city_id)
 
             for island_id in islands_ids:
