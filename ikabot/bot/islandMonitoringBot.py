@@ -113,12 +113,15 @@ class IslandMonitoringBot(Bot):
 
     def open_monitoring_city(self):
         logging.debug('Open monitoring city: ' + self.monitoring_city_id)
-        _city = self.ikariam_service.get(city_url + self.monitoring_city_id)
-        return _city
+        return self.ikariam_service.get(city_url + self.monitoring_city_id)
 
-    def extract_current_city_name_from_selector(self, _city):
-        return bs4.BeautifulSoup(_city, 'html.parser').select_one(
-            '#js_homeCitySelect option[selected]').text.strip()
+    @staticmethod
+    def extract_current_city_name_from_selector(html):
+        logging.debug('Extracting current city name from selector: %s', html)
+        return (bs4.BeautifulSoup(html, 'html.parser')
+                .select_one('#js_homeCitySelect option[selected]')
+                .text
+                .strip())
 
     @staticmethod
     def extract_cities(island):
