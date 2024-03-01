@@ -10,7 +10,7 @@ from ikabot.bot.bot import Bot
 from ikabot.config import city_url, island_url
 from ikabot.helpers.dicts import combine_dicts_with_lists, search_additional_keys_in_dict, \
     search_value_change_in_dict_for_presented_values_in_now
-from ikabot.helpers.getJson import getIsland
+from ikabot.helpers.getJson import getCity, getIsland
 from ikabot.helpers.citiesAndIslands import getIslandsIds
 
 
@@ -70,19 +70,22 @@ class IslandMonitoringBot(Bot):
             _monitoring_city_name = None
             if self.monitoring_city_id:
                 # open the monitoring city before loading the islands
-                _city = self.open_monitoring_city()
-                _monitoring_city_name = self.extract_current_city_name_from_selector(_city)
+                _city = getCity(self.open_monitoring_city())
+                _monitoring_city_name = '[{}:{}] {}'.format(_city['xCoord'], _city['yCoord'], _city['name'])
 
             for island_id in islands_ids:
                 self._set_process_info('Scanning island ' + island_id)
 
-                _island_html = self.ikariam_service.get(island_url + island_id)
-                _city_name = self.extract_current_city_name_from_selector(_island_html)
-
-                if _monitoring_city_name and _city_name != _monitoring_city_name:
-                    self.open_monitoring_city()
+                # Ensure we've loaded the island with the correct city
+                while True:
                     _island_html = self.ikariam_service.get(island_url + island_id)
                     _city_name = self.extract_current_city_name_from_selector(_island_html)
+
+                    if _monitoring_city_name and _city_name != _monitoring_city_name:
+                        logging.debug("Switching to monitoring city %s from %s", _monitoring_city_name, _city_name)
+                        self.open_monitoring_city()
+                    else:
+                        break
 
                 island = getIsland(_island_html)
 
