@@ -71,7 +71,7 @@ class IslandMonitoringBot(Bot):
             if self.monitoring_city_id:
                 # open the monitoring city before loading the islands
                 _city = getCity(self.open_monitoring_city())
-                _monitoring_city_name = '[{}:{}] {}'.format(_city['xCoord'], _city['yCoord'], _city['name'])
+                _monitoring_city_name = '[{}:{}] {}'.format(_city['x'], _city['y'], _city['name'])
 
             for island_id in islands_ids:
                 self._set_process_info('Scanning island ' + island_id)
@@ -115,7 +115,6 @@ class IslandMonitoringBot(Bot):
                        f'Checked islands {_island_ids_text}')
 
     def open_monitoring_city(self):
-        logging.debug('Open monitoring city: ' + self.monitoring_city_id)
         return self.ikariam_service.get(city_url + self.monitoring_city_id)
 
     @staticmethod
