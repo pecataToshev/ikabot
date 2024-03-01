@@ -67,17 +67,23 @@ class IslandMonitoringBot(Bot):
                 # a city in a new island
                 islands_ids = getIslandsIds(self.ikariam_service)
 
+            _monitoring_city_name = None
             if self.monitoring_city_id:
                 # open the monitoring city before loading the islands
-                logging.debug('Open monitoring city: ' + self.monitoring_city_id)
-                self.ikariam_service.get(city_url + self.monitoring_city_id)
+                _city = self.open_monitoring_city()
+                _monitoring_city_name = self.extract_current_city_name_from_selector(_city)
 
             for island_id in islands_ids:
                 self._set_process_info('Scanning island ' + island_id)
 
                 _island_html = self.ikariam_service.get(island_url + island_id)
-                _city_name = bs4.BeautifulSoup(_island_html, 'html.parser').select_one(
-                    '#js_homeCitySelect option[selected]').text.strip()
+                _city_name = self.extract_current_city_name_from_selector(_island_html)
+
+                if _monitoring_city_name and _city_name != _monitoring_city_name:
+                    self.open_monitoring_city()
+                    _island_html = self.ikariam_service.get(island_url + island_id)
+                    _city_name = self.extract_current_city_name_from_selector(_island_html)
+
                 island = getIsland(_island_html)
 
                 self._set_process_info(
@@ -104,6 +110,15 @@ class IslandMonitoringBot(Bot):
             self._set_process_info(f'Done with {_island_ids_text}', target_city='')
             self._wait(self.waiting_minutes * 60,
                        f'Checked islands {_island_ids_text}')
+
+    def open_monitoring_city(self):
+        logging.debug('Open monitoring city: ' + self.monitoring_city_id)
+        _city = self.ikariam_service.get(city_url + self.monitoring_city_id)
+        return _city
+
+    def extract_current_city_name_from_selector(self, _city):
+        return bs4.BeautifulSoup(_city, 'html.parser').select_one(
+            '#js_homeCitySelect option[selected]').text.strip()
 
     @staticmethod
     def extract_cities(island):
