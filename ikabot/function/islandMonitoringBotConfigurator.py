@@ -45,7 +45,7 @@ def island_monitoring_bot_configurator(ikariam_service: IkariamService, db: Data
             island = getIsland(html)
             island_ids.append(island['id'])
 
-    print('How frequently should the islands be searched in minutes (minimum is 3)?')
+    print('How frequently should the islands be searched in minutes (minimum is 3) (with max random of 30 seconds)?')
     waiting_minutes = int(read(min=3, digit=True))
 
     print('Which city you want to perform the monitoring (might affect the pirate availability)')

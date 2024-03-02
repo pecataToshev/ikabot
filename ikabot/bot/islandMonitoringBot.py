@@ -112,7 +112,8 @@ class IslandMonitoringBot(Bot):
             _island_ids_text = str([int(i) for i in islands_ids]).replace(" ", "")
             self._set_process_info(f'Done with {_island_ids_text}', target_city='')
             self._wait(self.waiting_minutes * 60,
-                       f'Checked islands {_island_ids_text}')
+                       f'Checked islands {_island_ids_text}',
+                       max_random=30)
 
     def open_monitoring_city(self):
         return self.ikariam_service.get(city_url + self.monitoring_city_id)
