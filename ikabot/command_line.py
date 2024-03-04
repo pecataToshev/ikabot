@@ -10,6 +10,7 @@ from ikabot.function.attackBarbariansBotConfigurator import attack_barbarians_bo
 from ikabot.function.attacksMonitoringBotConfigurator import configure_alert_attacks_monitoring_bot
 from ikabot.function.autoPiracyBotConfigurator import autoPiracyBotConfigurator
 from ikabot.function.buyResourcesBotConfigurator import buy_resources_bot_configurator
+from ikabot.function.buyShip import buy_ships
 from ikabot.function.conductExperimentBotConfigurator import configure_conduct_experiment_bot
 from ikabot.function.constructBuilding import constructBuilding
 from ikabot.function.decaptchaConf import decaptchaConf
@@ -99,6 +100,7 @@ _global_menu = [
     ]],
     ['Taverns', use_tavern],
     ['Workshops', use_workshop],
+    ['Buys Ships', buy_ships],
     ['Game Account Functions', [
         __command_back,
         ['Login daily', login_daily_bot_configurator],
