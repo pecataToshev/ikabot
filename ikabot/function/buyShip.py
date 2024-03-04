@@ -48,7 +48,8 @@ def buy_ships(ikariam_service: IkariamService, db: Database, telegram: Telegram)
     )
 
     while True:
-        clear()
+        print("\n\n")
+
         available_gold = int(float(port_info[0][1]["headerData"]["gold"]))
         update_template_data = port_info[2][1]
         ship_cost = int(float((update_template_data['js_transporterCosts'].replace(',', '').replace('.', ''))))
