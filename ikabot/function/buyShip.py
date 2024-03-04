@@ -48,9 +48,9 @@ def buy_ships(ikariam_service: IkariamService, db: Database, telegram: Telegram)
     )
 
     while True:
-        available_gold = int(port_info[0][1]["headerData"]["gold"])
+        available_gold = int(float(port_info[0][1]["headerData"]["gold"]))
         update_template_data = port_info[2][1]
-        ship_cost = int(update_template_data['js_transporterCosts'].replace(',', '').replace('.', ''))
+        ship_cost = int(float((update_template_data['js_transporterCosts'].replace(',', '').replace('.', ''))))
 
         can_buy = "enabled" == update_template_data.get('js_buyTransporterAction', {}).get("buttonState", "")
 
