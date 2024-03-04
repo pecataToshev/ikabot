@@ -65,7 +65,7 @@ def buy_ships(ikariam_service: IkariamService, db: Database, telegram: Telegram)
             enter()
             return
 
-        if not askUserYesNo('Do you want to buy a transporter for {}?'.format(ship_cost)):
+        if not askUserYesNo('Do you want to buy a transporter for {}?'.format(addThousandSeparator(ship_cost))):
             return
 
         port_info = json.loads(ikariam_service.post(
