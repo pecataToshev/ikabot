@@ -6,6 +6,7 @@ import logging
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url
 from ikabot.helpers.getJson import getCity
+from ikabot.helpers.gui import Colours
 from ikabot.helpers.resources import getProductionPerSecond
 
 
@@ -36,6 +37,9 @@ class DonationBot(Bot):
                 # get the storageCapacity and the wood this city has
                 html = self.ikariam_service.get(city_url + cityId)
                 city = getCity(html)
+
+                self._set_process_info('Preparing donations', city['name'])
+
                 wood = city['availableResources'][0]
                 storageCapacity = city['storageCapacity']
 
@@ -75,6 +79,12 @@ class DonationBot(Bot):
                         continue
 
                 island_id = self.cities_dict[cityId]['island']
+                self._set_process_info('Found {}{} Wood{} for donations. Donation type {}'.format(
+                    Colours.MATERIALS[0],
+                    to_donate,
+                    Colours.Text.RESET,
+                    donation_type
+                ))
 
                 # donate
                 if donation_type == 'both':
@@ -101,8 +111,9 @@ class DonationBot(Bot):
                                 'ajax': '1'})
                     logging.info("I donated %d wood to the %s on island %s", to_donate, donation_type, island_id)
 
+            self._set_process_info('Done donating', '')
             self._wait(
                 self.waiting_time * 60,
-                info='Sleeping till next donation',
+                info='Collecting wood for the next donation',
                 max_random=self.max_random_waiting_time * 60,
             )

@@ -1,7 +1,8 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from ikabot.bot.islandMonitoringBot import IslandMonitoringBot
+from ikabot.bot.islandMonitoringBot import IslandMonitoringBot, IslandMonitoringNotifications
+from ikabot.helpers.citiesAndIslands import chooseCity
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import banner, enter
@@ -44,15 +45,19 @@ def island_monitoring_bot_configurator(ikariam_service: IkariamService, db: Data
             island = getIsland(html)
             island_ids.append(island['id'])
 
-    print('How frequently should the islands be searched in minutes (minimum is 3)?')
+    print('How frequently should the islands be searched in minutes (minimum is 3) (with max random of 30 seconds)?')
     waiting_minutes = int(read(min=3, digit=True))
 
-    print('Do you wish to be notified if on these islands')
+    print('Which city you want to perform the monitoring (might affect the pirate availability)')
+    city = chooseCity(ikariam_service)
+
+    # print('Do you wish to be notified if on these islands')
     inform_list = []
     for val, msg in [
-        [IslandMonitoringBot.inform_fights, 'A fight breaks out or stops'],
-        [IslandMonitoringBot.inform_inactive, 'A player becomes active/inactive'],
-        [IslandMonitoringBot.inform_vacation, 'A player activates/deactivates vacation'],
+        [IslandMonitoringNotifications.PIRACY, 'Piracy cities'],
+    #     [IslandMonitoringBot.inform_fights, 'A fight breaks out or stops'],
+    #     [IslandMonitoringBot.inform_inactive, 'A player becomes active/inactive'],
+    #     [IslandMonitoringBot.inform_vacation, 'A player activates/deactivates vacation'],
     ]:
         if askUserYesNo(' - ' + msg):
             inform_list.append(val)
@@ -61,10 +66,12 @@ def island_monitoring_bot_configurator(ikariam_service: IkariamService, db: Data
         'islandsToMonitor': island_ids,
         'waitingMinutes': waiting_minutes,
         'informList': inform_list,
+        'monitoringCityId': city['id']
     }).start(
         action='Monitor Islands',
-        objective='{} @{}m'.format(
-            '/'.join([i.replace('inform-', '') for i in inform_list]),
+        objective='{}@{}m'.format(
+            "",
+            # ' ' + '/'.join([i.replace('inform-', '') for i in inform_list]),
             waiting_minutes
         )
     )

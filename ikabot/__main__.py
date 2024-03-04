@@ -22,6 +22,9 @@ def main():
     logging.debug("Named Parameters: %s", config.application_params)
     logging.debug("Arguments: %s", config.predetermined_input)
 
+    config.DB_FILE = config.application_params.get('dbFile', config.DB_FILE)
+    print('Using database file: %s' % config.DB_FILE)
+    logging.info("Database file: %s", config.DB_FILE)
     apply_migrations()
 
     config.BOT_NAME = read(msg='Please provide the unique bot identifier for this account: ')
@@ -54,7 +57,7 @@ def init_parameters(input_args: List[str]):
     named_params = {}
     positional_params = []
 
-    pattern = re.compile(r'--(\w+)(?:=(\w+))?')
+    pattern = re.compile(r'--(\w+)(?:=(\S+))?')
     for element in input_args:
         match = pattern.match(element)
         if match:

@@ -138,7 +138,7 @@ class SellResourcesToOfferBot(Bot):
                     'cityId': self.city_to_buy_from['id'],
                     'destinationCityId': destination_city_id,
                     'oldView': 'branchOffice',
-                    'position': self.city_to_buy_from['pos'],
+                    'position': self.city_to_buy_from['marketPosition'],
                     'avatar2Name': username,
                     'city2Name': cityname,
                     'type': '333',

@@ -165,13 +165,14 @@ class IkabotProcessListManager:
 
         # Print process
         logging.info(
-            "updateProcess: %s | %s | %s | next: %s | obj: %s | %s",
+            "updateProcess: %s | %s | %s | next: %s | obj: %s | city: %s | %s",
             _stored_process.get('pid', '-'),
             _stored_process.get('action', '-'),
             _stored_process.get('status', '-'),
             '-' if _stored_process.get('nextActionTime', None) is None else formatTimestamp(
                 _stored_process['nextActionTime']),
             _stored_process.get('objective', '-'),
+            _stored_process.get('targetCity', '-'),
             _stored_process.get('info', '-'),
         )
 

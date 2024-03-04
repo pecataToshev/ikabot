@@ -91,7 +91,7 @@ def donation_bot_configurator(ikariam_service: IkariamService, db: Database, tel
             'donate_method': donate_method,
         }
     ).start(
-        action='Donations',
+        action='Auto Donate',
         objective='Every {} minutes'.format(waiting_time)
     )
 

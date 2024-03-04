@@ -47,7 +47,7 @@ def getOffers(session, my_market_city, resource_type):
         resource_type = 'resource'
     else:
         resource_type = str(resource_type)
-    data = {'cityId': my_market_city['id'], 'position': my_market_city['pos'], 'view': 'branchOffice',
+    data = {'cityId': my_market_city['id'], 'position': my_market_city['marketPosition'], 'view': 'branchOffice',
             'activeTab': 'bargain', 'type': '333', 'searchResource': resource_type, 'range': my_market_city['rango'],
             'backgroundView': 'city', 'currentCityId': my_market_city['id'], 'templateView': 'branchOffice',
             'currentTab': 'bargain', 'actionRequest': actionRequest, 'ajax': '1'}
