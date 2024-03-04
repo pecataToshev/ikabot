@@ -8,7 +8,7 @@ from ikabot.helpers.buildings import extract_target_building, \
     find_city_with_the_biggest_building, get_building_info
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import addThousandSeparator, banner, enter
+from ikabot.helpers.gui import addThousandSeparator, banner, clear, enter
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import askUserYesNo
 from ikabot.web.ikariamService import IkariamService
@@ -48,6 +48,7 @@ def buy_ships(ikariam_service: IkariamService, db: Database, telegram: Telegram)
     )
 
     while True:
+        clear()
         available_gold = int(float(port_info[0][1]["headerData"]["gold"]))
         update_template_data = port_info[2][1]
         ship_cost = int(float((update_template_data['js_transporterCosts'].replace(',', '').replace('.', ''))))
@@ -57,7 +58,6 @@ def buy_ships(ikariam_service: IkariamService, db: Database, telegram: Telegram)
         print('Available gold:           {}'.format(addThousandSeparator(available_gold)))
         print('Transporter cost:         {}'.format(addThousandSeparator(ship_cost)))
         print('Transporters available:   {}'.format(update_template_data['js_maxTransporter']))
-        print('Max new transporters:     {}'.format(update_template_data['js_currentBuyableTransporters']))
 
         if not can_buy:
             print('You can\'t buy a transporter right now.')
