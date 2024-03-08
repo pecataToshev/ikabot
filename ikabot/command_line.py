@@ -24,6 +24,7 @@ from ikabot.function.islandMonitoringBotConfigurator import island_monitoring_bo
 from ikabot.function.islandWorkplaces import islandWorkplaces
 from ikabot.function.killTasks import kill_tasks
 from ikabot.function.loginDailyBotConfigurator import login_daily_bot_configurator
+from ikabot.function.miracle_donate import miracle_donate
 from ikabot.function.proxyConf import proxyConf, show_proxy
 from ikabot.function.sellResourcesBotConfigurator import sell_resources_bot_configurator
 from ikabot.function.tavern import use_tavern
@@ -80,7 +81,11 @@ _global_menu = [
         ['Buy resources', buy_resources_bot_configurator],
         ['Sell resources', sell_resources_bot_configurator],
     ]],
-    ['Activate miracle', activate_miracle_bot_configurator],
+    ['Miracle', [
+        __command_back,
+        ['Activate Miracle', activate_miracle_bot_configurator],
+        ['Donate to Miracle', miracle_donate],
+    ]],
     ['Military actions', [
         __command_back,
         ['Train Army', train_army_bot_configurator],

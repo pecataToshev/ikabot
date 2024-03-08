@@ -140,6 +140,7 @@ def getIsland(html):
     isla['x'] = int(isla['xCoord'])
     isla['y'] = int(isla['yCoord'])
     isla['name'] = decodeUnicodeEscape(isla['name'])
+    isla['wonderName'] = decodeUnicodeEscape(isla['wonderName'])
 
     for city in isla['cities']:
         populate_island_city(isla, city)
