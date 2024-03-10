@@ -133,7 +133,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
                 len=_max_len[ci],
                 **c,
             )
-             for ci, c in enumerate(tr)]
+                for ci, c in enumerate(tr)]
         ) + Colours.Text.RESET)
         if print_row_separator(tri):
             print(row_additional_indentation + '-' * (sum(_max_len) + (len(_max_len) - 1) * len(column_separator)))
@@ -157,7 +157,7 @@ def addThousandSeparator(num, character='.', include_sign=False):
         a string representing that number with added `character` for every thousand
     """
     sign = '+' if include_sign else ''
-    return format(int(num), sign+',').replace(',', character)
+    return format(int(num), sign + ',').replace(',', character)
 
 
 def daysHoursMinutes(total_seconds):
@@ -181,19 +181,23 @@ def daysHoursMinutes(total_seconds):
     total_seconds -= hours * Decimal(3600)
     minutes = int(total_seconds / Decimal(60))
     seconds = int(total_seconds % 60)
-    texto = ''
+    res = []
+
+    get_num = lambda x: str(x) if len(res) == 0 else str(x).zfill(2)
+
     if days > 0:
-        texto = str(days) + 'D '
+        res.append(get_num(days) + 'D')
     if hours > 0:
-        texto = texto + str(hours) + 'H '
+        res.append(get_num(hours) + 'H')
     if days == 0 and minutes > 0:
-        texto = texto + str(minutes) + 'M '
+        res.append(get_num(minutes) + 'M')
     if days == 0 and hours == 0 and seconds > 0:
-        texto = texto + str(seconds) + 'S '
-    return texto[:-1]
+        res.append(get_num(seconds) + 'S')
+
+    return ' '.join(res)
 
 
-def getDateTime(timestamp = None):
+def getDateTime(timestamp=None):
     """Returns a string of the current date and time in the YYYY-mm-dd_HH-MM-SS, if `timestamp` is provided then it converts it into the given format.
     Parameters
     ----------
@@ -207,6 +211,7 @@ def getDateTime(timestamp = None):
     """
     timestamp = timestamp if timestamp else time.time()
     return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d_%H-%M-%S')
+
 
 def decodeUnicodeEscape(input_string):
     """
@@ -289,4 +294,3 @@ class Colours:
         "sad": Text.BLUE,
         "outraged": Text.RED
     }
-
