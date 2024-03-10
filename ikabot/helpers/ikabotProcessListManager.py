@@ -191,7 +191,7 @@ class IkabotProcessListManager:
         def __fmt_next_action(t):
             remaining_time = int(t - now)
             color = Colours.Text.Light.YELLOW if remaining_time < 120 else ''
-            return "{} {}({:>8})".format(formatTimestamp(t),
+            return "{} {}({:>7})".format(formatTimestamp(t),
                                          color,
                                          daysHoursMinutes(remaining_time, add_leading_zeroes_on_smaller_unit=True))
 
