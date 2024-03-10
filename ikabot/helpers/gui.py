@@ -65,6 +65,11 @@ def printProgressBar(msg, current, total):
     print("{}: [{}={}] {}/{}".format(msg, loaded, waiting, current, total))
 
 
+def get_visible_length(input_string):
+    without_colors = re.sub(r'\x1b\[[0-9;]*m', '', input_string)
+    return len(without_colors)
+
+
 def rightAlign(data, length):
     """
     Right align the given data with the given length
@@ -106,7 +111,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
     if len(table_data) == 0:
         return
 
-    _max_len = [len(tc['title']) for tc in table_config]
+    _max_len = [get_visible_length(tc['title']) for tc in table_config]
     _table = [[{'data': tc['title'], 'colour': ''} for tc in table_config]]
     for row_index, row_data in enumerate(table_data):
         _row = []
@@ -118,7 +123,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
             if 'useDataRowIndexForValue' in column_config:
                 _v = column_config['useDataRowIndexForValue'](row_index)
             _v = str(_v or missing_value)
-            _max_len[column_index] = max(_max_len[column_index], len(_v))
+            _max_len[column_index] = max(_max_len[column_index], get_visible_length(_v))
             colour = ''
             if 'setColour' in column_config:
                 colour = column_config['setColour'](_raw_column_data, row_data)
@@ -136,7 +141,8 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
                 for ci, c in enumerate(tr)]
         ) + Colours.Text.RESET)
         if print_row_separator(tri):
-            print(row_additional_indentation + '-' * (sum(_max_len) + (len(_max_len) - 1) * len(column_separator)))
+            print(row_additional_indentation + '-' * (sum(_max_len) +
+                                                      (len(_max_len) - 1) * get_visible_length(column_separator)))
 
     print()
 

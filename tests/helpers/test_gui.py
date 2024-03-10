@@ -1,6 +1,23 @@
 import unittest
 
-from ikabot.helpers.gui import daysHoursMinutes
+from ikabot.helpers.gui import Colours, daysHoursMinutes, get_visible_length
+
+
+class TestGetVisibleLength(unittest.TestCase):
+
+    def test_visible_length(self):
+        colors = [
+            ['', '', '', '', ''],
+            [Colours.Text.YELLOW, '', '', '', ''],
+            [Colours.Text.YELLOW, Colours.Text.RESET, '', '', ''],
+            [Colours.Text.YELLOW, Colours.Text.RESET, Colours.Text.GREEN, '', ''],
+            [Colours.Text.YELLOW, Colours.Text.RESET, Colours.Text.GREEN, Colours.Text.Format.BOLD, Colours.Text.RESET],
+            [Colours.Text.Format.BOLD + Colours.Text.Format.UNDERLINED, '', '', '', Colours.Text.RESET],
+        ]
+
+        for colors in colors:
+            input_str = "{}Hello{}, {}World{}!{}".format(*colors)
+            self.assertEqual(get_visible_length(input_str), 13)
 
 
 class TestDaysHoursMinutes(unittest.TestCase):
