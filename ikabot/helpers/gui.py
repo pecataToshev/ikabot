@@ -160,17 +160,10 @@ def addThousandSeparator(num, character='.', include_sign=False):
     return format(int(num), sign + ',').replace(',', character)
 
 
-def daysHoursMinutes(total_seconds):
-    """Formats the total number of seconds into days hours minutes (eg. 321454 -> 3D 17H)
-    Parameters
-    ----------
-    total_seconds : int
-        total number of seconds
-
-    Returns
-    -------
-    text : str
-        formatted string (D H M S)
+def daysHoursMinutes(total_seconds: int, force_include_smaller_unit=False,
+                     add_leading_zeroes_on_smaller_unit=False) -> str:
+    """
+    Formats the total number of seconds into days hours minutes (eg. 321454 -> 3D 17H)
     """
     total_seconds = int(total_seconds)
     if total_seconds == 0:
@@ -183,15 +176,15 @@ def daysHoursMinutes(total_seconds):
     seconds = int(total_seconds % 60)
     res = []
 
-    get_num = lambda x: str(x) if len(res) == 0 else str(x).zfill(2)
+    get_num = lambda x: str(x).zfill(2) if add_leading_zeroes_on_smaller_unit and len(res) > 0 else str(x)
 
     if days > 0:
         res.append(get_num(days) + 'D')
-    if hours > 0:
+    if force_include_smaller_unit and len(res) > 0 or hours > 0:
         res.append(get_num(hours) + 'H')
-    if days == 0 and minutes > 0:
+    if force_include_smaller_unit and len(res) > 0 or days == 0 and minutes > 0:
         res.append(get_num(minutes) + 'M')
-    if days == 0 and hours == 0 and seconds > 0:
+    if force_include_smaller_unit and len(res) > 0 or days == 0 and hours == 0 and seconds > 0:
         res.append(get_num(seconds) + 'S')
 
     return ' '.join(res)
