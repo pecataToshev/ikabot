@@ -189,7 +189,11 @@ class IkabotProcessListManager:
             process_list = self.get_process_list()
 
         def __fmt_next_action(t):
-            return "{} ({:>8})".format(formatTimestamp(t), daysHoursMinutes(int(t - now)))
+            remaining_time = int(t - now)
+            color = Colours.Text.Light.YELLOW if remaining_time < 120 else ''
+            return "{} {}({:>8})".format(formatTimestamp(t),
+                                         color,
+                                         daysHoursMinutes(remaining_time, add_leading_zeroes_on_smaller_unit=True))
 
         additional_columns = []
         if add_process_numbers:
