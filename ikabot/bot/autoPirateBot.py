@@ -156,8 +156,8 @@ class AutoPirateBot(Bot):
         data = getPiracyTemplateData(self.ikariam_service, self.city_id)
         if data['hasOngoingMission']:
             self._wait(data['ongoingMissionTimeRemaining'],
-                              'Found unexpected mission. Waiting it to end.',
-                                      max_random=5)
+                       'Found unexpected mission. Waiting it to end.',
+                       max_random=5)
             return self.__get_template_data_and_wait_ongoing_mission()
 
         return data
@@ -214,15 +214,14 @@ class AutoPirateBot(Bot):
         html = self.ikariam_service.post(params=params, noIndex=captcha is not None)
         if 'function=createCaptcha' not in html \
                 and '"showPirateFortressShip":0' in html:
-
             # Well, it's far more convenient that we're going to execute the conversion right after we've started the
             # new mission rather that waiting the mission to end
             time_wait_for_conversion_start = self.__convert_capture_points(mission)
 
             # execution is successful, go get some sleep
             self._wait(mission['duration'] - time_wait_for_conversion_start,
-                              'Executing piracy mission {}. {}'.format(mission['name'], additional_message),
-                                      max_random=10)
+                       'Executing piracy mission {}. {}'.format(mission['name'], additional_message),
+                       max_random=10)
 
             return
 
@@ -239,8 +238,9 @@ class AutoPirateBot(Bot):
         captcha = None  # well, captcha failed, let's generate a new one
         while (captcha is None or captcha == 'Error') and remaining_attempts > 0:
             remaining_attempts -= 1
-            self._set_process_info("Found captcha. Trying to resolve it. %d attempts remaining",
-                                   remaining_attempts)
+            self._set_process_info(
+                message="Found captcha. Trying to resolve it. {} attempts remaining".format(remaining_attempts)
+            )
 
             picture = self.ikariam_service.get('action=Options&function=createCaptcha',
                                                fullResponse=True).content
