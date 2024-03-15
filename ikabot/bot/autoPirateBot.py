@@ -236,15 +236,15 @@ class AutoPirateBot(Bot):
                 remaining_attempts=remaining_attempts - 1,
             )
 
-        self._set_process_info('We have to solve some captcha. Let me handle that')
         captcha = None  # well, captcha failed, let's generate a new one
         while (captcha is None or captcha == 'Error') and remaining_attempts > 0:
             remaining_attempts -= 1
-            logging.info("Found captcha. Trying to resolve it. "
-                         "%d attempts remaining", remaining_attempts)
+            self._set_process_info("Found captcha. Trying to resolve it. %d attempts remaining",
+                                   remaining_attempts)
 
             picture = self.ikariam_service.get('action=Options&function=createCaptcha',
                                                fullResponse=True).content
+
             captcha = resolveCaptcha(self.db, self.telegram, picture)
 
             logging.info("Resolved captcha to %s", captcha)
