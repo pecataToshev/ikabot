@@ -135,7 +135,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
         print(row_clr + row_additional_indentation + (row_clr + column_separator).join(
             ['{colour}{data: {align}{len}}'.format(
                 align=table_config[ci].get('align', column_align),
-                len=_max_len[ci],
+                len=_max_len[ci] + len(c['data']) - get_visible_length(c['data']),
                 **c,
             )
                 for ci, c in enumerate(tr)]
