@@ -156,7 +156,7 @@ class UpgradeBuildingBot(Bot):
         if self.transport_resources_pid is not None:
             _process = self.db.get_processes({'pid': self.transport_resources_pid})
             if len(_process) == 0 or _process[0]['status'] not in [ProcessStatus.WAITING, ProcessStatus.RUNNING]:
-                # we no-longer have this process running
+                logging.debug("Transporting resources process %s is not running anymore", self.transport_resources_pid)
                 self.transport_resources_pid = None
             else:
                 next_action_time = _process[0].get('nextActionTime', None)
