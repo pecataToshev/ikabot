@@ -45,6 +45,7 @@ class UpgradeBuildingBot(Bot):
             )
 
         if self.__upgrade_building_bot():
+            logging.debug('Upgrade successful')
             # We've successfully finished the job
             if self.bot_config.get('notifyWhenDone', False):
                 self.telegram.send_message("I've started upgrading {} to {} in {}".format(
@@ -52,6 +53,7 @@ class UpgradeBuildingBot(Bot):
                 ))
             return
 
+        logging.debug('Upgrade failed')
         # We've failed
 
     @staticmethod
@@ -70,8 +72,10 @@ class UpgradeBuildingBot(Bot):
         """
         buildings_in_construction = [building for building in city['position'] if 'completed' in building]
         if len(buildings_in_construction) == 0:
+            logging.debug('No building in construction in city %s', city['name'])
             return None
 
+        logging.debug('In city %s I found building in construction: %s', city['name'], buildings_in_construction)
         return buildings_in_construction[0]
 
     @staticmethod
@@ -90,10 +94,11 @@ class UpgradeBuildingBot(Bot):
         while True:
             city = getCity(self.ikariam_service.get(city_url + self.city_id))
             building = city['position'][self.building_position]
+            logging.debug('Trying to upgrade building in city %s, Building: %s', city['name'], building)
 
             self.__validate_building(building)
             if not self.__has_more_levels_to_upgrade(building):
-                # We've successfully finished the job
+                logging.debug('No more levels to upgrade')
                 return True
 
             building_in_construction = self.__get_currently_expanding_building(city)
@@ -106,6 +111,7 @@ class UpgradeBuildingBot(Bot):
                 if (building_in_construction is None
                         or building_in_construction['position'] != self.building_position
                         or building_in_construction['building'] != self.building_building):
+                    logging.debug("I was not able to start the upgrade of the building")
                     raise Exception("Failed to extend building {} to {} in {}".format(
                         self.building_name_and_position,
                         self.get_building_level(building) + 1,
@@ -114,6 +120,8 @@ class UpgradeBuildingBot(Bot):
 
                 # add check for started expansion logic
                 continue  # Check if we need to upgrade more levels or we can skip the sleep
+            else:
+                logging.debug('We cannot upgrade the building now')
 
             waiting_times = self.__get_waiting_time_with_reason(building_in_construction)
             if waiting_times is None:
@@ -143,6 +151,7 @@ class UpgradeBuildingBot(Bot):
         :return:
         """
         building_upgrade_time_left = self.__get_waiting_time_to_finish_building(building_in_construction)
+        logging.debug('Building upgrade time left: %s', building_upgrade_time_left)
         if building_upgrade_time_left > 0:
             # if there is a building, that is expanding, we can do nothing. So we have to wait for it!
             return [
@@ -154,7 +163,8 @@ class UpgradeBuildingBot(Bot):
             ]
 
         if self.transport_resources_pid is not None:
-            _process = self.db.get_processes({'pid': self.transport_resources_pid})
+            logging.debug("Found transporting resources process with pid %s", self.transport_resources_pid)
+            _process = self.db.get_processes([('pid', '=', self.transport_resources_pid)])
             if len(_process) == 0 or _process[0]['status'] not in [ProcessStatus.WAITING, ProcessStatus.RUNNING]:
                 logging.debug("Transporting resources process %s is not running anymore", self.transport_resources_pid)
                 self.transport_resources_pid = None
@@ -182,16 +192,20 @@ class UpgradeBuildingBot(Bot):
 
     def __validate_building(self, building):
         if self.building_building != building['building']:
+            logging.debug("Different building on this position. Expected %s but found %s",
+                          self.building_building, building['building'])
             raise Exception('Different building on this position. '
                             'Have you changed something via UI? Expected {} but found {}'.format(
                 self.building_name, building['name']
             ))
 
+        logging.debug("Bot configuration is still valid")
+
     def __has_more_levels_to_upgrade(self, building):
         return self.get_building_level(building) < self.building_target_level
 
     def __expand_building(self, building):
-        logging.debug("Trying to expand building: cityId: %s, building: %s", self.city_id, building)
+        logging.debug("Trying to start expanding building %s in city %s", building, self.city_id)
         self.ikariam_service.post(
             noIndex=True,
             params={
