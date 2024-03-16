@@ -38,6 +38,12 @@ class UpgradeBuildingBot(Bot):
         )
 
     def _start(self) -> None:
+        if self.transport_resources_pid is not None:
+            self._wait(
+                seconds=10,
+                info='Waiting for process to start sending resources (pid: {})'.format(self.transport_resources_pid)
+            )
+
         if self.__upgrade_building_bot():
             # We've successfully finished the job
             if self.bot_config.get('notifyWhenDone', False):
@@ -180,6 +186,7 @@ class UpgradeBuildingBot(Bot):
                             'Have you changed something via UI? Expected {} but found {}'.format(
                 self.building_name, building['name']
             ))
+
     def __has_more_levels_to_upgrade(self, building):
         return self.get_building_level(building) < self.building_target_level
 
