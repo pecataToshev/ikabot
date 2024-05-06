@@ -73,7 +73,7 @@ def distribute_resources_bot_configurator(ikariam_service: IkariamService, db: D
         ikariam_service=ikariam_service,
         bot_config={
             'jobs': routes,
-            'batchSize': 5000
+            'batchSize': TransportGoodsBot.DEFAULT_BATCH_SIZE
         }
     ).start(
         action='Distribute Resources',

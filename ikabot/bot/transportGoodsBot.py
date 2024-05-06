@@ -7,6 +7,7 @@ import sys
 from decimal import Decimal
 from typing import List, Union
 
+from ikabot import config
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, materials_names, SECONDS_IN_HOUR
 from ikabot.helpers.citiesAndIslands import getCurrentCityId
@@ -41,6 +42,7 @@ class TransportGoodsBot(Bot):
     Performs transportations
     """
     MAXIMUM_SHIP_SIZE = 500
+    DEFAULT_BATCH_SIZE = 20 * MAXIMUM_SHIP_SIZE
 
     def _get_process_info(self) -> str:
         return 'I execute transportation of resources'

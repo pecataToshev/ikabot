@@ -87,7 +87,7 @@ def transport_goods_bot_configurator(ikariam_service: IkariamService, db: Databa
         enter()
         return
 
-    batch_size = 10 * TransportGoodsBot.MAXIMUM_SHIP_SIZE
+    batch_size = TransportGoodsBot.DEFAULT_BATCH_SIZE
     batch_size = read(
         msg="Set batch size of sent resources from city (default: {}, min: {}, ship size: {}): "
             .format(batch_size, TransportGoodsBot.MAXIMUM_SHIP_SIZE, TransportGoodsBot.MAXIMUM_SHIP_SIZE),
