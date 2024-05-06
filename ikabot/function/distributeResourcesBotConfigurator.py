@@ -12,6 +12,15 @@ from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 
+def __get_route_text(route: TransportJob, resource: int) -> str:
+    return '{:>{maxCityLen}} ---> {:<{maxCityLen}} : {} {}'.format(
+        route.origin_city['name'],
+        route.target_city['name'],
+        materials_names[resource],
+        addThousandSeparator(route.resources[resource]),
+        maxCityLen=config.MAXIMUM_CITY_NAME_LENGTH
+    )
+
 
 def distribute_resources_bot_configurator(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     banner()
@@ -45,21 +54,26 @@ def distribute_resources_bot_configurator(ikariam_service: IkariamService, db: D
     banner()
     print('\nThe following shipments will be made:\n')
     for route in routes:
-        print('{:>{maxCityLen}} ---> {:<{maxCityLen}} : {} {}'.format(
-            route.origin_city['name'],
-            route.target_city['name'],
-            materials_names[resource],
-            addThousandSeparator(route.resources[resource]),
-            maxCityLen=config.MAXIMUM_CITY_NAME_LENGTH
-        ))  # displays all routes to be executed in console
+        print(__get_route_text(route, resource))
 
-    if not askUserYesNo('Proceed'):
+    if not askUserYesNo('Execute all routes'):
+        route_index_to_remove = []
+        for i, route in enumerate(routes):
+            if not askUserYesNo('Execute ' + __get_route_text(route, resource)):
+                route_index_to_remove.append(i)
+
+        routes = [route for i, route in enumerate(routes) if i not in route_index_to_remove]
+
+    if len(routes) == 0:
+        print('No routes to execute')
+        enter()
         return
 
     TransportGoodsBot(
         ikariam_service=ikariam_service,
         bot_config={
             'jobs': routes,
+            'batchSize': 5000
         }
     ).start(
         action='Distribute Resources',
