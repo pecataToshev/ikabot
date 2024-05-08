@@ -276,7 +276,10 @@ def sendResourcesMenu(ikariam_service, beneficent_city_id, missing):
     else:
         print('The resources will be sent and the building will be expanded if possible.')
 
-    process = TransportGoodsBot(ikariam_service, {'jobs': all_routes}).start(
+    process = TransportGoodsBot(ikariam_service, {
+        'jobs': all_routes,
+        'batchSize': TransportGoodsBot.DEFAULT_BATCH_SIZE
+    }).start(
         action='Transport Goods',
         objective='Provide upgrade building resources',
         target_city=beneficent_city['name']

@@ -7,7 +7,6 @@ import sys
 from decimal import Decimal
 from typing import List, Union
 
-from ikabot import config
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, materials_names, SECONDS_IN_HOUR
 from ikabot.helpers.citiesAndIslands import getCurrentCityId
