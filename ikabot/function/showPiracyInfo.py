@@ -1,23 +1,19 @@
 import math
 
+from ikabot.helpers.database import Database
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, decodeUnicodeEscape, enter, \
     printTable
 from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
     getPiracyTemplateData
+from ikabot.helpers.telegram import Telegram
+from ikabot.web.ikariamService import IkariamService
 
 
-def showPiracyInfo(ikariam_service, db, telegram):
-    """
-    Parameters
-    ----------
-    ikariam_service : ikabot.web.ikariamService.IkariamService
-    db: ikabot.helpers.database.Database
-    telegram: ikabot.helpers.telegram.Telegram
-    """
+def showPiracyInfo(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     banner()
 
     great_pirate_city = findCityWithTheBiggestPiracyFortress(ikariam_service)
-    template_data = getPiracyTemplateData(ikariam_service, great_pirate_city)
+    template_data = getPiracyTemplateData(ikariam_service, great_pirate_city['id'])
 
     print('Biggest fortress level:', template_data['buildingLevel'])
 

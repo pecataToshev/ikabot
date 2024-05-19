@@ -2,22 +2,18 @@ import re
 
 from ikabot.bot.autoPirateBot import AutoPirateBot
 from ikabot.config import isWindows
+from ikabot.helpers.database import Database
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, decodeUnicodeEscape, enter, \
     printTable
 from ikabot.helpers.ikabotProcessListManager import run
+from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.piracy import findCityWithTheBiggestPiracyFortress, \
     getPiracyTemplateData
+from ikabot.web.ikariamService import IkariamService
 
 
-def autoPiracyBotConfigurator(ikariam_service, db, telegram):
-    """
-    Parameters
-    ----------
-    ikariam_service : ikabot.web.ikariamService.IkariamService
-    db: ikabot.helpers.database.Database
-    telegram: ikabot.helpers.telegram.Telegram
-    """
+def autoPiracyBotConfigurator(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     banner()
 
     if not isWindows:
@@ -33,16 +29,16 @@ def autoPiracyBotConfigurator(ikariam_service, db, telegram):
     print(Colours.Text.RESET)
     print()
 
-    great_pirate_city_id = findCityWithTheBiggestPiracyFortress(ikariam_service)
-    if great_pirate_city_id is None:
+    great_pirate_city = findCityWithTheBiggestPiracyFortress(ikariam_service)
+    if great_pirate_city is None:
         print("Well, no pirate fortress found. Sorry.")
         enter()
         return
 
-    template_data = getPiracyTemplateData(ikariam_service, great_pirate_city_id)
+    template_data = getPiracyTemplateData(ikariam_service, great_pirate_city['id'])
 
     bot_config = {
-        'cityId': great_pirate_city_id
+        'cityId': great_pirate_city['id'],
     }
 
     print("What type of automation you want?")
@@ -109,7 +105,8 @@ def autoPiracyBotConfigurator(ikariam_service, db, telegram):
 
     AutoPirateBot(ikariam_service, bot_config).start(
         action='Auto Pirating',
-        objective=objective
+        objective=objective,
+        target_city=great_pirate_city['name'],
     )
 
     enter()

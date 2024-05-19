@@ -47,18 +47,18 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
     return city, building, data
 
 
-def find_city_with_the_biggest_building(ikariam_service: IkariamService, building_type: str) -> Union[int, None]:
+def find_city_with_the_biggest_building(ikariam_service: IkariamService, building_type: str) -> Union[dict, None]:
     """
-    Finds and returns the id of the city with the highest building level of given type.
+    Finds and returns the city with the highest building level of given type.
     """
     [cities_ids, _] = getIdsOfCities(ikariam_service)
-    great_city_id = None
+    great_city = None
     max_level = 0
     for city_id in cities_ids:
         city = getCity(ikariam_service.get(city_url + city_id))
         for building in city['position']:
             if building['building'] == building_type and building['level'] > max_level:
-                great_city_id = city_id
+                great_city = city
                 max_level = building['level']
 
-    return great_city_id
+    return great_city
