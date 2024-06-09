@@ -427,6 +427,10 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
                 wp['availableWood'] = workplace['availableWood']
                 wp['freeCitizens'] = workplace['freeCitizens']
                 wp['goldPerHour'] = workplace['goldPerHour']
+            elif wp['islandId'] == workplace['islandId'] and wp['material'] == workplace['material']:
+                wp['availableWood'] = workplace['availableWood']
+                wp['upgradeEndTime'] = workplace['upgradeEndTime']
+                wp['upgrading'] = workplace['upgrading']
 
         # update operational workplace
         workplaces[workplace_ind] = workplace
