@@ -11,6 +11,7 @@ from ikabot.web.ikariamService import IkariamService
 
 
 def calculate_conversion(population: int, number_of_priests: int, slider: dict) -> float:
+    # It's not the right formula, but it does some job
     _start_conversion = float(number_of_priests * slider['callback_data']['citizens_per_priest'])
     constraint = float(slider['bottom_constraint']) / slider['top_constraint']
     return max(((_start_conversion - constraint) / population) * 100, 0)
