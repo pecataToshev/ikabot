@@ -12,7 +12,8 @@ from ikabot.web.ikariamService import IkariamService
 
 def calculate_conversion(population: int, number_of_priests: int, slider: dict) -> float:
     _start_conversion = float(number_of_priests * slider['callback_data']['citizens_per_priest'])
-    return max(((_start_conversion - slider['bottom_constraint']) / population) * 100, 0)
+    constraint = float(slider['bottom_constraint']) / slider['top_constraint']
+    return max(((_start_conversion - constraint) / population) * 100, 0)
 
 
 def use_temple(ikariam_service: IkariamService, db: Database, telegram: Telegram):
