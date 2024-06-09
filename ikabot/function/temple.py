@@ -1,8 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import json
-
 from ikabot.config import actionRequest
 from ikabot.helpers.buildings import choose_city_with_building
 from ikabot.helpers.database import Database
@@ -31,14 +29,15 @@ def use_temple(ikariam_service: IkariamService, db: Database, telegram: Telegram
     population = update_global_data['headerData']['currentResources']['population']
 
     template_data = data[2][1]
-    template_params = json.loads(template_data['load_js']['params'], strict=False)
-    slider = template_params['js_TempleSlider']['slider']
+    slider = template_data['js_TempleSlider']['slider']
 
     citizens_per_priest = slider['callback_data']['citizens_per_priest']
 
     # Print current data
-    print('Current priests:', slider['ini_value'])
-    print('Current conversion rate:', calculate_conversion(population, slider['ini_value'], citizens_per_priest))
+    current_priests = slider['ini_value']
+    print('Current priests:', current_priests)
+    print('Current conversion rate: {:.2f}%'
+          .format(calculate_conversion(population, current_priests, citizens_per_priest)))
 
     # Prepare common conversion percentages
     _table = []
@@ -53,7 +52,7 @@ def use_temple(ikariam_service: IkariamService, db: Database, telegram: Telegram
     print('Common conversion percentages')
     printTable(
         table_config=[
-            {'key': 'priests', 'title': 'Number of priests'},
+            {'key': 'priests', 'title': '# Priests'},
             {'key': 'conversionRate', 'title': 'Conversion Rate', 'fmt': lambda v: '{:.2f}%'.format(v)},
         ],
         table_data=_table,
@@ -61,7 +60,8 @@ def use_temple(ikariam_service: IkariamService, db: Database, telegram: Telegram
 
     # Choose number of priests
     while True:
-        new_number_of_priests = read(min=0, max=slider['max_value'], msg='Choose number of priests: ')
+        new_number_of_priests = read(min=0, max=slider['max_value'],
+                                     msg='Choose number of priests (max {}): '.format(slider['max_value']), digit=True)
 
         print('You chose {} priest(s)'.format(new_number_of_priests))
         print('The new conversion rate is {:.2f}%'.format(calculate_conversion(population, new_number_of_priests,
