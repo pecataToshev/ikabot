@@ -33,6 +33,7 @@ from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.function.stationArmy import stationArmy
 from ikabot.function.studies import study
 from ikabot.function.telegramFunctions import test_telegram_bot, update_telegram_bot
+from ikabot.function.temple import use_temple
 from ikabot.function.trainArmyBotConfigurator import train_army_bot_configurator
 from ikabot.function.transportGoodsBotConfigurator import transport_goods_bot_configurator
 from ikabot.function.update import update
@@ -81,10 +82,11 @@ _global_menu = [
         ['Buy resources', buy_resources_bot_configurator],
         ['Sell resources', sell_resources_bot_configurator],
     ]],
-    ['Miracle', [
+    ['Temple & Miracle', [
         __command_back,
         ['Activate Miracle', activate_miracle_bot_configurator],
         ['Donate to Miracle', miracle_donate],
+        ['Set Priests', use_temple],
     ]],
     ['Military actions', [
         __command_back,
