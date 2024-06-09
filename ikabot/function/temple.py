@@ -10,8 +10,9 @@ from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.web.ikariamService import IkariamService
 
 
-def calculate_conversion(population: int, number_of_priests: int, citizens_per_priest: int) -> float:
-    return (float(number_of_priests * citizens_per_priest) / population) * 100
+def calculate_conversion(population: int, number_of_priests: int, slider: dict) -> float:
+    _start_conversion = float(number_of_priests * slider['callback_data']['citizens_per_priest'])
+    return max(((_start_conversion - slider['bottom_constraint']) / population) * 100, 0)
 
 
 def use_temple(ikariam_service: IkariamService, db: Database, telegram: Telegram):
@@ -31,18 +32,15 @@ def use_temple(ikariam_service: IkariamService, db: Database, telegram: Telegram
     template_data = data[2][1]
     slider = template_data['js_TempleSlider']['slider']
 
-    citizens_per_priest = slider['callback_data']['citizens_per_priest']
-
     # Print current data
     current_priests = slider['ini_value']
     print('Current priests:', current_priests)
-    print('Current conversion rate: {:.2f}%'
-          .format(calculate_conversion(population, current_priests, citizens_per_priest)))
+    print('Current conversion rate: {:.2f}%'.format(calculate_conversion(population, current_priests, slider)))
 
     # Prepare common conversion percentages
     _table = []
     for _priests in range(slider['max_value']):
-        _c = calculate_conversion(population, _priests, citizens_per_priest)
+        _c = calculate_conversion(population, _priests, slider)
         _threshold = 0.1  # adjust the threshold as needed
 
         _closest_divisible = round(_c / 25) * 25
@@ -60,12 +58,11 @@ def use_temple(ikariam_service: IkariamService, db: Database, telegram: Telegram
 
     # Choose number of priests
     while True:
-        new_number_of_priests = read(min=0, max=slider['max_value'],
+        new_priests_number = read(min=0, max=slider['max_value'],
                                      msg='Choose number of priests (max {}): '.format(slider['max_value']), digit=True)
 
-        print('You chose {} priest(s)'.format(new_number_of_priests))
-        print('The new conversion rate is {:.2f}%'.format(calculate_conversion(population, new_number_of_priests,
-                                                                               citizens_per_priest)))
+        print('You chose {} priest(s)'.format(new_priests_number))
+        print('The new conversion rate is {:.2f}%'.format(calculate_conversion(population, new_priests_number, slider)))
         if askUserYesNo('Proceed with setting'):
             break
 
@@ -78,7 +75,7 @@ def use_temple(ikariam_service: IkariamService, db: Database, telegram: Telegram
             'action': 'CityScreen',
             'function': 'assignPriests',
             'templateView': 'temple',
-            'priests': new_number_of_priests,
+            'priests': new_priests_number,
             'cityId': city['id'],
             'position': temple['position'],
             'backgroundView': 'city',
