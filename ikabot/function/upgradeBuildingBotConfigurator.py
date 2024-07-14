@@ -364,7 +364,7 @@ def getBuildingGroupToExpand(city: dict) -> Union[dict, None]:
                     colour = Colours.Text.Light.RED
 
                 _levels.append(colour)
-                _levels.append('+' if building['isBusy'] is True else ' ' + building['level'])
+                _levels.append("{}{}".format('+' if building['isBusy'] is True else ' ', building['level']))
 
         print("{}{:>2}) {} lvls {}{}".format(
             Colours.Text.RESET,
