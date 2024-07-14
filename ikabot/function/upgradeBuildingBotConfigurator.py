@@ -363,7 +363,8 @@ def getBuildingGroupToExpand(city: dict) -> Union[dict, None]:
                 else:
                     colour = Colours.Text.Light.RED
 
-                _levels.append("{}{}{}".format(colour, '+' if building['isBusy'] is True else ' ', building['level']))
+                _levels.append("{}{}{}{}".format(colour, building['level'],
+                                                 '+' if building['isBusy'] is True else '', Colours.Text.RESET))
 
         print("{}{:>2}) {}: {}{}".format(
             Colours.Text.RESET,
@@ -516,9 +517,13 @@ def upgrade_building_group_bot_configurator(ikariam_service, db, telegram):
 
     buildings_to_expand = [b for b in city['position'] if b['building'] == building_type]
     _min_lvl = min([AbstractUpgradeBuildingBot.get_building_level(b) for b in buildings_to_expand])
-    target_level = read(min = _min_lvl+1, digit=True, msg="Target level (min: {})".format(_min_lvl+1))
 
-    resources_needed = [getResourcesNeeded(ikariam_service, city, building, AbstractUpgradeBuildingBot.get_building_level(building), target_level) for building in buildings_to_expand]
+    print('Selected {} buildings of type {} to upgrade.'.format(len(buildings_to_expand)), buildings_to_expand[0]['name'])
+    target_level = read(min=_min_lvl+1, digit=True, msg="Target level (min: {}): ".format(_min_lvl+1))
+
+    resources_needed = [getResourcesNeeded(ikariam_service, city, building,
+                                           AbstractUpgradeBuildingBot.get_building_level(building), target_level)
+                        for building in buildings_to_expand]
     resources_needed = [sum(col) for col in zip(*resources_needed)]
 
     print('\nMaterials needed:')
