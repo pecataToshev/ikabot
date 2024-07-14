@@ -349,7 +349,7 @@ def getBuildingGroupToExpand(city: dict) -> Union[dict, None]:
     print('(0)\tExit')
     buildings = [building for building in city['position'] if building['name'] != 'empty']
     buildings = [buildings[0]] + sorted(buildings[1:], key=lambda b: b['name'])
-    building_types = list(set([item['building'] for item in buildings]))
+    building_types = list(dict.fromkeys([item['building'] for item in buildings]))
     for i, _type in enumerate(building_types):
         _levels = []
         _name = ''
