@@ -5,7 +5,7 @@ from ikabot.config import city_url, materials_names, MAXIMUM_CITY_NAME_LENGTH
 from ikabot.function.constructBuilding import constructBuilding
 from ikabot.function.islandWorkplaces import islandWorkplaces
 from ikabot.function.transportGoodsBotConfigurator import transport_goods_bot_configurator
-from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_bot_configurator
+from ikabot.function.upgradeBuildingBotConfigurator import upgrade_single_building_bot_configurator
 from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
@@ -199,7 +199,7 @@ def getStatusForAllCities(ikariam_service: IkariamService, db: Database, telegra
         elif action == 1:
             print_buildings(cities)
         elif action == 2:
-            return upgrade_building_bot_configurator(ikariam_service, db, telegram)
+            return upgrade_single_building_bot_configurator(ikariam_service, db, telegram)
         elif action == 3:
             return constructBuilding(ikariam_service, db, telegram)
         elif action == 4:

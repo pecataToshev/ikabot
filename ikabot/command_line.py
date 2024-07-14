@@ -37,7 +37,7 @@ from ikabot.function.temple import use_temple
 from ikabot.function.trainArmyBotConfigurator import train_army_bot_configurator
 from ikabot.function.transportGoodsBotConfigurator import transport_goods_bot_configurator
 from ikabot.function.update import update
-from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_bot_configurator
+from ikabot.function.upgradeBuildingBotConfigurator import upgrade_single_building_bot_configurator
 from ikabot.function.vacationMode import vacationMode
 from ikabot.function.wineMonitoringBotConfigurator import configure_wine_monitoring_bot
 from ikabot.function.workshop import use_workshop
@@ -56,7 +56,7 @@ _global_menu = [
     ['Refresh process info', __function_refresh],
     ['Construction', [
         __command_back,
-        ['Building Upgrades', upgrade_building_bot_configurator],
+        ['Building Upgrades', upgrade_single_building_bot_configurator],
         ['Construct building', constructBuilding],
     ]],
     ['Resources & Donations', [

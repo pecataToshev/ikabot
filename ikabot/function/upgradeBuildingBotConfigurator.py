@@ -5,12 +5,15 @@ import json
 import math
 import re
 from decimal import Decimal
+from typing import Union
 
 import requests
 
 from ikabot import config
 from ikabot.bot.transportGoodsBot import TransportGoodsBot, TransportJob
-from ikabot.bot.upgradeBuildingBot import UpgradeBuildingBot
+from ikabot.bot.upgradeBuilding.abstractUpgradeBuildingBot import AbstractUpgradeBuildingBot
+from ikabot.bot.upgradeBuilding.upgradeBuildingGroupBot import UpgradeBuildingGroupBot
+from ikabot.bot.upgradeBuilding.upgradeSingleBuildingBot import UpgradeSingleBuildingBot
 from ikabot.config import actionRequest, city_url, materials_names, materials_names_tec, MAXIMUM_CITY_NAME_LENGTH
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, decodeUnicodeEscape, enter
@@ -329,7 +332,7 @@ def getBuildingToExpand(city):
         return None
 
     building = buildings[selected_building_id - 1]
-    current_level = UpgradeBuildingBot.get_building_level(building)
+    current_level = UpgradeSingleBuildingBot.get_building_level(building)
 
     print()
     print()
@@ -338,6 +341,44 @@ def getBuildingToExpand(city):
     building['targetLevel'] = read(min=current_level+1, msg='increase to level: ')
 
     return building
+
+
+def getBuildingGroupToExpand(city: dict) -> Union[dict, None]:
+    # show the buildings available to expand (ignore empty spaces)
+    print('Which building do you want to expand?\n')
+    print('(0)\tExit')
+    buildings = [building for building in city['position'] if building['name'] != 'empty']
+    buildings = [buildings[0]] + sorted(buildings[1:], key=lambda b: b['name'])
+    building_types = [item['building'] for item in buildings]
+    for i, _type in enumerate(building_types):
+        _levels = []
+        _name = ''
+        for building in buildings:
+            if building['building'] == _type:
+                _name = building['name']
+                if building['isMaxLevel'] is True:
+                    colour = Colours.Text.Light.BLACK
+                elif building['canUpgrade'] is True:
+                    colour = Colours.Text.Light.GREEN
+                else:
+                    colour = Colours.Text.Light.RED
+
+                _levels.append(colour)
+                _levels.append('+' if building['isBusy'] is True else ' ' + building['level'])
+
+        print("{}{:>2}) {} lvls {}{}".format(
+            Colours.Text.RESET,
+            i+1,
+            _name,
+            _levels,
+            Colours.Text.RESET)
+        )
+
+    selected_building_id = read(min=0, max=len(building_types))
+    if selected_building_id == 0:
+        return None
+
+    return building_types[selected_building_id - 1]
 
 
 def checkhash(url):
@@ -371,7 +412,7 @@ def __print_related_processes(db, city_name):
     )
 
 
-def upgrade_building_bot_configurator(ikariam_service, db, telegram):
+def upgrade_single_building_bot_configurator(ikariam_service, db, telegram):
     """
     Parameters
     ----------
@@ -394,7 +435,7 @@ def upgrade_building_bot_configurator(ikariam_service, db, telegram):
         return
 
     target_level = building['targetLevel']
-    current_level = UpgradeBuildingBot.get_building_level(building)
+    current_level = UpgradeSingleBuildingBot.get_building_level(building)
 
     # calculate the resources that are needed
     resources_needed = getResourcesNeeded(ikariam_service, city, building, current_level, target_level)
@@ -437,7 +478,7 @@ def upgrade_building_bot_configurator(ikariam_service, db, telegram):
         if not askUserYesNo('Proceed'):
             return
 
-    UpgradeBuildingBot(
+    UpgradeSingleBuildingBot(
         ikariam_service=ikariam_service,
         bot_config={
             'cityId': city['id'],
@@ -448,5 +489,86 @@ def upgrade_building_bot_configurator(ikariam_service, db, telegram):
     ).start(
         action='Upgrade Building',
         objective='{} to {}'.format(building['positionAndName'], target_level),
+        target_city=city['cityName']
+    )
+
+
+def upgrade_building_group_bot_configurator(ikariam_service, db, telegram):
+    """
+    Parameters
+    ----------
+    ikariam_service : ikabot.web.ikariamService.IkariamService
+    db: ikabot.helpers.database.Database
+    telegram: ikabot.helpers.telegram.Telegram
+    """
+
+    banner()
+    print('In which city do you want to expand a building?')
+    city = chooseCity(ikariam_service)
+    city_id = city['id']
+
+    banner()
+    print(city['cityName'])
+    __print_related_processes(db, city['cityName'])
+
+    building_type = getBuildingGroupToExpand(city)
+    if building_type is None:
+        return
+
+    buildings_to_expand = [b for b in city['position'] if b['building'] == building_type]
+    _min_lvl = min([AbstractUpgradeBuildingBot.get_building_level(b) for b in buildings_to_expand])
+    target_level = read(min = _min_lvl+1, digit=True, msg="Target level (min: {})".format(_min_lvl+1))
+
+    resources_needed = [getResourcesNeeded(ikariam_service, city, building, AbstractUpgradeBuildingBot.get_building_level(building), target_level) for building in buildings_to_expand]
+    resources_needed = [sum(col) for col in zip(*resources_needed)]
+
+    print('\nMaterials needed:')
+    for i, name in enumerate(materials_names):
+        amount = resources_needed[i]
+        if amount == 0:
+            continue
+        print('- {}: {}'.format(name, addThousandSeparator(amount)))
+    print('')
+
+    # calculate the resources that are missing
+    missing = [0] * len(materials_names)
+    for i in range(len(materials_names)):
+        if city['availableResources'][i] < resources_needed[i]:
+            missing[i] = resources_needed[i] - city['availableResources'][i]
+
+    # show missing resources to the user
+    _transport_process_pid = None
+    if sum(missing) > 0:
+        print('\nMissing:')
+        for i in range(len(materials_names)):
+            if missing[i] == 0:
+                continue
+            name = materials_names[i].lower()
+            print('{} of {}'.format(addThousandSeparator(missing[i]), name))
+        print('')
+
+        # if the user wants, send the resources from the selected cities
+        if not askUserYesNo('Automatically transport resources'):
+            if not askUserYesNo('Proceed anyway'):
+                return
+        else:
+            _transport_process_pid = sendResourcesMenu(ikariam_service, city_id, missing)
+    else:
+        print('\nYou have enough materials')
+        if not askUserYesNo('Proceed'):
+            return
+
+    UpgradeBuildingGroupBot(
+        ikariam_service=ikariam_service,
+        bot_config={
+            'cityId': city['id'],
+            'cityName': city['name'],
+            'building': buildings_to_expand[0],
+            'targetLevel': target_level,
+            'transportResourcesPid': _transport_process_pid
+        }
+    ).start(
+        action='Upgrade Building Group',
+        objective='{} to {}'.format(buildings_to_expand[0]['name'], target_level),
         target_city=city['cityName']
     )
