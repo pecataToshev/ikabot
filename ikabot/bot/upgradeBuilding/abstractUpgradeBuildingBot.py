@@ -103,11 +103,11 @@ class AbstractUpgradeBuildingBot(Bot):
                 city = getCity(self.ikariam_service.get(city_url + self.city_id))
                 building_in_construction = self.__get_currently_expanding_building(city)
                 if (building_in_construction is None
-                        or building_in_construction['position'] != self.building_position
-                        or building_in_construction['building'] != self.building_building):
+                        or building_in_construction['position'] != building['position']
+                        or building_in_construction['building'] != building['building']):
                     logging.debug("I was not able to start the upgrade of the building")
                     raise Exception("Failed to extend building {} to {} in {}".format(
-                        self.building_name_and_position,
+                        building['nameAndPosition'],
                         self.get_building_level(building) + 1,
                         self.city_name
                     ))
