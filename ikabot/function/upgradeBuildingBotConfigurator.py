@@ -518,8 +518,10 @@ def upgrade_building_group_bot_configurator(ikariam_service, db, telegram):
     buildings_to_expand = [b for b in city['position'] if b['building'] == building_type]
     _min_lvl = min([AbstractUpgradeBuildingBot.get_building_level(b) for b in buildings_to_expand])
 
+    print()
     print('Selected {} buildings of type {} to upgrade.'.format(len(buildings_to_expand),
                                                                 buildings_to_expand[0]['name']))
+    print()
     target_level = read(min=_min_lvl+1, digit=True, msg="Target level (min: {}): ".format(_min_lvl+1))
 
     resources_needed = [getResourcesNeeded(ikariam_service, city, building,
