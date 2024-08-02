@@ -350,12 +350,22 @@ def getBuildingGroupToExpand(city: dict) -> Union[dict, None]:
     buildings = [building for building in city['position'] if building['name'] != 'empty']
     buildings = [buildings[0]] + sorted(buildings[1:], key=lambda b: b['name'])
     building_types = list(dict.fromkeys([item['building'] for item in buildings]))
-    for i, _type in enumerate(building_types):
+    _forced_groups = [
+        ['safehouse', 'townHall', 'tavern', 'temple', 'wall'],
+        ['architect', 'carpentering', 'fireworker', 'optician', 'vineyard'],
+        ['alchemist', 'forester', 'glassblowing', 'stonemason', 'winegrower'],
+        ['barracks', 'shipyard'],
+        ['blackMarket', 'branchOffice']
+    ]
+    _ungrouped_buildings = [[b] for b in building_types if not any(b in row for row in _forced_groups)]
+    _grouped_types = _forced_groups + _ungrouped_buildings
+
+    for i, _types in enumerate(_grouped_types):
         _levels = []
-        _name = ''
+        _names = []
         for building in buildings:
-            if building['building'] == _type:
-                _name = building['name']
+            if building['building'] in _types:
+                _names.append(building['name'])
                 if building['isMaxLevel'] is True:
                     colour = Colours.Text.Light.BLACK
                 elif building['canUpgrade'] is True:
@@ -369,16 +379,16 @@ def getBuildingGroupToExpand(city: dict) -> Union[dict, None]:
         print("{}{:>2}) {}: {}{}".format(
             Colours.Text.RESET,
             i+1,
-            _name,
+            ', '.join(_names),
             ', '.join(_levels),
             Colours.Text.RESET)
         )
 
-    selected_building_id = read(min=0, max=len(building_types))
+    selected_building_id = read(min=0, max=len(_grouped_types))
     if selected_building_id == 0:
         return None
 
-    return building_types[selected_building_id - 1]
+    return _grouped_types[selected_building_id - 1]
 
 
 def checkhash(url):
@@ -511,11 +521,11 @@ def upgrade_building_group_bot_configurator(ikariam_service, db, telegram):
     print(city['cityName'])
     __print_related_processes(db, city['cityName'])
 
-    building_type = getBuildingGroupToExpand(city)
-    if building_type is None:
+    building_types = getBuildingGroupToExpand(city)
+    if building_types is None:
         return
 
-    buildings_to_expand = [b for b in city['position'] if b['building'] == building_type]
+    buildings_to_expand = [b for b in city['position'] if b['building'] in building_types]
     _min_lvl = min([AbstractUpgradeBuildingBot.get_building_level(b) for b in buildings_to_expand])
 
     print()
@@ -570,7 +580,7 @@ def upgrade_building_group_bot_configurator(ikariam_service, db, telegram):
         bot_config={
             'cityId': city['id'],
             'cityName': city['name'],
-            'building': buildings_to_expand[0],
+            'buildingTypes': building_types,
             'targetLevel': target_level,
             'transportResourcesPid': _transport_process_pid
         }

@@ -12,23 +12,23 @@ class UpgradeBuildingGroupBot(AbstractUpgradeBuildingBot):
     def __init__(self, ikariam_service, bot_config):
         super().__init__(ikariam_service, bot_config)
         self.building_target_level = bot_config['targetLevel']
-        building = bot_config['building']
-        self.building_name = building['name']
-        self.building_building = building['building']
+        self.building_types = bot_config['buildingTypes']
 
     def _get_process_info(self):
         return '\nI upgrade all {} to {} level in {}\n'.format(
-            self.building_name,
+            self.building_types,
             self.building_target_level,
             self.city_name,
         )
 
     @staticmethod
-    def _get_building_with_smallest_level_from_type(city: dict, building_type: str) -> dict:
+    def _get_building_with_smallest_level_from_type(city: dict, building_type: [str]) -> dict:
         min_level = 10000
         position = None
         for building in city['position']:
-            if building['building'] == building_type and building['level'] < min_level:
+            if (building['building'] in building_type
+                    and building['level'] < min_level
+                    and building['isMaxLevel'] is False):
                 min_level = building['level']
                 position = building['position']
 
@@ -38,11 +38,11 @@ class UpgradeBuildingGroupBot(AbstractUpgradeBuildingBot):
         return city['position'][position]
 
     def _get_building_to_upgrade(self, city: dict) -> dict:
-        return self._get_building_with_smallest_level_from_type(city, self.building_building)
+        return self._get_building_with_smallest_level_from_type(city, self.building_types)
 
     def _notify_done_message(self) -> str:
         return "I've started upgrading last {} to {} in {}".format(
-            self.building_name, self.building_target_level, self.city_name
+            self.building_types, self.building_target_level, self.city_name
         )
 
     def _has_more_levels_to_upgrade(self, building):
