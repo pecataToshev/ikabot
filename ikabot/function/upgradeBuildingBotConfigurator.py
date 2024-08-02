@@ -355,7 +355,8 @@ def getBuildingGroupToExpand(city: dict) -> Union[dict, None]:
         ['architect', 'carpentering', 'fireworker', 'optician', 'vineyard'],
         ['alchemist', 'forester', 'glassblowing', 'stonemason', 'winegrower'],
         ['barracks', 'shipyard'],
-        ['blackMarket', 'branchOffice']
+        ['blackMarket', 'branchOffice'],
+        ['warehouse']
     ]
     # remove groups that have no representation in the city
     _forced_groups = [row for row in _forced_groups if any(value in building_types for value in row)]
