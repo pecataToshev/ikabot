@@ -357,7 +357,11 @@ def getBuildingGroupToExpand(city: dict) -> Union[dict, None]:
         ['barracks', 'shipyard'],
         ['blackMarket', 'branchOffice']
     ]
+    # remove groups that have no representation in the city
+    _forced_groups = [row for row in _forced_groups if any(value in building_types for value in row)]
+    # remove elements, that are part of groups and make elements in single groups
     _ungrouped_buildings = [[b] for b in building_types if not any(b in row for row in _forced_groups)]
+    # combine all the groups
     _grouped_types = _forced_groups + _ungrouped_buildings
 
     for i, _types in enumerate(_grouped_types):
