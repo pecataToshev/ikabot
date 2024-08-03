@@ -343,7 +343,7 @@ def getBuildingToExpand(city):
     return building
 
 
-def getBuildingGroupToExpand(city: dict) -> Union[dict, None]:
+def getBuildingGroupToExpand(city: dict) -> Union[list, None]:
     # show the buildings available to expand (ignore empty spaces)
     print('Which building do you want to expand?\n')
     print('(0)\tExit')
@@ -531,11 +531,11 @@ def upgrade_building_group_bot_configurator(ikariam_service, db, telegram):
         return
 
     buildings_to_expand = [b for b in city['position'] if b['building'] in building_types]
+    building_names = sorted(set([b['name'] for b in buildings_to_expand]))
     _min_lvl = min([AbstractUpgradeBuildingBot.get_building_level(b) for b in buildings_to_expand])
 
     print()
-    print('Selected {} buildings of type {} to upgrade.'.format(len(buildings_to_expand),
-                                                                buildings_to_expand[0]['name']))
+    print('Selected {} buildings of type {} to upgrade.'.format(len(buildings_to_expand), building_names))
     print()
     target_level = read(min=_min_lvl+1, digit=True, msg="Target level (min: {}): ".format(_min_lvl+1))
 
@@ -591,6 +591,6 @@ def upgrade_building_group_bot_configurator(ikariam_service, db, telegram):
         }
     ).start(
         action='Upgrade Building Group',
-        objective='{} to {}'.format(buildings_to_expand[0]['name'], target_level),
+        objective='{} to {}'.format([b[:3] for b in building_names], target_level),
         target_city=city['cityName']
     )
