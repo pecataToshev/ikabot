@@ -1,4 +1,5 @@
 import json
+from enum import Enum
 from typing import Tuple, Union
 
 from ikabot.config import actionRequest, city_url
@@ -6,6 +7,29 @@ from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import enter
 from ikabot.web.ikariamService import IkariamService
+
+
+class BuildingTypes(Enum):
+    TOWN_HALL = {'building': 'townHall'}
+    SAFE_HOUSE = {'building': 'safehouse'}
+    TAVERN = {'building': 'tavern'}
+    TEMPLE = {'building': 'temple'}
+    WALL = {'building': 'wall'}
+    ARCHITECT = {'building': 'architect', 'reducesResources': 'stone'}
+    CARPENTERING = {'building': 'carpentering', 'reducesResources': 'wood'}
+    FIRE_WORKER = {'building': 'fireworker', 'reducesResources': 'sulphur'}
+    OPTICIAN = {'building': 'optician', 'reducesResources': 'crystal'}
+    VINEYARD = {'building': 'vineyard', 'reducesResources': 'wine'}
+    ALCHEMIST = {'building': 'alchemist'}
+    FORESTER = {'building': 'forester'}
+    GLASSBLOWING = {'building': 'glassblowing'}
+    STONEMASON = {'building': 'stonemason'}
+    WINEGROWER = {'building': 'winegrower'}
+    BARRACKS = {'building': 'barracks'}
+    SHIPYARD = {'building': 'shipyard'}
+    BLACK_MARKET = {'building': 'blackMarket'}
+    BRANCH_OFFICE = {'building': 'branchOffice'}
+    WAREHOUSE = {'building': 'warehouse'}
 
 
 def extract_target_building(city: dict, building_type: str):
