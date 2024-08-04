@@ -352,6 +352,7 @@ def getBuildingGroupToExpand(city: dict) -> Union[list, None]:
     building_types = list(dict.fromkeys([item['building'] for item in buildings]))
     _forced_groups = [
         ['safehouse', 'townHall', 'tavern', 'temple', 'wall'],
+        ['architect', 'carpentering'],
         ['architect', 'carpentering', 'fireworker', 'optician', 'vineyard'],
         ['alchemist', 'forester', 'glassblowing', 'stonemason', 'winegrower'],
         ['barracks', 'shipyard'],
