@@ -50,7 +50,7 @@ class AbstractUpgradeBuildingBot(Bot):
         raise NotImplementedError()
 
     @abstractmethod
-    def _has_more_levels_to_upgrade(self, building):
+    def _has_more_levels_to_upgrade(self, city: dict, building: dict) -> bool:
         raise NotImplementedError()
 
     @staticmethod
@@ -91,7 +91,7 @@ class AbstractUpgradeBuildingBot(Bot):
             building = self._get_building_to_upgrade(city)
             logging.debug('Trying to upgrade building in city %s, Building: %s', city['name'], building)
 
-            if not self._has_more_levels_to_upgrade(building):
+            if not self._has_more_levels_to_upgrade(city, building):
                 logging.debug('No more levels to upgrade')
                 return True
 

@@ -42,5 +42,5 @@ class UpgradeSingleBuildingBot(AbstractUpgradeBuildingBot):
             self.building_name_and_position, self.building_target_level, self.city_name
         )
 
-    def _has_more_levels_to_upgrade(self, building):
+    def _has_more_levels_to_upgrade(self, city, building):
         return self.get_building_level(building) < self.building_target_level

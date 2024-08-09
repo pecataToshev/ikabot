@@ -27,9 +27,9 @@ class UpgradeBuildingGroupBot(AbstractUpgradeBuildingBot):
         position = None
         for building in city['position']:
             if (building['building'] in building_type
-                    and building['level'] < min_level
+                    and AbstractUpgradeBuildingBot.get_building_level(building) < min_level
                     and building['isMaxLevel'] is False):
-                min_level = building['level']
+                min_level = AbstractUpgradeBuildingBot.get_building_level(building)
                 position = building['position']
 
         if position is None:
@@ -45,5 +45,6 @@ class UpgradeBuildingGroupBot(AbstractUpgradeBuildingBot):
             self.building_types, self.building_target_level, self.city_name
         )
 
-    def _has_more_levels_to_upgrade(self, building):
-        return self.get_building_level(building) < self.building_target_level
+    def _has_more_levels_to_upgrade(self, city: dict, building: dict) -> bool:
+        _smallest_buildings = [self._get_building_with_smallest_level_from_type(city, bt) for bt in self.building_types]
+        return any(self.get_building_level(b) < self.building_target_level for b in _smallest_buildings)
