@@ -41,8 +41,9 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
         'Overcharged',
         'level',
         'Upgrade wood required',
+        'Free Upgrade Wood'
     ]
-    column_length = [3, config.MAXIMUM_CITY_NAME_LENGTH, 17, 8, 10, 13, 11, 5, 23]
+    column_length = [3, config.MAXIMUM_CITY_NAME_LENGTH, 17, 8, 10, 13, 11, 5, 23, 20]
     
     def get_view(material_ind):
         return 'resource' if material_ind == 0 else 'tradegood'
@@ -83,10 +84,18 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
 
         if not data['upgrading'] and json[1][0] == 'changeView':
             # changeView -> resources
-            needed, donated = re.findall(r'<li class="wood">(.*?)</li>', json[1][1][1])
+            matches = re.findall(r'<li class="wood">(.*?)</li>', json[1][1][1])
+            if len(matches) == 2:
+                needed, donated = matches
+                free_deposit = "0"
+            else:
+                needed, donated, free_deposit = matches
+
             data['requiredWoodForNextLevel'] = get_number(needed) - get_number(donated)
+            data['freeDonationWood'] = get_number(free_deposit)
         else:
             data['requiredWoodForNextLevel'] = init_data.get("requiredWoodForNextLevel", 0)
+            data['freeDonationWood'] = init_data.get("freeDonationWood", 0)
 
         return data
 
@@ -180,6 +189,7 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
             overcharged = workplace['overchargedWorkers']
             free_citizens = workplace['freeCitizens']
             gold_per_hour = workplace['goldPerHour']
+            free_donation = workplace['freeDonationWood']
 
             city_stats_colour = ''
             if print_city_name:
@@ -202,6 +212,7 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
                 Colours.Text.Light.YELLOW if total_workers > max_workers else '',
                 Colours.Text.Light.GREEN if upgrading else '',
                 Colours.Text.Light.YELLOW if upgrading else '',
+                '',
             ]
 
             city_column = workplace['cityName']
@@ -233,7 +244,8 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
                     overcharged
                 ),
                 workplace['level'] + ('+' if upgrading else ' '),
-                addThousandSeparator(workplace['requiredWoodForNextLevel']) if not upgrading else "Upgrading for " + workplace['upgradeEndTime']
+                addThousandSeparator(workplace['requiredWoodForNextLevel']) if not upgrading else "Upgrading for " + workplace['upgradeEndTime'],
+                addThousandSeparator(free_donation)
             ]
 
             # Combine and print
@@ -273,12 +285,13 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
             print('Already in process of upgrading. Have to wait', workplace['upgradeEndTime'])
             return workplace
 
+        _available_wood = workplace['availableWood'] + workplace['freeDonationWood']
         print(
             "Free wood in town: ",
-            addThousandSeparator(workplace['availableWood'])
+            addThousandSeparator(_available_wood)
         )
         maximum_donation = min(
-            workplace['availableWood'],
+            _available_wood,
             workplace['requiredWoodForNextLevel']
         )
 
