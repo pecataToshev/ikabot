@@ -57,16 +57,28 @@ class TransportGoodsBot(Bot):
         doing almost the same job. 
         """
         while True:
-            job_indexes = [i for i, job in enumerate(jobs) if job is not None]
-            if len(job_indexes) == 0:
+            _remaining_job_indexes = [i for i, job in enumerate(jobs) if job is not None]
+            if len(_remaining_job_indexes) == 0:
                 # No undone jobs left
                 break
 
-            for i in job_indexes:
-                job = self.__execute_job(jobs[i], batch_size)
-                if sum(job.resources) == 0:
+            _remaining_resources_to_send = sum([sum(jobs[i].resources) for i in _remaining_job_indexes])
+
+            for i in _remaining_job_indexes:
+                _current_job_remaining_resources_sum_start = sum(jobs[i].resources)
+                job = self.__execute_job(jobs[i], batch_size, _remaining_resources_to_send)
+                _current_job_remaining_resources_sum_after = sum(job.resources)
+
+                # Remove job if no resource left
+                if _current_job_remaining_resources_sum_after == 0:
                     job = None
                 jobs[i] = job
+
+                # Update total remaining resources
+                _remaining_resources_to_send -= _current_job_remaining_resources_sum_start
+                _remaining_resources_to_send += _current_job_remaining_resources_sum_after
+
+
 
 
     @staticmethod
@@ -97,7 +109,7 @@ class TransportGoodsBot(Bot):
             job_map[key] = None
         return res
 
-    def __execute_job(self, job: TransportJob, batch_size: Union[int, None]) -> TransportJob:
+    def __execute_job(self, job: TransportJob, batch_size: Union[int, None], sum_of_all_remaining_resources_to_send: int) -> TransportJob:
         """
         Executes the transport job (even in batches)
         :param job: what to execute
@@ -112,7 +124,8 @@ class TransportGoodsBot(Bot):
         obj = f'Sending {remaining_str} ---> {job.target_city["name"]}'
         self._set_process_info(message=obj, target_city=job.origin_city["name"])
 
-        ships_available = waitForAvailableShips(self.ikariam_service, self._wait)
+        ships_available = waitForAvailableShips(self.ikariam_service, self._wait,
+                                                additional='; Resources left: {}'.format(addThousandSeparator(sum_of_all_remaining_resources_to_send)))
         storage_capacity_in_ships = ships_available * self.MAXIMUM_SHIP_SIZE
 
         # Consider maximum batch size
