@@ -11,25 +11,39 @@ from ikabot.web.ikariamService import IkariamService
 
 class BuildingTypes(Enum):
     TOWN_HALL = {'building': 'townHall'}
-    SAFE_HOUSE = {'building': 'safehouse'}
+    ACADEMY = {'building': 'academy'}
+    WAREHOUSE = {'building': 'warehouse'}
     TAVERN = {'building': 'tavern'}
-    TEMPLE = {'building': 'temple'}
+    PALACE = {'building': 'palace'}
+    PALACE_COLONY = {'building': 'palaceColony'}
+    MUSEUM = {'building': 'museum'}
+    PORT = {'building': 'port'}
+    SHIPYARD = {'building': 'shipyard'}
+    BARRACKS = {'building': 'barracks'}
     WALL = {'building': 'wall'}
-    ARCHITECT = {'building': 'architect', 'reducesResources': 'stone'}
-    CARPENTERING = {'building': 'carpentering', 'reducesResources': 'wood'}
-    FIRE_WORKER = {'building': 'fireworker', 'reducesResources': 'sulphur'}
-    OPTICIAN = {'building': 'optician', 'reducesResources': 'crystal'}
-    VINEYARD = {'building': 'vineyard', 'reducesResources': 'wine'}
-    ALCHEMIST = {'building': 'alchemist'}
+    EMBASSY = {'building': 'embassy'}
+    BRANCH_OFFICE = {'building': 'branchOffice'}
+    WORKSHOP = {'building': 'workshop'}
+    SAFE_HOUSE = {'building': 'safehouse'}
+
     FORESTER = {'building': 'forester'}
     GLASSBLOWING = {'building': 'glassblowing'}
-    STONEMASON = {'building': 'stonemason'}
+    ALCHEMIST = {'building': 'alchemist'}
     WINEGROWER = {'building': 'winegrower'}
-    BARRACKS = {'building': 'barracks'}
-    SHIPYARD = {'building': 'shipyard'}
+    STONEMASON = {'building': 'stonemason'}
+    CARPENTERING = {'building': 'carpentering', 'reducesResources': 'wood'}
+    OPTICIAN = {'building': 'optician', 'reducesResources': 'crystal'}
+    FIRE_WORKER = {'building': 'fireworker', 'reducesResources': 'sulphur'}
+    VINEYARD = {'building': 'vineyard', 'reducesResources': 'wine'}
+    ARCHITECT = {'building': 'architect', 'reducesResources': 'stone'}
+    TEMPLE = {'building': 'temple'}
+    DUMPER = {'building': 'dump'}
+    PIRATE_FORTRESS = {'building': 'pirateFortress'}
     BLACK_MARKET = {'building': 'blackMarket'}
-    BRANCH_OFFICE = {'building': 'branchOffice'}
-    WAREHOUSE = {'building': 'warehouse'}
+    MARINE_CHART_ARCHIVE = {'building': 'marineChartArchive'}
+
+    DOCKYARD = {'building': 'dockyards'}
+    SHRINE = {'building': 'shrineOfOlympus'}
 
 
 def extract_target_building(city: dict, building_type: str):

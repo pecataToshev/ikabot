@@ -15,6 +15,7 @@ from ikabot.bot.upgradeBuilding.abstractUpgradeBuildingBot import AbstractUpgrad
 from ikabot.bot.upgradeBuilding.upgradeBuildingGroupBot import UpgradeBuildingGroupBot
 from ikabot.bot.upgradeBuilding.upgradeSingleBuildingBot import UpgradeSingleBuildingBot
 from ikabot.config import actionRequest, city_url, materials_names, materials_names_tec, MAXIMUM_CITY_NAME_LENGTH
+from ikabot.helpers.buildings import BuildingTypes
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, decodeUnicodeEscape, enter
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
@@ -351,16 +352,19 @@ def getBuildingGroupToExpand(city: dict) -> Union[list, None]:
     buildings = [buildings[0]] + sorted(buildings[1:], key=lambda b: b['name'])
     building_types = list(dict.fromkeys([item['building'] for item in buildings]))
     _forced_groups = [
-        ['safehouse', 'townHall', 'tavern'],
-        ['safehouse', 'townHall', 'tavern', 'temple', 'wall'],
-        ['architect', 'carpentering'],
-        ['architect', 'carpentering', 'vineyard'],
-        ['architect', 'carpentering', 'fireworker', 'optician', 'vineyard'],
-        ['alchemist', 'forester', 'glassblowing', 'stonemason', 'winegrower'],
-        ['barracks', 'shipyard'],
-        ['blackMarket', 'branchOffice'],
-        ['warehouse']
+        [BuildingTypes.SAFE_HOUSE, BuildingTypes.TOWN_HALL, BuildingTypes.TAVERN],
+        [BuildingTypes.SAFE_HOUSE, BuildingTypes.TOWN_HALL, BuildingTypes.TAVERN, BuildingTypes.TEMPLE, BuildingTypes.WALL],
+        [BuildingTypes.ARCHITECT, BuildingTypes.CARPENTERING],
+        [BuildingTypes.ARCHITECT, BuildingTypes.CARPENTERING, BuildingTypes.VINEYARD],
+        [BuildingTypes.ARCHITECT, BuildingTypes.CARPENTERING, BuildingTypes.FIRE_WORKER, BuildingTypes.OPTICIAN, BuildingTypes.VINEYARD],
+        [BuildingTypes.ALCHEMIST, BuildingTypes.FORESTER, BuildingTypes.GLASSBLOWING, BuildingTypes.STONEMASON, BuildingTypes.WINEGROWER],
+        [BuildingTypes.BARRACKS, BuildingTypes.SHIPYARD],
+        [BuildingTypes.BLACK_MARKET, BuildingTypes.BRANCH_OFFICE],
+        [BuildingTypes.WAREHOUSE],
+        [BuildingTypes.PORT],
+        [BuildingTypes.PALACE, BuildingTypes.PALACE_COLONY],
     ]
+    _forced_groups = [[b.value['building'] for b in gr] for gr in _forced_groups]
     # remove groups that have no representation in the city
     _forced_groups = [row for row in _forced_groups if any(value in building_types for value in row)]
     # remove elements, that are part of groups and make elements in single groups
