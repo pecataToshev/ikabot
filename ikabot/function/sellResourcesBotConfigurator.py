@@ -7,7 +7,7 @@ import re
 from ikabot.bot.sellResourcesBot import SellResourcesToOfferBot, SellResourcesWithOwnOfferBot
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
-from ikabot.helpers.gui import addThousandSeparator, banner, enter
+from ikabot.helpers.gui import addThousandSeparator, banner, Colours, enter
 from ikabot.helpers.market import getCommercialCities, getMarketInfo, storageCapacityOfMarket
 from ikabot.helpers.userInput import read
 from ikabot.helpers.telegram import Telegram
@@ -129,7 +129,8 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
         }
     ).start(
         action='Sell To Offers',
-        objective='{} {}'.format(addThousandSeparator(amount_to_sell), materials_names[resource_type])
+        objective="{}{} {}".format(Colours.MATERIALS[resource_type], addThousandSeparator(amount_to_sell),
+                                   materials_names[resource_type]),
     )
 
 
@@ -172,7 +173,8 @@ def createOffer(ikariam_service: IkariamService, my_offering_market_city, resour
         }
     ).start(
         action="Sell Own Offers",
-        objective="{} @{}".format(addThousandSeparator(amount_to_sell), price),
+        objective="{}{} {}{} @{}".format(Colours.MATERIALS[resource_type], addThousandSeparator(amount_to_sell),
+                                         materials_names[resource_type], Colours.Text.RESET, price),
         target_city=my_offering_market_city['name'],
     )
 
@@ -202,4 +204,3 @@ def sell_resources_bot_configurator(ikariam_service: IkariamService, db: Databas
     print('Do you want to sell to existing offers (1) or do you want to make your own offer (2)?')
     selected = read(min=1, max=2)
     [sellToOffers, createOffer][selected - 1](ikariam_service, city, resource)
-

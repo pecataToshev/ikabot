@@ -38,7 +38,7 @@ def getMinimumWaitingTime(ikariam_service):
         return 0
 
 
-def waitForAvailableShips(session, wait):
+def waitForAvailableShips(session, wait, additional=''):
     """This function will return the number of available ships, and if there aren't any, it will wait for the closest fleet to arrive and then return the number of available ships
     Parameters
     ----------
@@ -56,4 +56,4 @@ def waitForAvailableShips(session, wait):
         if available_ships > 0:
             return available_ships
         minimum_waiting_time_for_ship = getMinimumWaitingTime(session)
-        wait(minimum_waiting_time_for_ship, 'Waiting some ships to get available')
+        wait(minimum_waiting_time_for_ship, 'Waiting some ships to get available' + additional)

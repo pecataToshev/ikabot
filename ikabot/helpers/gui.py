@@ -65,6 +65,11 @@ def printProgressBar(msg, current, total):
     print("{}: [{}={}] {}/{}".format(msg, loaded, waiting, current, total))
 
 
+def get_visible_length(input_string):
+    without_colors = re.sub(r'\x1b\[[0-9;]*m', '', input_string)
+    return len(without_colors)
+
+
 def rightAlign(data, length):
     """
     Right align the given data with the given length
@@ -106,7 +111,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
     if len(table_data) == 0:
         return
 
-    _max_len = [len(tc['title']) for tc in table_config]
+    _max_len = [get_visible_length(tc['title']) for tc in table_config]
     _table = [[{'data': tc['title'], 'colour': ''} for tc in table_config]]
     for row_index, row_data in enumerate(table_data):
         _row = []
@@ -118,7 +123,7 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
             if 'useDataRowIndexForValue' in column_config:
                 _v = column_config['useDataRowIndexForValue'](row_index)
             _v = str(_v or missing_value)
-            _max_len[column_index] = max(_max_len[column_index], len(_v))
+            _max_len[column_index] = max(_max_len[column_index], get_visible_length(_v))
             colour = ''
             if 'setColour' in column_config:
                 colour = column_config['setColour'](_raw_column_data, row_data)
@@ -130,13 +135,14 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
         print(row_clr + row_additional_indentation + (row_clr + column_separator).join(
             ['{colour}{data: {align}{len}}'.format(
                 align=table_config[ci].get('align', column_align),
-                len=_max_len[ci],
+                len=_max_len[ci] + len(c['data']) - get_visible_length(c['data']),
                 **c,
             )
-             for ci, c in enumerate(tr)]
+                for ci, c in enumerate(tr)]
         ) + Colours.Text.RESET)
         if print_row_separator(tri):
-            print(row_additional_indentation + '-' * (sum(_max_len) + (len(_max_len) - 1) * len(column_separator)))
+            print(row_additional_indentation + '-' * (sum(_max_len) +
+                                                      (len(_max_len) - 1) * get_visible_length(column_separator)))
 
     print()
 
@@ -157,20 +163,13 @@ def addThousandSeparator(num, character='.', include_sign=False):
         a string representing that number with added `character` for every thousand
     """
     sign = '+' if include_sign else ''
-    return format(int(num), sign+',').replace(',', character)
+    return format(int(num), sign + ',').replace(',', character)
 
 
-def daysHoursMinutes(total_seconds):
-    """Formats the total number of seconds into days hours minutes (eg. 321454 -> 3D 17H)
-    Parameters
-    ----------
-    total_seconds : int
-        total number of seconds
-
-    Returns
-    -------
-    text : str
-        formatted string (D H M S)
+def daysHoursMinutes(total_seconds: int, force_include_smaller_unit=False,
+                     add_leading_zeroes_on_smaller_unit=False) -> str:
+    """
+    Formats the total number of seconds into days hours minutes (eg. 321454 -> 3D 17H)
     """
     total_seconds = int(total_seconds)
     if total_seconds == 0:
@@ -181,19 +180,23 @@ def daysHoursMinutes(total_seconds):
     total_seconds -= hours * Decimal(3600)
     minutes = int(total_seconds / Decimal(60))
     seconds = int(total_seconds % 60)
-    texto = ''
+    res = []
+
+    get_num = lambda x: str(x).zfill(2) if add_leading_zeroes_on_smaller_unit and len(res) > 0 else str(x)
+
     if days > 0:
-        texto = str(days) + 'D '
-    if hours > 0:
-        texto = texto + str(hours) + 'H '
-    if days == 0 and minutes > 0:
-        texto = texto + str(minutes) + 'M '
-    if days == 0 and hours == 0 and seconds > 0:
-        texto = texto + str(seconds) + 'S '
-    return texto[:-1]
+        res.append(get_num(days) + 'D')
+    if force_include_smaller_unit and len(res) > 0 or hours > 0:
+        res.append(get_num(hours) + 'H')
+    if force_include_smaller_unit and len(res) > 0 or days == 0 and minutes > 0:
+        res.append(get_num(minutes) + 'M')
+    if force_include_smaller_unit and len(res) > 0 or days == 0 and hours == 0 and seconds > 0:
+        res.append(get_num(seconds) + 'S')
+
+    return ' '.join(res)
 
 
-def getDateTime(timestamp = None):
+def getDateTime(timestamp=None):
     """Returns a string of the current date and time in the YYYY-mm-dd_HH-MM-SS, if `timestamp` is provided then it converts it into the given format.
     Parameters
     ----------
@@ -207,6 +210,7 @@ def getDateTime(timestamp = None):
     """
     timestamp = timestamp if timestamp else time.time()
     return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d_%H-%M-%S')
+
 
 def decodeUnicodeEscape(input_string):
     """
@@ -289,4 +293,3 @@ class Colours:
         "sad": Text.BLUE,
         "outraged": Text.RED
     }
-

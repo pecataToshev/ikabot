@@ -1,3 +1,4 @@
+import logging
 import time
 
 import requests
@@ -9,6 +10,8 @@ from ikabot.helpers.telegram import Telegram
 
 def resolveCaptcha(db: Database, telegram: Telegram, picture):
     decaptcha_config = db.get_stored_value('decaptcha')
+    logging.debug("Decaptcha config: %s", decaptcha_config)
+
     if decaptcha_config is None or decaptcha_config['name'] == 'default':
         text = run('nslookup -q=txt ikagod.twilightparadox.com ns2.afraid.org')
         parts = text.split('"')
@@ -17,8 +20,11 @@ def resolveCaptcha(db: Database, telegram: Telegram, picture):
             return 'Error'
         address = parts[1]
 
+        _url = 'http://{0}'.format(address)
+        logging.debug("Sending captcha to %s", _url)
+
         files = {'upload_file': picture}
-        captcha = requests.post('http://{0}'.format(address), files=files).text
+        captcha = requests.post(_url, files=files).text
         return captcha
     elif decaptcha_config['name'] == 'custom':
         files = {'upload_file': picture}

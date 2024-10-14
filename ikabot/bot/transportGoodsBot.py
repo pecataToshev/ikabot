@@ -5,7 +5,7 @@ import json
 import math
 import sys
 from decimal import Decimal
-from typing import List
+from typing import List, Union
 
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, materials_names, SECONDS_IN_HOUR
@@ -41,14 +41,45 @@ class TransportGoodsBot(Bot):
     Performs transportations
     """
     MAXIMUM_SHIP_SIZE = 500
+    DEFAULT_BATCH_SIZE = 20 * MAXIMUM_SHIP_SIZE
 
     def _get_process_info(self) -> str:
         return 'I execute transportation of resources'
 
     def _start(self) -> None:
+        batch_size = self.bot_config.get('batchSize', None)
         jobs = self.optimize_jobs(self.bot_config['jobs'])
-        for job in jobs:
-            self.__execute_job(job)
+
+        """
+        Execute jobs with max batch size.
+        We ensure that we're not exceeding the maximum batch size from city by optimizing the jobs. By doing this 
+        we don't have a sequential source and target city which aare the same. This is easier for support and is
+        doing almost the same job. 
+        """
+        while True:
+            _remaining_job_indexes = [i for i, job in enumerate(jobs) if job is not None]
+            if len(_remaining_job_indexes) == 0:
+                # No undone jobs left
+                break
+
+            _remaining_resources_to_send = sum([sum(jobs[i].resources) for i in _remaining_job_indexes])
+
+            for i in _remaining_job_indexes:
+                _current_job_remaining_resources_sum_start = sum(jobs[i].resources)
+                job = self.__execute_job(jobs[i], batch_size, _remaining_resources_to_send)
+                _current_job_remaining_resources_sum_after = sum(job.resources)
+
+                # Remove job if no resource left
+                if _current_job_remaining_resources_sum_after == 0:
+                    job = None
+                jobs[i] = job
+
+                # Update total remaining resources
+                _remaining_resources_to_send -= _current_job_remaining_resources_sum_start
+                _remaining_resources_to_send += _current_job_remaining_resources_sum_after
+
+
+
 
     @staticmethod
     def optimize_jobs(jobs: List[TransportJob]) -> List[TransportJob]:
@@ -78,7 +109,7 @@ class TransportGoodsBot(Bot):
             job_map[key] = None
         return res
 
-    def __execute_job(self, job: TransportJob):
+    def __execute_job(self, job: TransportJob, batch_size: Union[int, None], sum_of_all_remaining_resources_to_send: int) -> TransportJob:
         """
         Executes the transport job (even in batches)
         :param job: what to execute
@@ -87,55 +118,59 @@ class TransportGoodsBot(Bot):
         remaining_resources_to_send = job.resources
         storage_capacity_in_city = len(materials_names) * [sys.maxsize]
 
-        while sum(remaining_resources_to_send) > 0:
-            remaining_str = ', '.join(['{}{}'.format(addThousandSeparator(volume), name[0])
-                                       for volume, name in zip(remaining_resources_to_send, materials_names)])
+        remaining_str = ', '.join(['{}{}'.format(addThousandSeparator(volume), name[0])
+                                   for volume, name in zip(remaining_resources_to_send, materials_names)])
 
-            obj = f'Sending {remaining_str} ---> {job.target_city["name"]}'
-            self._set_process_info(message=obj, target_city=job.origin_city["name"])
+        obj = f'Sending {remaining_str} ---> {job.target_city["name"]}'
+        self._set_process_info(message=obj, target_city=job.origin_city["name"])
 
-            ships_available = waitForAvailableShips(self.ikariam_service, self._wait)
-            storage_capacity_in_ships = ships_available * self.MAXIMUM_SHIP_SIZE
+        ships_available = waitForAvailableShips(self.ikariam_service, self._wait,
+                                                additional='; Resources left: {}'.format(addThousandSeparator(sum_of_all_remaining_resources_to_send)))
+        storage_capacity_in_ships = ships_available * self.MAXIMUM_SHIP_SIZE
 
-            origin_city = getCity(self.ikariam_service.get(city_url + str(job.origin_city['id'])))
-            target_city = getCity(self.ikariam_service.get(city_url + str(job.target_city['id'])))
+        # Consider maximum batch size
+        if batch_size is not None:
+            storage_capacity_in_ships = min(storage_capacity_in_ships, batch_size)
 
-            foreign = str(target_city['id']) != str(job.target_city['id'])
-            if not foreign:
-                storage_capacity_in_city = target_city['freeSpaceForResources']
+        origin_city = getCity(self.ikariam_service.get(city_url + str(job.origin_city['id'])))
+        target_city = getCity(self.ikariam_service.get(city_url + str(job.target_city['id'])))
 
-            resources_to_send = []
-            for remaining, available, capacity in zip(remaining_resources_to_send,
-                                                      origin_city['availableResources'],
-                                                      storage_capacity_in_city):
-                minimum_resource_value = min(remaining, available, capacity, storage_capacity_in_ships)
-                resources_to_send.append(minimum_resource_value)
-                storage_capacity_in_ships -= minimum_resource_value
+        foreign = str(target_city['id']) != str(job.target_city['id'])
+        if not foreign:
+            storage_capacity_in_city = target_city['freeSpaceForResources']
 
-            total_resources_to_send = sum(resources_to_send)
-            if total_resources_to_send == 0:
-                # no space available in target city
-                # no resources available in the origin city
-                self._wait(
-                    SECONDS_IN_HOUR,
-                    'Either no space left in {} or no resources in {}. Will retry! Remaining {}'.format(
-                        target_city['name'], origin_city['name'], remaining_str
-                    ),
-                    max_random=60
-                )
-                continue
+        resources_to_send = []
+        for remaining, available, capacity in zip(remaining_resources_to_send,
+                                                  origin_city['availableResources'],
+                                                  storage_capacity_in_city):
+            minimum_resource_value = min(remaining, available, capacity, storage_capacity_in_ships)
+            resources_to_send.append(minimum_resource_value)
+            storage_capacity_in_ships -= minimum_resource_value
 
-            actually_sent_resources = self.__send_goods(origin_city, target_city, resources_to_send)
-            if sum(actually_sent_resources) == 0:
-                self._wait(
-                    seconds=30,
-                    info='Failed to send resources from {} to {}. Will try again!'.format(
-                        origin_city['name'], target_city['name']
-                    ),
-                    max_random=20,
-                )
+        total_resources_to_send = sum(resources_to_send)
+        if total_resources_to_send == 0:
+            # no space available in target city
+            # no resources available in the origin city
+            self._wait(
+                SECONDS_IN_HOUR,
+                'Either no space left in {} or no resources in {}. Will retry! Remaining {}'.format(
+                    target_city['name'], origin_city['name'], remaining_str
+                ),
+                max_random=60
+            )
 
-            remaining_resources_to_send = [r - a for r, a in zip(remaining_resources_to_send, actually_sent_resources)]
+        actually_sent_resources = self.__send_goods(origin_city, target_city, resources_to_send)
+        if sum(actually_sent_resources) == 0:
+            self._wait(
+                seconds=30,
+                info='Failed to send resources from {} to {}. Will try again!'.format(
+                    origin_city['name'], target_city['name']
+                ),
+                max_random=20,
+            )
+
+        remaining_resources_to_send = [r - a for r, a in zip(remaining_resources_to_send, actually_sent_resources)]
+        return TransportJob(job.origin_city, job.target_city, remaining_resources_to_send)
 
     def __send_goods(self, origin_city, target_city, resources_to_send):
         # this can fail if a random request is made in between this two posts

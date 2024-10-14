@@ -24,6 +24,7 @@ from ikabot.function.islandMonitoringBotConfigurator import island_monitoring_bo
 from ikabot.function.islandWorkplaces import islandWorkplaces
 from ikabot.function.killTasks import kill_tasks
 from ikabot.function.loginDailyBotConfigurator import login_daily_bot_configurator
+from ikabot.function.miracle_donate import miracle_donate
 from ikabot.function.proxyConf import proxyConf, show_proxy
 from ikabot.function.sellResourcesBotConfigurator import sell_resources_bot_configurator
 from ikabot.function.tavern import use_tavern
@@ -32,11 +33,14 @@ from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.function.stationArmy import stationArmy
 from ikabot.function.studies import study
 from ikabot.function.telegramFunctions import test_telegram_bot, update_telegram_bot
+from ikabot.function.temple import use_temple
 from ikabot.function.trainArmyBotConfigurator import train_army_bot_configurator
 from ikabot.function.transportGoodsBotConfigurator import transport_goods_bot_configurator
 from ikabot.function.update import update
-from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_bot_configurator
+from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_group_bot_configurator, \
+    upgrade_single_building_bot_configurator
 from ikabot.function.vacationMode import vacationMode
+from ikabot.function.viewArmy import viewArmy
 from ikabot.function.wineMonitoringBotConfigurator import configure_wine_monitoring_bot
 from ikabot.function.workshop import use_workshop
 from ikabot.helpers.checkForUpdate import checkForUpdate
@@ -54,8 +58,9 @@ _global_menu = [
     ['Refresh process info', __function_refresh],
     ['Construction', [
         __command_back,
-        ['Building Upgrades', upgrade_building_bot_configurator],
+        ['Single Building Upgrades', upgrade_single_building_bot_configurator],
         ['Construct building', constructBuilding],
+        ['Building Group Upgrades', upgrade_building_group_bot_configurator],
     ]],
     ['Resources & Donations', [
         __command_back,
@@ -80,12 +85,18 @@ _global_menu = [
         ['Buy resources', buy_resources_bot_configurator],
         ['Sell resources', sell_resources_bot_configurator],
     ]],
-    ['Activate miracle', activate_miracle_bot_configurator],
-    ['Military actions', [
+    ['Temple & Miracle', [
+        __command_back,
+        ['Activate Miracle', activate_miracle_bot_configurator],
+        ['Donate to Miracle', miracle_donate],
+        ['Set Priests', use_temple],
+    ]],
+    ['Military', [
         __command_back,
         ['Train Army', train_army_bot_configurator],
         ['Send Troops/Ships', stationArmy],
         ['Attack barbarians', attack_barbarians_bot_configurator],
+        ['View Army', viewArmy],
     ]],
     ['See movements', shipMovements],
     ['Piracy', [

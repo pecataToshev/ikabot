@@ -4,8 +4,6 @@ from typing import Union
 
 from ikabot.config import city_url, actionRequest
 from ikabot.helpers.buildings import find_city_with_the_biggest_building
-from ikabot.helpers.getJson import getCity
-from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -32,7 +30,7 @@ def getPiracyTemplateData(session, city_id):
     return json.loads(_template_data, strict=False)
 
 
-def findCityWithTheBiggestPiracyFortress(ikariam_service: IkariamService) -> Union[int, None]:
+def findCityWithTheBiggestPiracyFortress(ikariam_service: IkariamService) -> Union[dict, None]:
     """
     Finds and returns the id of the city with the biggest pirate fortress.
     :param ikariam_service: ikabot.web.session.Session

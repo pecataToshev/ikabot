@@ -12,7 +12,7 @@ import psutil
 
 from ikabot.config import isWindows
 from ikabot.helpers.database import Database
-from ikabot.helpers.gui import Colours, formatTimestamp, printTable
+from ikabot.helpers.gui import Colours, daysHoursMinutes, formatTimestamp, printTable
 
 
 def run(command):
@@ -189,8 +189,11 @@ class IkabotProcessListManager:
             process_list = self.get_process_list()
 
         def __fmt_next_action(t):
-            return "{} ({})".format(formatTimestamp(t),
-                                    datetime.utcfromtimestamp(t - now).strftime('%H:%M:%S'))
+            remaining_time = int(t - now)
+            color = Colours.Text.Light.YELLOW if remaining_time < 120 else ''
+            return "{} {}({:>7})".format(formatTimestamp(t),
+                                         color,
+                                         daysHoursMinutes(remaining_time, add_leading_zeroes_on_smaller_unit=True))
 
         additional_columns = []
         if add_process_numbers:

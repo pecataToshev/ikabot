@@ -7,7 +7,6 @@ from ikabot.config import actionRequest, city_url
 from ikabot.helpers.buildings import extract_target_building, \
     find_city_with_the_biggest_building, get_building_info
 from ikabot.helpers.database import Database
-from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, clear, enter
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import askUserYesNo
@@ -20,16 +19,15 @@ def buy_ships(ikariam_service: IkariamService, db: Database, telegram: Telegram)
     target_building_type = 'port'
     target_tab = 'tabBuyTransporter'
 
-    port_city_id = find_city_with_the_biggest_building(ikariam_service, target_building_type)
-    if port_city_id is None:
+    port_city = find_city_with_the_biggest_building(ikariam_service, target_building_type)
+    if port_city is None:
         print('No port found.')
         enter()
         return
 
-    port_city = getCity(ikariam_service.get(city_url + port_city_id))
     port = extract_target_building(port_city, target_building_type)
     # Only initial data. After that we get it with the buy
-    port_info = get_building_info(ikariam_service, port_city_id, port)
+    port_info = get_building_info(ikariam_service, port_city['id'], port)
 
     # activate the right tab
     ikariam_service.post(
@@ -37,10 +35,10 @@ def buy_ships(ikariam_service: IkariamService, db: Database, telegram: Telegram)
         params={
             'view': target_building_type,
             'activeTab': target_tab,
-            'cityId': port_city_id,
+            'cityId': port_city['id'],
             'position': port['position'],
             'backgroundView': 'city',
-            'currentCityId': port_city_id,
+            'currentCityId': port_city['id'],
             'templateView': target_building_type,
             'actionRequest': actionRequest,
             'ajax': '1'
@@ -75,10 +73,10 @@ def buy_ships(ikariam_service: IkariamService, db: Database, telegram: Telegram)
                 'function': 'increaseTransporter',
                 'templateView': target_building_type,
                 'activeTab': target_tab,
-                'cityId': port_city_id,
+                'cityId': port_city['id'],
                 'position': port['position'],
                 'backgroundView': 'city',
-                'currentCityId': port_city_id,
+                'currentCityId': port_city['id'],
                 'actionRequest': actionRequest,
                 'ajax': '1'
             },
