@@ -1,23 +1,16 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
-from tkinter.constants import SEPARATOR
 from typing import Callable, Dict, List, Tuple
 
 from bs4 import BeautifulSoup
 
 from ikabot.config import city_url, materials_names, MAXIMUM_CITY_NAME_LENGTH, actionRequest
-from ikabot.function.constructBuilding import constructBuilding
-from ikabot.function.islandWorkplaces import islandWorkplaces
-from ikabot.function.transportGoodsBotConfigurator import transport_goods_bot_configurator
-from ikabot.function.upgradeBuildingBotConfigurator import upgrade_single_building_bot_configurator
 from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, decodeUnicodeEscape, enter, printProgressBar
-from ikabot.helpers.market import printGoldForAllCities
 from ikabot.helpers.telegram import Telegram
-from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -114,7 +107,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
 
         return [town_hall_name] + sorted([key for key, value in constructed_buildings.items() for _ in range(value)])
 
-    def _print_vertical(prefix_length: int, words: List[str], columns_width: list[int]):
+    def _print_vertical(prefix_length: int, words: List[str], columns_width: list[int], separator=COLUMN_SEPARATOR):
         max_length = max(len(word) for word in words)
         # Pad each word with spaces to make them equal in length
         padded_words = [word.rjust(max_length) for word in words]
@@ -129,7 +122,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
 
         # Print the matrix
         for row in matrix:
-            print(COLUMN_SEPARATOR.join([" " * prefix_length] + row))
+            print(separator.join([" " * prefix_length] + row))
 
     def _print_units(_cities_data: List[CityArmyData],
                      _extract_units: Callable[[CityArmyData], Tuple[Dict[str, int], List[str]]]):
@@ -141,7 +134,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         _cities_army = [units for units, _ in (_extract_units(c) for c in _cities_data)]
         _max_length_per_army = [max(len(addThousandSeparator(army[unit])) for army in _cities_army) for unit in _army_order]
 
-        _print_vertical(_max_city_name_length, _army_order, _max_length_per_army)
+        _print_vertical(_max_city_name_length, _army_order, _max_length_per_army, separator=' '*len(COLUMN_SEPARATOR))
         print("-" * (_max_city_name_length + sum(_max_length_per_army) + len(_max_length_per_army)))
         for _city_name, _army in zip(_city_names, _cities_army):
             _row = ["{: >{}}".format(_city_name, _max_city_name_length)]
