@@ -40,6 +40,7 @@ from ikabot.function.update import update
 from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_group_bot_configurator, \
     upgrade_single_building_bot_configurator
 from ikabot.function.vacationMode import vacationMode
+from ikabot.function.viewArmy import viewArmy
 from ikabot.function.wineMonitoringBotConfigurator import configure_wine_monitoring_bot
 from ikabot.function.workshop import use_workshop
 from ikabot.helpers.checkForUpdate import checkForUpdate
@@ -90,11 +91,12 @@ _global_menu = [
         ['Donate to Miracle', miracle_donate],
         ['Set Priests', use_temple],
     ]],
-    ['Military actions', [
+    ['Military', [
         __command_back,
         ['Train Army', train_army_bot_configurator],
         ['Send Troops/Ships', stationArmy],
         ['Attack barbarians', attack_barbarians_bot_configurator],
+        ['View Army', viewArmy],
     ]],
     ['See movements', shipMovements],
     ['Piracy', [
