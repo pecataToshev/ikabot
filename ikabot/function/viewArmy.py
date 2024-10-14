@@ -5,11 +5,11 @@ from typing import Callable, Dict, List, Tuple
 
 from bs4 import BeautifulSoup
 
-from ikabot.config import city_url, materials_names, MAXIMUM_CITY_NAME_LENGTH, actionRequest
+from ikabot.config import actionRequest, city_url
 from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import addThousandSeparator, banner, Colours, decodeUnicodeEscape, enter, printProgressBar
+from ikabot.helpers.gui import addThousandSeparator, banner, decodeUnicodeEscape, enter, printProgressBar
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 
@@ -26,26 +26,7 @@ class CityArmyData:
 def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
 
     # region Config
-    COLUMN_SEPARATOR = ' | '
-    STORAGE_COLUMN_MAX_LENGTH = 10
-    RESOURCE_COLUMN_MAX_LENGTH = 10
-    TABLE_WIDTH = MAXIMUM_CITY_NAME_LENGTH + RESOURCE_COLUMN_MAX_LENGTH + len(materials_names) * RESOURCE_COLUMN_MAX_LENGTH + (len(materials_names) + 2 - 1) * len(COLUMN_SEPARATOR)
-    TABLE_ROW_SEPARATOR = '-' * TABLE_WIDTH
-    TOTAL = 'TOTAL'
-
-    def get_increment(incr):
-        if incr == 0:
-            return " " * RESOURCE_COLUMN_MAX_LENGTH
-        colour = Colours.Text.Light.GREEN if incr > 0 else Colours.Text.Light.RED
-        res_incr = "{: >{len}}".format(str(format(incr, '+,')), len=RESOURCE_COLUMN_MAX_LENGTH)
-        return colour + res_incr + Colours.Text.RESET
-
-    def get_storage(capacity, available):
-        res = "{: >{len}}".format(str(format(available, ',')), len=RESOURCE_COLUMN_MAX_LENGTH)
-        if capacity * 0.2 > capacity - available:
-            res = Colours.Background.Light.RED + res + Colours.Background.RESET
-        return res
-
+    __column_separator = ' | '
 
     def _extract_units(html: str, root_id: str) -> (dict[str, int], List[str]):
         _soup = BeautifulSoup(html, 'html.parser')
@@ -107,7 +88,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
 
         return [town_hall_name] + sorted([key for key, value in constructed_buildings.items() for _ in range(value)])
 
-    def _print_vertical(prefix_length: int, words: List[str], columns_width: list[int], separator=COLUMN_SEPARATOR):
+    def _print_vertical(prefix_length: int, words: List[str], columns_width: list[int], separator=__column_separator):
         max_length = max(len(word) for word in words)
         # Pad each word with spaces to make them equal in length
         padded_words = [word.rjust(max_length) for word in words]
@@ -134,64 +115,23 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         _cities_army = [units for units, _ in (_extract_units(c) for c in _cities_data)]
         _max_length_per_army = [max(len(addThousandSeparator(army[unit])) for army in _cities_army) for unit in _army_order]
 
-        _print_vertical(_max_city_name_length, _army_order, _max_length_per_army, separator=' '*len(COLUMN_SEPARATOR))
-        print("-" * (_max_city_name_length + sum(_max_length_per_army) + len(_max_length_per_army) * len(COLUMN_SEPARATOR) + 1))
+        _print_vertical(_max_city_name_length, _army_order, _max_length_per_army, separator=' '*len(__column_separator))
+        print("-" * (_max_city_name_length + sum(_max_length_per_army) + len(_max_length_per_army) * len(__column_separator) + 1))
         for _city_name, _army in zip(_city_names, _cities_army):
             _row = ["{: >{}}".format(_city_name, _max_city_name_length)]
             for _unit, _max_length in zip(_army_order, _max_length_per_army):
                 _num = int(_army[_unit])
                 _num = ' ' if _num == 0 else addThousandSeparator(_num)
-                _row.append("{}{: >{}}".format(COLUMN_SEPARATOR, _num, _max_length))
+                _row.append("{}{: >{}}".format(__column_separator, _num, _max_length))
             print("".join(_row))
 
 
-
     def _print_all_army_table(_cities_army_data: List[CityArmyData]):
+        print("\n\n\tUNITS:\n\n")
         _print_units(_cities_army_data, lambda c: (c.units, c.units_order))
-        # print("\n\n\n\nBuildings:\n")
-        # buildings_column_width = 5
-        # constructed_building_names = get_building_names(_cities_army_data)
-        # max_building_name_length = max(len(b) for b in constructed_building_names)
-        # city_names = [c['name'] for c in _cities_army_data]
-        # _print_vertical(max_building_name_length - 1, city_names, ' ' * buildings_column_width)
-        # print("-" * (max_building_name_length + (buildings_column_width + 1) * len(_cities_army_data)))
-        # # gow many times we've encountered a building in the city. This is being
-        # # done to display the duplicates
-        # # {townHall: {city1: 1}, storage: {city1: 2}}
-        # buildings_in_city_count = {}
-        # for building_name in constructed_building_names:
-        #     row = ["{: >{len}}".format(building_name, len=max_building_name_length)]
-        #     encounters = buildings_in_city_count.get(building_name, {})
-        #     for city in _cities_army_data:
-        #         required_number = encounters.get(city['cityName'], 0)
-        #         current_number = 0
-        #
-        #         building = None
-        #         for pos in city['position']:
-        #             if building_name == pos['name']:
-        #                 if current_number == required_number:
-        #                     building = pos
-        #                     break
-        #                 else:
-        #                     current_number += 1
-        #
-        #         encounters.update({city['cityName']: current_number + 1})
-        #         if building is None:
-        #             row.append(" - ")
-        #             continue
-        #
-        #         if building['isMaxLevel'] is True:
-        #             colour = Colours.Text.Light.BLACK
-        #         elif building['canUpgrade'] is True:
-        #             colour = Colours.Text.Light.GREEN
-        #         else:
-        #             colour = Colours.Text.Light.RED
-        #
-        #         additional = '+' if building['isBusy'] is True else ' '
-        #         row.append("{}{: >2}{}{}".format(colour, building['level'], additional, Colours.Text.RESET))
-        #
-        #     buildings_in_city_count.update({building_name: encounters})
-        #     print(COLUMN_SEPARATOR.join(row))
+        print("\n\n\n")
+        print("\n\n\tFLEET:\n\n")
+        _print_units(_cities_army_data, lambda c: (c.fleet, c.fleet_order))
     # endregion
 
     banner()
