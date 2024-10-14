@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
+from tkinter.constants import SEPARATOR
 from typing import Callable, Dict, List, Tuple
 
 from bs4 import BeautifulSoup
@@ -141,10 +142,11 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         _max_length_per_army = [max(len(addThousandSeparator(army[unit])) for army in _cities_army) for unit in _army_order]
 
         _print_vertical(_max_city_name_length, _army_order, _max_length_per_army)
+        print("-" * (_max_city_name_length + sum(_max_length_per_army) + len(_max_length_per_army)))
         for _city_name, _army in zip(_city_names, _cities_army):
-            _row = ["{: >{}}{}".format(_city_name, _max_city_name_length, COLUMN_SEPARATOR)]
+            _row = ["{: >{}}".format(_city_name, _max_city_name_length)]
             for _unit, _max_length in zip(_army_order, _max_length_per_army):
-                _row.append("{: >{}}{}".format(addThousandSeparator(_army[_unit]), _max_length, COLUMN_SEPARATOR))
+                _row.append("{}{: >{}}".format(COLUMN_SEPARATOR, addThousandSeparator(_army[_unit]), _max_length))
             print("".join(_row))
 
 
