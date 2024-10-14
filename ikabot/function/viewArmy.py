@@ -4,7 +4,6 @@ import json
 from typing import Callable, Dict, List, Tuple
 
 from bs4 import BeautifulSoup
-from numpy import number
 
 from ikabot.config import city_url, materials_names, MAXIMUM_CITY_NAME_LENGTH, actionRequest
 from ikabot.function.constructBuilding import constructBuilding
@@ -22,7 +21,7 @@ from ikabot.web.ikariamService import IkariamService
 
 
 class CityArmyData:
-    def __init__(self, city: dict[str, str], units: dict[str, number], units_order: List[str], fleet: dict[str, number], fleet_order: List[str]):
+    def __init__(self, city: dict[str, str], units: dict[str, int], units_order: List[str], fleet: dict[str, int], fleet_order: List[str]):
         self.city = city
         self.units = units
         self.units_order = units_order
@@ -54,7 +53,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         return res
 
 
-    def _extract_units(html: str, root_id: str) -> (dict[str, number], List[str]):
+    def _extract_units(html: str, root_id: str) -> (dict[str, int], List[str]):
         _soup = BeautifulSoup(html, 'html.parser')
         _tables = _soup.find('div', id=root_id).find_all('table', class_='militaryList')
         _data = {}
@@ -72,7 +71,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
                 _data[_name] = _count.text.strip()
         return _data, _order
 
-    def _get_city_army_data(_city_id: number) -> CityArmyData:
+    def _get_city_army_data(_city_id: int) -> CityArmyData:
         _city = getCity(ikariam_service.get(city_url + _city_id))
         _json = ikariam_service.post(
             params={
