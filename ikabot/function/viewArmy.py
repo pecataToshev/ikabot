@@ -38,7 +38,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         # region Retrieve cities _data
         [_city_ids, _] = getIdsOfCities(ikariam_service, False)
         for _res_ind, _city_id in enumerate(_city_ids):
-            printProgressBar("Retrieving cities _data", _res_ind+1, len(_city_ids))
+            printProgressBar("Retrieving cities data", _res_ind+1, len(_city_ids))
             _data.append(_get_city_army_data(_city_id))
 
         return _data
@@ -108,7 +108,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         _cities_army = [units for units, _ in (_extract_units(c) for c in _cities_data)]
         _max_length_per_army = [max(len(addThousandSeparator(army[unit])) for army in _cities_army) for unit in _army_order]
 
-        _short_army_order = [s[:16] + '…' if len(s) > 16 else s for s in _army_order]
+        _short_army_order = [(s[:15] + '…') if len(s) > 16 else s for s in _army_order]
         _print_vertical(_max_city_name_length, _short_army_order, _max_length_per_army, separator=' '*len(__column_separator))
         print("-" * (_max_city_name_length + sum(_max_length_per_army) + len(_max_length_per_army) * len(__column_separator) + 1))
         for _city_name, _army in zip(_city_names, _cities_army):
