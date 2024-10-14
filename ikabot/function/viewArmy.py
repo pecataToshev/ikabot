@@ -87,17 +87,18 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
                      _extract_units: Callable[[CityArmyData], Tuple[Dict[str, int], List[str]]]):
         _minimum_unit_column_width = 4
         _city_names = [c.city['name'] for c in _cities_data]
+        _max_city_name_length = max(len(c) for c in _city_names)
 
         (_, _army_order) = _extract_units(_cities_data[0])
-        _max_army_name_length = max(len(c) for c in _army_order)
         _cities_army = [units for units, _ in (_extract_units(c) for c in _cities_data)]
-        _max_length_per_city = [max(len(addThousandSeparator(army[unit])) for unit in _army_order) for army in _cities_army]
+        _max_length_per_army = [max(len(addThousandSeparator(army[unit])) for army in _cities_army) for unit in _army_order]
 
-        _print_vertical(_max_army_name_length, _city_names, _max_length_per_city, separator=' '*len(__column_separator))
-        print("-" * (_max_army_name_length + sum(_max_length_per_city) + len(_max_length_per_city) * len(__column_separator) + 1))
-        for _unit in _army_order:
-            _row = ["{: >{}}".format(_unit, _max_army_name_length)]
-            for _city_name, _army, _max_length in zip(_city_names, _cities_army, _max_length_per_city):
+        _short_army_order = [s[:16] for s in _army_order]
+        _print_vertical(_max_city_name_length, _short_army_order, _max_length_per_army, separator=' '*len(__column_separator))
+        print("-" * (_max_city_name_length + sum(_max_length_per_army) + len(_max_length_per_army) * len(__column_separator) + 1))
+        for _city_name, _army in zip(_city_names, _cities_army):
+            _row = ["{: >{}}".format(_city_name, _max_city_name_length)]
+            for _unit, _max_length in zip(_army_order, _max_length_per_army):
                 _num = int(_army[_unit])
                 _num = ' ' if _num == 0 else addThousandSeparator(_num)
                 _row.append("{}{: >{}}".format(__column_separator, _num, _max_length))
