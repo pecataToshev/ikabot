@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
+import time
 from typing import Callable, Dict, List, Tuple
 
 from bs4 import BeautifulSoup
@@ -9,7 +10,8 @@ from ikabot.config import actionRequest, city_url
 from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import addThousandSeparator, banner, decodeUnicodeEscape, enter, printProgressBar
+from ikabot.helpers.gui import addThousandSeparator, banner, decodeUnicodeEscape, enter, formatTimestamp, \
+    printProgressBar
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
@@ -28,6 +30,18 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
 
     # region Config
     __column_separator = ' | '
+
+    def _load_data(ikariam_service: IkariamService) -> List[CityArmyData]:
+        banner()
+        _data: List[CityArmyData] = []
+
+        # region Retrieve cities _data
+        [_city_ids, _] = getIdsOfCities(ikariam_service, False)
+        for _res_ind, _city_id in enumerate(_city_ids):
+            printProgressBar("Retrieving cities _data", _res_ind+1, len(_city_ids))
+            _data.append(_get_city_army_data(_city_id))
+
+        return _data
 
     def _extract_units(html: str, root_id: str) -> (dict[str, int], List[str]):
         _soup = BeautifulSoup(html, 'html.parser')
@@ -106,37 +120,34 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
             print("".join(_row))
     # endregion
 
-    banner()
-
-    [city_ids, _] = getIdsOfCities(ikariam_service, False)
-    data: List[CityArmyData] = []
-
-    # region Retrieve cities data
-    for res_ind, city_id in enumerate(city_ids):
-        printProgressBar("Retrieving cities data", res_ind+1, len(city_ids))
-        data.append(_get_city_army_data(city_id))
-    # endregion
-
+    _data: List[CityArmyData] = _load_data(ikariam_service)
+    _data_time = time.time()
     # Remove progressbar
     banner()
 
     while True:
-        print("\n\n")
+        print("Data loaded on: {}\n".format(formatTimestamp(_data_time)))
         print(" 0) Exit")
         print(" 1) Units")
         print(" 2) Fleet")
-        _selected=read(min=0, max=2, digit=True)
+        print(" 3) Reload Data")
+        _selected=read(min=0, max=3, digit=True)
 
         if _selected == 0:
             return
 
+        if _selected == 3:
+            _data = _load_data(ikariam_service)
+            _data_time = time.time()
+            continue
+
         banner()
-        print("\n\n")
         if _selected == 1:
             print("\tUNITS:\n")
-            _print_units(data, lambda c: (c.units, c.units_order))
+            _print_units(_data, lambda c: (c.units, c.units_order))
         elif _selected == 2:
             print("\tFLEET:\n")
-            _print_units(data, lambda c: (c.fleet, c.fleet_order))
+            _print_units(_data, lambda c: (c.fleet, c.fleet_order))
 
+        print("\n\n")
     # THE END
