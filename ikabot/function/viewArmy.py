@@ -113,7 +113,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
 
         return [town_hall_name] + sorted([key for key, value in constructed_buildings.items() for _ in range(value)])
 
-    def print_vertical(prefix_length, words, separator=COLUMN_SEPARATOR):
+    def _print_vertical(prefix_length: int, words: List[str], columns_width: list[int]):
         max_length = max(len(word) for word in words)
         # Pad each word with spaces to make them equal in length
         padded_words = [word.rjust(max_length) for word in words]
@@ -121,9 +121,14 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         # Create a matrix with characters aligned
         matrix = [list(row) for row in zip(*padded_words)]
 
+        # Center column over text
+        for _r in range(len(matrix)):
+            for _c in range(len(matrix[_r])):
+                matrix[_r][_c] = "{:^{}}".format(matrix[_r][_c], columns_width[_c])
+
         # Print the matrix
         for row in matrix:
-            print(separator.join([" " * prefix_length] + row))
+            print(COLUMN_SEPARATOR.join([" " * prefix_length] + row))
 
     def _print_units(_cities_data: List[CityArmyData],
                      _extract_units: Callable[[CityArmyData], Tuple[Dict[str, int], List[str]]]):
@@ -135,7 +140,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         _cities_army = [units for units, _ in (_extract_units(c) for c in _cities_data)]
         _max_length_per_army = [max(len(addThousandSeparator(army[unit])) for army in _cities_army) for unit in _army_order]
 
-        print_vertical(_max_city_name_length, _army_order)
+        _print_vertical(_max_city_name_length, _army_order)
         for _city_name, _army in zip(_city_names, _cities_army):
             _row = ["{: >{}}{}".format(_city_name, _max_city_name_length, COLUMN_SEPARATOR)]
             for _unit, _max_length in zip(_army_order, _max_length_per_army):
@@ -151,7 +156,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         # constructed_building_names = get_building_names(_cities_army_data)
         # max_building_name_length = max(len(b) for b in constructed_building_names)
         # city_names = [c['name'] for c in _cities_army_data]
-        # print_vertical(max_building_name_length - 1, city_names, ' ' * buildings_column_width)
+        # _print_vertical(max_building_name_length - 1, city_names, ' ' * buildings_column_width)
         # print("-" * (max_building_name_length + (buildings_column_width + 1) * len(_cities_army_data)))
         # # gow many times we've encountered a building in the city. This is being
         # # done to display the duplicates
