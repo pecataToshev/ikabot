@@ -140,7 +140,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         _cities_army = [units for units, _ in (_extract_units(c) for c in _cities_data)]
         _max_length_per_army = [max(len(addThousandSeparator(army[unit])) for army in _cities_army) for unit in _army_order]
 
-        _print_vertical(_max_city_name_length, _army_order)
+        _print_vertical(_max_city_name_length, _army_order, _max_length_per_army)
         for _city_name, _army in zip(_city_names, _cities_army):
             _row = ["{: >{}}{}".format(_city_name, _max_city_name_length, COLUMN_SEPARATOR)]
             for _unit, _max_length in zip(_army_order, _max_length_per_army):
