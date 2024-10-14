@@ -11,6 +11,7 @@ from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, decodeUnicodeEscape, enter, printProgressBar
 from ikabot.helpers.telegram import Telegram
+from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -103,14 +104,6 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
                 _num = ' ' if _num == 0 else addThousandSeparator(_num)
                 _row.append("{}{: >{}}".format(__column_separator, _num, _max_length))
             print("".join(_row))
-
-
-    def _print_all_army_table(_cities_army_data: List[CityArmyData]):
-        print("\n\n\tUNITS:\n\n")
-        _print_units(_cities_army_data, lambda c: (c.units, c.units_order))
-        print("\n\n\n")
-        print("\n\n\tFLEET:\n\n")
-        _print_units(_cities_army_data, lambda c: (c.fleet, c.fleet_order))
     # endregion
 
     banner()
@@ -126,7 +119,24 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
 
     # Remove progressbar
     banner()
-    _print_all_army_table(data)
 
-    enter()
+    while True:
+        print("\n\n")
+        print(" 0) Exit")
+        print(" 1) Units")
+        print(" 2) Fleet")
+        _selected=read(min=0, max=2, digit=True)
+
+        if _selected == 0:
+            return
+
+        banner()
+        print("\n\n")
+        if _selected == 1:
+            print("\tUNITS:\n")
+            _print_units(data, lambda c: (c.units, c.units_order))
+        elif _selected == 2:
+            print("\tFLEET:\n")
+            _print_units(data, lambda c: (c.fleet, c.fleet_order))
+
     # THE END
