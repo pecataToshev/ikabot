@@ -126,7 +126,6 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     banner()
 
     while True:
-        print("Data loaded on: {}\n".format(formatTimestamp(_data_time)))
         print(" 0) Exit")
         print(" 1) Units")
         print(" 2) Fleet")
@@ -142,6 +141,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
             continue
 
         banner()
+        print("Data loaded on: {}\n".format(formatTimestamp(_data_time)))
         if _selected == 1:
             print("\tUNITS:\n")
             _print_units(_data, lambda c: (c.units, c.units_order))
