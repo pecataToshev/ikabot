@@ -53,7 +53,9 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
             _counts_row = _table.find('tr', class_='count')
             if _counts_row is None:
                 # Handle no data found - optimised with removing the empty table
-                _counts_row = [0] * len(_titles_row)
+                _dict = {}
+                setattr(_dict, "text", "0")
+                _counts_row = [_dict] * len(_titles_row)
             else:
                 _counts_row = _counts_row.find_all('td')
 
