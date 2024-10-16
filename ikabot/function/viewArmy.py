@@ -63,6 +63,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
 
     def _get_city_army_data(_city_id: int) -> CityArmyData:
         _city = getCity(ikariam_service.get(city_url + _city_id))
+        print(_city['name'])
         _json = ikariam_service.post(
             params={
                 "view": "cityMilitary",
