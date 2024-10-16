@@ -50,7 +50,13 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         _order = []
         for _table in _tables:
             _titles_row = _table.find('tr', class_='title_img_row').find_all('th')
-            _counts_row = _table.find('tr', class_='count').find_all('td')
+            _counts_row = _table.find('tr', class_='count')
+            if _counts_row is None:
+                # Handle no data found - optimised with removing the empty table
+                _counts_row = [0] * len(_titles_row)
+            else:
+                _counts_row = _counts_row.find_all('td')
+
             _is_first = True
             for _title, _count in zip(_titles_row, _counts_row):
                 if _is_first:
