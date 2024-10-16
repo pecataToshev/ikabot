@@ -53,11 +53,10 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
             _counts_row = _table.find('tr', class_='count')
             if _counts_row is None:
                 # Handle no data found - optimised with removing the empty table
-                _dict = {}
-                setattr(_dict, "text", "0")
-                _counts_row = [_dict] * len(_titles_row)
+                _counts_row = [0] * len(_titles_row)
             else:
-                _counts_row = _counts_row.find_all('td')
+                _counts_row = [int(_count.text.strip().replace(',', '').replace('.', ''))
+                               for _count in _counts_row.find_all('td')]
 
             _is_first = True
             for _title, _count in zip(_titles_row, _counts_row):
@@ -123,7 +122,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         for _city_name, _army in zip(_city_names, _cities_army):
             _row = ["{: >{}}".format(_city_name, _max_city_name_length)]
             for _unit, _max_length in zip(_army_order, _max_length_per_army):
-                _num = int(_army[_unit])
+                _num = _army[_unit]
                 _num = ' ' if _num == 0 else addThousandSeparator(_num)
                 _row.append("{}{: >{}}".format(__column_separator, _num, _max_length))
             print("".join(_row))
