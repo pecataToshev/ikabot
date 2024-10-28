@@ -194,6 +194,8 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
             city_stats_colour = ''
             if print_city_name:
                 print(free_citizens)
+                print(type(free_citizens))
+                print(int(free_citizens))
                 if free_citizens > 0:
                     city_stats_colour = Colours.Text.Light.GREEN
             else:
