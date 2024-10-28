@@ -72,14 +72,14 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
             'level': background_data[view + 'Level'],  # resourceLevel / tradegoodLevel
             'upgrading': upgrading,
             'upgradeEndTime': end_upgrade_time,
-            'production': template_data['js_resource_tooltip_total_production']['text'],
-            'totalWorkers': template_data['valueWorkers'],
-            'maxWorkers': slider_data['max_value'],
-            'overchargedWorkers': slider_data['overcharge'],
+            'production': float(template_data['js_resource_tooltip_total_production']['text']),
+            'totalWorkers': int(template_data['valueWorkers']),
+            'maxWorkers': int(slider_data['max_value']),
+            'overchargedWorkers': int(slider_data['overcharge']),
             # city related
-            'availableWood': json[0][1]['headerData']['currentResources']['resource'],
-            'freeCitizens': template_data['valueCitizens'],
-            'goldPerHour': template_data['valueWorkCosts'],
+            'availableWood': int(json[0][1]['headerData']['currentResources']['resource']),
+            'freeCitizens': int(template_data['valueCitizens']),
+            'goldPerHour': float(template_data['valueWorkCosts']),
         })
 
         if not data['upgrading'] and json[1][0] == 'changeView':
@@ -193,10 +193,10 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
 
             city_stats_colour = ''
             if print_city_name:
-                if int(free_citizens) > 0:
+                if free_citizens > 0:
                     city_stats_colour = Colours.Text.Light.GREEN
             else:
-                if int(gold_per_hour) < 0:
+                if gold_per_hour < 0:
                     city_stats_colour = Colours.Text.Light.RED
                 else:
                     city_stats_colour = Colours.Text.Light.YELLOW
