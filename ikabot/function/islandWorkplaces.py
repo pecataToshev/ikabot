@@ -19,7 +19,7 @@ def get_number(s):
     return int(s.replace(',', '').replace('.', ''))
 
 def _get_int(s: str) -> int:
-    return int(s.replace(',', '').replace('.', ''))
+    return int(str(s).replace(',', '').replace('.', ''))
 
 
 def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Telegram):
