@@ -18,6 +18,9 @@ from ikabot.web.ikariamService import IkariamService
 def get_number(s):
     return int(s.replace(',', '').replace('.', ''))
 
+def _get_int(s: str) -> int:
+    return int(s.replace(',', '').replace('.', ''))
+
 
 def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     action_exit = "Exit"
@@ -73,12 +76,12 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
             'upgrading': upgrading,
             'upgradeEndTime': end_upgrade_time,
             'production': float(template_data['js_resource_tooltip_total_production']['text']),
-            'totalWorkers': int(template_data['valueWorkers']),
-            'maxWorkers': int(slider_data['max_value']),
-            'overchargedWorkers': int(slider_data['overcharge']),
+            'totalWorkers': _get_int(template_data['valueWorkers']),
+            'maxWorkers': _get_int(slider_data['max_value']),
+            'overchargedWorkers': _get_int(slider_data['overcharge']),
             # city related
-            'availableWood': int(json[0][1]['headerData']['currentResources']['resource']),
-            'freeCitizens': int(template_data['valueCitizens']),
+            'availableWood': _get_int(json[0][1]['headerData']['currentResources']['resource']),
+            'freeCitizens': _get_int(template_data['valueCitizens']),
             'goldPerHour': float(template_data['valueWorkCosts']),
         })
 
