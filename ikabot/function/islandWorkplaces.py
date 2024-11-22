@@ -75,14 +75,14 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
             'level': background_data[view + 'Level'],  # resourceLevel / tradegoodLevel
             'upgrading': upgrading,
             'upgradeEndTime': end_upgrade_time,
-            'production': float(template_data['js_resource_tooltip_total_production']['text']),
+            'production': float(template_data['js_resource_tooltip_total_production']['text'].replace(',', '')),
             'totalWorkers': _get_int(template_data['valueWorkers']),
             'maxWorkers': _get_int(slider_data['max_value']),
             'overchargedWorkers': _get_int(slider_data['overcharge']),
             # city related
             'availableWood': _get_int(json[0][1]['headerData']['currentResources']['resource']),
             'freeCitizens': _get_int(template_data['valueCitizens']),
-            'goldPerHour': float(template_data['valueWorkCosts']),
+            'goldPerHour': float(template_data['valueWorkCosts'].replace(',', '')),
         })
 
         if not data['upgrading'] and json[1][0] == 'changeView':
