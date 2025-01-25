@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from ikabot.config import actionRequest, city_url
 from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.database import Database
-from ikabot.helpers.getJson import getCity
+from ikabot.helpers.getJson import getCity, parse_int
 from ikabot.helpers.gui import addThousandSeparator, banner, decodeUnicodeEscape, enter, formatTimestamp, \
     printProgressBar
 from ikabot.helpers.telegram import Telegram
@@ -55,7 +55,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
                 # Handle no data found - optimised with removing the empty table
                 _counts_row = ['0'] * len(_titles_row)
             else:
-                _counts_row = [_count.text.strip().replace(',', '').replace('.', '')
+                _counts_row = [parse_int(_count.text.strip())
                                for _count in _counts_row.find_all('td')]
 
             _is_first = True

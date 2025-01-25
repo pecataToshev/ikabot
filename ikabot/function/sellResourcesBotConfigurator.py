@@ -7,6 +7,7 @@ import re
 from ikabot.bot.sellResourcesBot import SellResourcesToOfferBot, SellResourcesWithOwnOfferBot
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
+from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, enter
 from ikabot.helpers.market import getCommercialCities, getMarketInfo, storageCapacityOfMarket
 from ikabot.helpers.userInput import read
@@ -76,9 +77,8 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
     for offer in offers:
         cityname, username, amount, price, dist, destination_city_id = offer
         cityname = cityname.strip()
-        amount = amount.replace(',', '').replace('.', '')
-        amount = int(amount)
-        price = int(price)
+        amount = parse_int(amount)
+        price = parse_int(price)
         msg = '{} ({}): {} at {:d} each ({} in total) [Y/n]'.format(cityname, username, addThousandSeparator(amount),
                                                                     price, addThousandSeparator(price * amount))
         rta = read(msg=msg, values=['y', 'Y', 'n', 'N', ''])
@@ -105,9 +105,8 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
     for offer in chosen_offers:
         cityname, username, amount, price, dist, destination_city_id = offer
         cityname = cityname.strip()
-        amount = amount.replace(',', '').replace('.', '')
-        amount = int(amount)
-        price = int(price)
+        amount = parse_int(amount)
+        price = parse_int(price)
         sell = min(amount, left_to_sell)
         left_to_sell -= sell
         profit += sell * price
@@ -147,8 +146,8 @@ def createOffer(ikariam_service: IkariamService, my_offering_market_city, resour
         return
 
     price_max, price_min = re.findall(r'\'upper\': (\d+),\s*\'lower\': (\d+)', html)[resource_type]
-    price_max = int(price_max)
-    price_min = int(price_min)
+    price_max = parse_int(price_max)
+    price_min = parse_int(price_min)
     print('\nAt what price? [min = {:d}, max = {:d}]'.format(price_min, price_max))
     price = read(min=price_min, max=price_max)
 

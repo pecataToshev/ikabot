@@ -2,8 +2,9 @@ import json
 import logging
 from typing import Union
 
-from ikabot.config import city_url, actionRequest
+from ikabot.config import actionRequest, city_url
 from ikabot.helpers.buildings import find_city_with_the_biggest_building
+from ikabot.helpers.getJson import parse_int
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -54,7 +55,7 @@ def convertCapturePoints(session, pirate_city_id, conversion_points):
     if conversion_points == 'all':
         conversion_points = captured_points
     elif type(conversion_points) is str and conversion_points.startswith('over-'):
-        minimum_threshold = int(conversion_points.replace('over-', ''))
+        minimum_threshold = parse_int(conversion_points.replace('over-', ''))
         conversion_points = max(0, captured_points - minimum_threshold)
     else:
         conversion_points = min(int(conversion_points), captured_points)

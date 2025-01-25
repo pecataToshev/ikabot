@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, materials_names
+from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.gui import addThousandSeparator
 from ikabot.helpers.market import getMarketInfo, onSellInMarket, storageCapacityOfMarket
 from ikabot.helpers.planRoutes import waitForAvailableShips
@@ -120,8 +121,7 @@ class SellResourcesToOfferBot(Bot):
         for offer in self.offers:
             cityname, username, amount, precio, dist, destination_city_id = offer
             cityname = cityname.strip()
-            amount_to_buy = amount.replace(',', '').replace('.', '')
-            amount_to_buy = int(amount_to_buy)
+            amount_to_buy = parse_int(amount)
             while True:
                 amount_to_sell = min(amount_to_buy, self.left_to_sell)
                 ships_available = waitForAvailableShips(self.ikariam_service, self._wait)
