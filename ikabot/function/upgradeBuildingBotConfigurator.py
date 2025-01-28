@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import hashlib
 import json
+import logging
 import math
 import re
 from decimal import Decimal
@@ -139,6 +140,8 @@ def getResourcesNeeded(session, city, building, current_level, final_level):
         levels_to_upgrade += 1
         # get the costs for the current level
         costs = re.findall(r'<td class="costs">([\d,\.]*)</td>', match)
+
+        logging.debug("Costs for level %d: %s", lv, costs)
 
         for i in range(len(costs)):
             #get hash from CDN images to identify the resource type
