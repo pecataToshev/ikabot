@@ -141,7 +141,14 @@ def getResourcesNeeded(session, city, building, current_level, final_level):
 
         levels_to_upgrade += 1
         # get the costs for the current level
-        costs = re.findall(r'<td class="costs">([\d,\.]*)</td>', match)
+
+        # Taken from #303
+        # costs = re.findall(r'<td class="costs"><div.*>([\d,\.]*)</div></div></td>', match)
+
+        # Taken from #304
+        costs = re.findall(r'<td class="costs"><div.*>([\d,\.\s\xa0]*)</div></div></td>', match)
+        # delete blank spaces (\xa0) in costs
+        costs = [value.replace('\xa0', '').replace(' ', '') for value in costs]
 
         logging.debug("Costs for level %d: %s", lv, costs)
 
