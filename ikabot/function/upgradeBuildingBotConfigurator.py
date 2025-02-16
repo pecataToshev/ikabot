@@ -124,13 +124,11 @@ def getResourcesNeeded(session, city, building, current_level, final_level):
 
     # get the actual cost of each upgrade
     matches = re.findall(r'<td class="level">\d+</td>(?:\s+<td class="costs">.*?</td>)+', html_costs)
-    logging.debug("Costs Reductions: %s; matches Len: %d", costs_reductions, len(matches))
 
     # calculate the cost of the entire upgrade, taking into account all the possible reductions
     final_costs = [0] * len(materials_names)
     levels_to_upgrade = 0
     for match in matches:
-        logging.debug("levels to upgrade: %d, match: %s", levels_to_upgrade, match)
         lv = re.search(r'"level">(\d+)</td>', match).group(1)
         lv = int(lv)
 
