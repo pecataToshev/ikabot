@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import hashlib
 import json
-import logging
 import math
 import re
 from decimal import Decimal
@@ -147,8 +146,6 @@ def getResourcesNeeded(session, city, building, current_level, final_level):
         costs = re.findall(r'<td class="costs"><div.*>([\d,\.\s\xa0]*)</div></div></td>', match)
         # delete blank spaces (\xa0) in costs
         costs = [value.replace('\xa0', '').replace(' ', '') for value in costs]
-
-        logging.debug("Costs for level %d: %s", lv, costs)
 
         for i in range(len(costs)):
             #get hash from CDN images to identify the resource type
