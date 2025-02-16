@@ -7,12 +7,20 @@ from ikabot import config
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.database import Database
-from ikabot.helpers.getJson import getCity, parse_float, parse_int
+from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, enter, printProgressBar, \
     rightAlign
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
+
+
+def get_number(s):
+    return int(s.replace(',', '').replace('.', ''))
+
+def _get_int(s: str) -> int:
+    return int(str(s).replace(',', '').replace('.', ''))
+
 
 def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     action_exit = "Exit"
@@ -67,14 +75,14 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
             'level': background_data[view + 'Level'],  # resourceLevel / tradegoodLevel
             'upgrading': upgrading,
             'upgradeEndTime': end_upgrade_time,
-            'production': parse_float(template_data['js_resource_tooltip_total_production']['text']),
-            'totalWorkers': parse_int(template_data['valueWorkers']),
-            'maxWorkers': parse_int(slider_data['max_value']),
-            'overchargedWorkers': parse_int(slider_data['overcharge']),
+            'production': float(str(template_data['js_resource_tooltip_total_production']['text']).replace(',', '')),
+            'totalWorkers': _get_int(template_data['valueWorkers']),
+            'maxWorkers': _get_int(slider_data['max_value']),
+            'overchargedWorkers': _get_int(slider_data['overcharge']),
             # city related
-            'availableWood': parse_int(json[0][1]['headerData']['currentResources']['resource']),
-            'freeCitizens': parse_int(template_data['valueCitizens']),
-            'goldPerHour': parse_float(template_data['valueWorkCosts']),
+            'availableWood': _get_int(json[0][1]['headerData']['currentResources']['resource']),
+            'freeCitizens': _get_int(template_data['valueCitizens']),
+            'goldPerHour': float(str(template_data['valueWorkCosts']).replace(',', '')),
         })
 
         if not data['upgrading'] and json[1][0] == 'changeView':
@@ -86,8 +94,8 @@ def islandWorkplaces(ikariam_service: IkariamService, db: Database, telegram: Te
             else:
                 needed, donated, free_deposit = matches
 
-            data['requiredWoodForNextLevel'] = parse_int(needed) - parse_int(donated)
-            data['freeDonationWood'] = parse_int(free_deposit)
+            data['requiredWoodForNextLevel'] = get_number(needed) - get_number(donated)
+            data['freeDonationWood'] = get_number(free_deposit)
         else:
             data['requiredWoodForNextLevel'] = init_data.get("requiredWoodForNextLevel", 0)
             data['freeDonationWood'] = init_data.get("freeDonationWood", 0)

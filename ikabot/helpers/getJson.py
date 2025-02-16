@@ -13,21 +13,8 @@ from ikabot.helpers.resources import extract_resource_production, extract_tradeg
     getWineConsumptionPerHour
 
 
-def parse_int(num) -> int:
+def parse_int(num: str) -> int:
     return int(num.replace(',', '').replace('.', ''))
-
-def parse_float(num) -> float:
-    num = str(num)
-    _last_dot = num.rfind('.')
-    _last_comma = num.rfind(',')
-    _number_of_dots = num.count('.')
-    if _number_of_dots > 1 or _last_comma > _last_dot:
-        return float(num.replace('.', '').replace(',', '.'))
-
-    if _last_dot > _last_comma:
-        return float(num.replace(',', ''))
-
-    return float(num.replace(',',  '').replace('.', ''))
 
 
 def getFreeCitizens(html):
@@ -42,8 +29,8 @@ def getFreeCitizens(html):
     freeCitizens : int
         an integer representing the amount of free citizens in the given city.
     """
-    _free_citizens = re.search(r'js_GlobalMenu_citizens">(.*?)</span>', html).group(1)
-    return parse_int(_free_citizens)
+    freeCitizens = re.search(r'js_GlobalMenu_citizens">(.*?)</span>', html).group(1)
+    return int(freeCitizens.replace(',', '').replace('.', ''))
 
 def getPopulation(html):
     """This function is used in the ``getCity`` function to determine the population in the given city.
@@ -57,8 +44,8 @@ def getPopulation(html):
     freeCitizens : int
         an integer representing the amount of free citizens in the given city.
     """
-    _population = re.search(r'js_GlobalMenu_population">(.*?)</span>', html).group(1)
-    return parse_int(_population)
+    freeCitizens = re.search(r'js_GlobalMenu_population">(.*?)</span>', html).group(1)
+    return int(freeCitizens.replace(',', '').replace('.', ''))
 
 
 def getResourcesListedForSale(html):
@@ -120,7 +107,7 @@ def populate_island_city(island: dict, city: dict):
         _ranking = island['avatarScores'][str(city['ownerId'])]
         city['playerRanking'] = _ranking
         city['playerPlace'] = _ranking['place']
-        city['playerPointsWithoutCitizens'] = sum(ceil(parse_int(x) / 100) for x in [
+        city['playerPointsWithoutCitizens'] = sum(ceil(int(x.replace(',', '')) / 100) for x in [
             _ranking['building_score_main'],
             _ranking['research_score_main'],
             _ranking['army_score_main'],

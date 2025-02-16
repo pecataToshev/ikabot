@@ -5,7 +5,6 @@ import re
 from ikabot.bot.buyResourcesBot import BuyResourcesBot
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
-from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.market import getCommercialCities, getGold, getMarketHtml
 from ikabot.helpers.userInput import askUserYesNo, read
@@ -66,10 +65,10 @@ def getOffers(session, city):
         offer = {
             'ciudadDestino': hit[0],
             'jugadorAComprar': hit[1],
-            'bienesXminuto': parse_int(hit[2]),
-            'amountAvailable': parse_int(hit[3].replace('<', '')),
+            'bienesXminuto': int(hit[2]),
+            'amountAvailable': int(hit[3].replace(',', '').replace('.', '').replace('<', '')),
             'tipo': hit[4],
-            'precio': parse_int(hit[5]),
+            'precio': int(hit[5]),
             'destinationCityId': hit[6],
             'cityId': hit[7],
             'position': hit[8],

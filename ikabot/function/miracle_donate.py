@@ -1,17 +1,22 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
+import logging
 
 from bs4 import BeautifulSoup
 
 from ikabot.config import actionRequest, city_url, island_url, materials_names
 from ikabot.helpers.citiesAndIslands import chooseCity
 from ikabot.helpers.database import Database
-from ikabot.helpers.getJson import getCity, getIsland, parse_int
+from ikabot.helpers.getJson import getCity, getIsland
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, decodeUnicodeEscape, enter
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.web.ikariamService import IkariamService
+
+
+def get_number(s):
+    return int(s.replace(',', '').replace('.', ''))
 
 
 def miracle_donate(ikariam_service: IkariamService, db: Database, telegram: Telegram):
@@ -45,8 +50,8 @@ def miracle_donate(ikariam_service: IkariamService, db: Database, telegram: Tele
     update_template_data = miracle_json[2][1]
     load_js_params = json.loads(update_template_data['load_js']['params'], strict=False)
 
-    required_donations = parse_int(update_template_data['js_donateNextLevel'])
-    current_donations = parse_int(update_template_data['js_donatedResources'])
+    required_donations = get_number(update_template_data['js_donateNextLevel'])
+    current_donations = get_number(update_template_data['js_donatedResources'])
     remaining_donations = required_donations - current_donations
     to_donate = [0] * len(materials_names)
 

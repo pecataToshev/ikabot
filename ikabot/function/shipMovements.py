@@ -6,7 +6,6 @@ import time
 from decimal import Decimal
 
 from ikabot.config import materials_names, materials_names_tec
-from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, enter
 from ikabot.helpers.naval import get_military_and_see_movements, getAvailableShips, getTotalShips
 
@@ -78,9 +77,9 @@ def shipMovements(ikariam_service, db, telegram):
             fleets = 0
             for mov in movement['fleet']['ships']:
                 if mov['cssClass'] == 'ship_transport':
-                    ships += parse_int(mov['amount'])
+                    ships += int(mov['amount'])
                 else:
-                    fleets += parse_int(mov['amount'])
+                    fleets += int(mov['amount'])
             print('Troops:{}\nFleets:{}\n Ships:{}'.format(addThousandSeparator(troops), addThousandSeparator(fleets), addThousandSeparator(ships)))
         else:
             assert len(materials_names) == 5
@@ -92,7 +91,7 @@ def shipMovements(ikariam_service, db, telegram):
                 if tradegood != 'gold':
                     index = materials_names_tec.index(tradegood)
                     tradegood = materials_names[index]
-                total_load += parse_int(amount)
+                total_load += int(amount.replace(',', '').replace('.', ''))
                 print('{} of {}'.format(amount, tradegood))
             ships = int(math.ceil((Decimal(total_load) / Decimal(500))))
             print('{:d} Ships'.format(ships))

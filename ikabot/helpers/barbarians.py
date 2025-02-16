@@ -5,7 +5,6 @@ from decimal import Decimal
 
 from ikabot.bot.transportGoodsBot import TransportGoodsBot
 from ikabot.config import actionRequest, materials_names
-from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.naval import get_military_and_see_movements
 
 
@@ -63,7 +62,7 @@ def get_units(session, city):
 
     units = {}
     for i in range(len(unit_id_names)):
-        amount = parse_int(unit_amounts[i].replace('-', '0'))
+        amount = int(unit_amounts[i].replace(',', '').replace('-', '0'))
         unit_id = unit_id_names[i][0][1:]
         unit_name = unit_id_names[i][1]
         units[unit_id] = {}
@@ -78,15 +77,15 @@ def get_barbarians_lv(session, island):
     resp = session.post(params=params)
     resp = json.loads(resp, strict=False)
 
-    level = parse_int(resp[2][1]['js_islandBarbarianLevel']['text'])
-    gold = parse_int(resp[2][1]['js_islandBarbarianResourcegold']['text'])
+    level = int(resp[2][1]['js_islandBarbarianLevel']['text'])
+    gold = int(resp[2][1]['js_islandBarbarianResourcegold']['text'].replace(',', ''))
 
     resources = [0] * len(materials_names)
     for i in range(len(materials_names)):
         if i == 0:
-            resources[i] = parse_int(resp[2][1]['js_islandBarbarianResourceresource']['text'])
+            resources[i] = int(resp[2][1]['js_islandBarbarianResourceresource']['text'].replace(',', ''))
         else:
-            resources[i] = parse_int(resp[2][1]['js_islandBarbarianResourcetradegood{:d}'.format(i)]['text'])
+            resources[i] = int(resp[2][1]['js_islandBarbarianResourcetradegood{:d}'.format(i)]['text'].replace(',', ''))
 
     html = resp[1][1][1]
     troops = re.findall(r'<div class="army \w*?">\s*<div class=".*?">(.*?)</div>\s*</div>\s*</td>\s*</tr>\s*<tr>\s*<td class="center">\s*(\d+)', html)
