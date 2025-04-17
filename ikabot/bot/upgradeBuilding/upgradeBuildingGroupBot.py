@@ -46,5 +46,5 @@ class UpgradeBuildingGroupBot(AbstractUpgradeBuildingBot):
         )
 
     def _has_more_levels_to_upgrade(self, city: dict, building: dict) -> bool:
-        _smallest_buildings = [self._get_building_with_smallest_level_from_type(city, bt) for bt in self.building_types]
-        return any(self.get_building_level(b) < self.building_target_level for b in _smallest_buildings)
+        _smallest_buildings = self._get_building_to_upgrade(city)
+        return self.get_building_level(_smallest_buildings) < self.building_target_level

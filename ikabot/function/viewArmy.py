@@ -50,7 +50,14 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         _order = []
         for _table in _tables:
             _titles_row = _table.find('tr', class_='title_img_row').find_all('th')
-            _counts_row = _table.find('tr', class_='count').find_all('td')
+            _counts_row = _table.find('tr', class_='count')
+            if _counts_row is None:
+                # Handle no data found - optimised with removing the empty table
+                _counts_row = ['0'] * len(_titles_row)
+            else:
+                _counts_row = [_count.text.strip().replace(',', '').replace('.', '')
+                               for _count in _counts_row.find_all('td')]
+
             _is_first = True
             for _title, _count in zip(_titles_row, _counts_row):
                 if _is_first:
@@ -58,11 +65,12 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
                     continue
                 _name = decodeUnicodeEscape(_title.text).strip()
                 _order.append(_name)
-                _data[_name] = _count.text.strip()
+                _data[_name] = int(_count)
         return _data, _order
 
     def _get_city_army_data(_city_id: int) -> CityArmyData:
         _city = getCity(ikariam_service.get(city_url + _city_id))
+        print(_city['name'])
         _json = ikariam_service.post(
             params={
                 "view": "cityMilitary",
@@ -114,7 +122,7 @@ def viewArmy(ikariam_service: IkariamService, db: Database, telegram: Telegram):
         for _city_name, _army in zip(_city_names, _cities_army):
             _row = ["{: >{}}".format(_city_name, _max_city_name_length)]
             for _unit, _max_length in zip(_army_order, _max_length_per_army):
-                _num = int(_army[_unit])
+                _num = _army[_unit]
                 _num = ' ' if _num == 0 else addThousandSeparator(_num)
                 _row.append("{}{: >{}}".format(__column_separator, _num, _max_length))
             print("".join(_row))
