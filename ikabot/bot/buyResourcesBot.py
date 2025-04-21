@@ -9,6 +9,7 @@ from decimal import Decimal
 from ikabot.bot.bot import Bot
 from ikabot.bot.transportGoodsBot import TransportGoodsBot
 from ikabot.config import actionRequest, materials_names
+from ikabot.helpers.citiesAndIslands import getCurrentCityId
 from ikabot.helpers.gui import addThousandSeparator
 from ikabot.helpers.naval import TransportShip, get_transport_ships_size
 from ikabot.helpers.planRoutes import waitForAvailableShips
@@ -30,7 +31,7 @@ class BuyResourcesBot(Bot):
 
     def _start(self) -> None:
         while True:
-            ship_size = get_transport_ships_size(self.ikariam_service, self.building_position['cityId'], TransportShip.TRANSPORT_SHIP)
+            ship_size = get_transport_ships_size(self.ikariam_service, getCurrentCityId(self.ikariam_service), TransportShip.TRANSPORT_SHIP)
             for offer in self.offers:
                 if self.amount_to_buy == 0:
                     return

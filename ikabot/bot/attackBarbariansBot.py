@@ -9,7 +9,7 @@ from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, island_url
 from ikabot.helpers.barbarians import (calc_travel_time, filter_fighting,
                                        filter_loading, filter_traveling,
-                                       get_barbarians_info,
+                                       get_barbarians_info, get_barbarians_lv,
                                        get_current_attacks, get_units)
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.naval import TransportShip, get_transport_ships_size

@@ -6,6 +6,7 @@ import time
 from decimal import Decimal
 
 from ikabot.config import materials_names, materials_names_tec
+from ikabot.helpers.citiesAndIslands import getCurrentCityId
 from ikabot.helpers.gui import (Colours, addThousandSeparator, banner,
                                 daysHoursMinutes, enter)
 from ikabot.helpers.naval import (TransportShip,
@@ -53,6 +54,7 @@ def shipMovements(ikariam_service, db, telegram):
         enter()
         return
 
+    ship_size = get_transport_ships_size(ikariam_service, getCurrentCityId(ikariam_service), TransportShip.TRANSPORT_SHIP)
     for movement in movements:
 
         colour = ''
@@ -71,7 +73,6 @@ def shipMovements(ikariam_service, db, telegram):
                                               movement['event']['missionText'], daysHoursMinutes(time_left),
                                               Colours.Text.RESET))
 
-        ship_size = get_transport_ships_size(ikariam_service, movement['origin']['id'], TransportShip.TRANSPORT_SHIP)
         if movement['isHostile']:
             troops = movement['army']['amount']
             fleets = movement['fleet']['amount']

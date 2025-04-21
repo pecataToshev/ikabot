@@ -93,7 +93,7 @@ def get_barbarians_lv(session, island):
     html = resp[1][1][1]
     troops = re.findall(r'<div class="army \w*?">\s*<div class=".*?">(.*?)</div>\s*</div>\s*</td>\s*</tr>\s*<tr>\s*<td class="center">\s*(\d+)', html)
 
-    ship_size = get_transport_ships_size(session, getCurrentCityId(), TransportShip.TRANSPORT_SHIP)
+    ship_size = get_transport_ships_size(session, getCurrentCityId(session), TransportShip.TRANSPORT_SHIP)
     total_cargo = sum(resources)
     ships = math.ceil(Decimal(total_cargo) / Decimal(ship_size))
 
