@@ -61,16 +61,17 @@ def get_transport_ships_size(ikariam_service: IkariamService, city_id: int, ship
         'ajax': 1
     })
     html = json.loads(response, strict=False)[1][1][1]
-    return int(bs4.BeautifulSoup(html, 'html.parser')
+    size = (bs4.BeautifulSoup(html, 'html.parser')
             .find('div', {'id': 'unit', 'class': 's{}'.format(ship.value)})
-            .find('div', {'class': 'unit_info'})
+            .parent
             .find('div', {'class': 'infoBoxContent'})
             .find('div', {'class': 'floatleft'})
-            .encode_contents()
+            .encode_contents().decode('utf-8')
             .split('<br/>')[-2]
             .split("</span>")[1]
-            .replace(' ', '')
-            .replace('.', ''))
+            .strip()
+    )
+    return int(size.replace(' ', '').replace('.', ''))
 
 
 def get_military_and_see_movements(ikariam_service, city_id=None):
