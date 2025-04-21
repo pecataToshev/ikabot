@@ -7,7 +7,9 @@ from decimal import Decimal
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, materials_names
 from ikabot.helpers.gui import addThousandSeparator
-from ikabot.helpers.market import getMarketInfo, onSellInMarket, storageCapacityOfMarket
+from ikabot.helpers.market import (getMarketInfo, onSellInMarket,
+                                   storageCapacityOfMarket)
+from ikabot.helpers.naval import TransportShip, get_transport_ships_size
 from ikabot.helpers.planRoutes import waitForAvailableShips
 
 
@@ -117,6 +119,7 @@ class SellResourcesToOfferBot(Bot):
         )
 
     def _start(self) -> None:
+        ship_size = get_transport_ships_size(self.ikariam_service, self.city_to_buy_from['id'], TransportShip.TRANSPORT_SHIP)
         for offer in self.offers:
             cityname, username, amount, precio, dist, destination_city_id = offer
             cityname = cityname.strip()
@@ -125,10 +128,10 @@ class SellResourcesToOfferBot(Bot):
             while True:
                 amount_to_sell = min(amount_to_buy, self.left_to_sell)
                 ships_available = waitForAvailableShips(self.ikariam_service, self._wait)
-                ships_needed = math.ceil((Decimal(amount_to_sell) / Decimal(500)))
+                ships_needed = math.ceil((Decimal(amount_to_sell) / Decimal(ship_size)))
                 ships_used = min(ships_available, ships_needed)
                 if ships_needed > ships_used:
-                    amount_to_sell = ships_used * 500
+                    amount_to_sell = ships_used * ship_size
                 self.left_to_sell -= amount_to_sell
                 amount_to_buy -= amount_to_sell
 

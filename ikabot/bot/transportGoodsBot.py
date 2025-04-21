@@ -8,10 +8,12 @@ from decimal import Decimal
 from typing import List, Union
 
 from ikabot.bot.bot import Bot
-from ikabot.config import actionRequest, city_url, materials_names, SECONDS_IN_HOUR
+from ikabot.config import (SECONDS_IN_HOUR, actionRequest, city_url,
+                           materials_names)
 from ikabot.helpers.citiesAndIslands import getCurrentCityId
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator
+from ikabot.helpers.naval import TransportShip
 from ikabot.helpers.planRoutes import waitForAvailableShips
 
 
@@ -40,8 +42,7 @@ class TransportGoodsBot(Bot):
     """
     Performs transportations
     """
-    MAXIMUM_SHIP_SIZE = 500
-    DEFAULT_BATCH_SIZE = 20 * MAXIMUM_SHIP_SIZE
+    DEFAULT_NUMBER_OF_SHIPS_IN_BATCH = 20
 
     def _get_process_info(self) -> str:
         return 'I execute transportation of resources'
@@ -49,6 +50,7 @@ class TransportGoodsBot(Bot):
     def _start(self) -> None:
         batch_size = self.bot_config.get('batchSize', None)
         jobs = self.optimize_jobs(self.bot_config['jobs'])
+        self.ship_size = self.bot_config.get('shipSize', 500)
 
         """
         Execute jobs with max batch size.
@@ -124,9 +126,10 @@ class TransportGoodsBot(Bot):
         obj = f'Sending {remaining_str} ---> {job.target_city["name"]}'
         self._set_process_info(message=obj, target_city=job.origin_city["name"])
 
+        
         ships_available = waitForAvailableShips(self.ikariam_service, self._wait,
                                                 additional='; Resources left: {}'.format(addThousandSeparator(sum_of_all_remaining_resources_to_send)))
-        storage_capacity_in_ships = ships_available * self.MAXIMUM_SHIP_SIZE
+        storage_capacity_in_ships = ships_available * self.ship_size
 
         # Consider maximum batch size
         if batch_size is not None:
@@ -190,7 +193,7 @@ class TransportGoodsBot(Bot):
             }
         )
 
-        required_ships = int(math.ceil((Decimal(sum(resources_to_send)) / Decimal(self.MAXIMUM_SHIP_SIZE))))
+        required_ships = int(math.ceil((Decimal(sum(resources_to_send)) / Decimal(self.ship_size))))
         # Request to send the resources from the origin to the target
         data = {
             'action': 'transportOperations',

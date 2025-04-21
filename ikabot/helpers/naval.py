@@ -2,9 +2,13 @@
 # -*- coding: utf-8 -*-
 import json
 import re
+from enum import Enum
+
+import bs4
 
 from ikabot.config import actionRequest
 from ikabot.helpers.citiesAndIslands import getCurrentCityId
+from ikabot.web.ikariamService import IkariamService
 
 
 def getAvailableShips(session):
@@ -37,6 +41,36 @@ def getTotalShips(session):
     """
     html = session.get()
     return int(re.search(r'maxTransporters">(\d+)<', html).group(1))
+
+class TransportShip(Enum):
+    TRANSPORT_SHIP = 201
+    TRANSPORT_SHIP_LARGE = 204
+
+def get_transport_ships_size(ikariam_service: IkariamService, city_id: int, ship: TransportShip):
+    """
+    Get the size of the transport ships
+    """
+    response = ikariam_service.post(params={
+        'view': 'unitdescription',
+        'shipId': ship.value,
+        'helpId': 10,
+        'backgroundView': 'city',
+        'currentCityId': city_id,
+        'templateView': 'buildingDetail',
+        'actionRequest': actionRequest,
+        'ajax': 1
+    })
+    html = json.loads(response, strict=False)[1][1][1]
+    return int(bs4.BeautifulSoup(html, 'html.parser')
+            .find('div', {'id': 'unit', 'class': 's{}'.format(ship.value)})
+            .find('div', {'class': 'unit_info'})
+            .find('div', {'class': 'infoBoxContent'})
+            .find('div', {'class': 'floatleft'})
+            .encode_contents()
+            .split('<br/>')[-2]
+            .split("</span>")[1]
+            .replace(' ', '')
+            .replace('.', ''))
 
 
 def get_military_and_see_movements(ikariam_service, city_id=None):

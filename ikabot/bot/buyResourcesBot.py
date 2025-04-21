@@ -10,6 +10,7 @@ from ikabot.bot.bot import Bot
 from ikabot.bot.transportGoodsBot import TransportGoodsBot
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.gui import addThousandSeparator
+from ikabot.helpers.naval import TransportShip, get_transport_ships_size
 from ikabot.helpers.planRoutes import waitForAvailableShips
 
 
@@ -29,6 +30,7 @@ class BuyResourcesBot(Bot):
 
     def _start(self) -> None:
         while True:
+            ship_size = get_transport_ships_size(self.ikariam_service, self.building_position['cityId'], TransportShip.TRANSPORT_SHIP)
             for offer in self.offers:
                 if self.amount_to_buy == 0:
                     return
@@ -36,17 +38,17 @@ class BuyResourcesBot(Bot):
                     continue
 
                 ships_available = waitForAvailableShips(self.ikariam_service, self._wait)
-                storage_capacity = ships_available * TransportGoodsBot.MAXIMUM_SHIP_SIZE
+                storage_capacity = ships_available * ship_size
                 buy_amount = min(self.amount_to_buy, storage_capacity, offer['amountAvailable'])
 
                 self.amount_to_buy -= buy_amount
                 offer['amountAvailable'] -= buy_amount
-                self.__buy(offer, buy_amount, ships_available)
+                self.__buy(offer, buy_amount, ship_size, ships_available)
                 # start from the beginning again, so that we always buy from the cheapest offers fisrt
                 break
 
-    def __buy(self, offer, amount_to_buy, ships_available):
-        ships = int(math.ceil((Decimal(amount_to_buy) / Decimal(TransportGoodsBot.MAXIMUM_SHIP_SIZE))))
+    def __buy(self, offer, amount_to_buy, ship_size, ships_available):
+        ships = int(math.ceil((Decimal(amount_to_buy) / Decimal(ship_size))))
         data_dict = {
             'action': 'transportOperations',
             'function': 'buyGoodsAtAnotherBranchOffice',

@@ -7,9 +7,12 @@ from decimal import Decimal
 
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, island_url
-from ikabot.helpers.barbarians import calc_travel_time, filter_fighting, filter_loading, filter_traveling, \
-    get_barbarians_info, get_current_attacks, get_units
+from ikabot.helpers.barbarians import (calc_travel_time, filter_fighting,
+                                       filter_loading, filter_traveling,
+                                       get_barbarians_info,
+                                       get_current_attacks, get_units)
 from ikabot.helpers.getJson import getIsland
+from ikabot.helpers.naval import TransportShip, get_transport_ships_size
 from ikabot.helpers.planRoutes import waitForAvailableShips
 
 
@@ -140,7 +143,8 @@ class AttackBarbariansBot(Bot):
 
 
     def __load_troops(self, attack_round, units_data, attack_data, extra_cargo=0):
-        ships_needed = Decimal(extra_cargo) / Decimal(500)
+        ship_size = get_transport_ships_size(self.ikariam_service, self.city['id'], TransportShip.TRANSPORT_SHIP)
+        ships_needed = Decimal(extra_cargo) / Decimal(ship_size)
         speeds = []
         current_units = get_units(self.ikariam_service, self.city)
         for unit_id in attack_round['units']:
@@ -154,7 +158,7 @@ class AttackBarbariansBot(Bot):
     
             if city_is_in_island(self.city, island) is False:
                 weight = units_data[unit_id]['weight']
-                ships_needed += Decimal(amount_to_send * weight) / Decimal(500)
+                ships_needed += Decimal(amount_to_send * weight) / Decimal(ship_size)
     
         ships_needed = math.ceil(ships_needed)
         speed = min(speeds)

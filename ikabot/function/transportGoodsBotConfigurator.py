@@ -7,6 +7,7 @@ from ikabot.config import materials_names
 from ikabot.helpers.citiesAndIslands import chooseCity
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
+from ikabot.helpers.naval import TransportShip, get_transport_ships_size
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import askForValue, askUserYesNo, read
 from ikabot.web.ikariamService import IkariamService
@@ -87,11 +88,11 @@ def transport_goods_bot_configurator(ikariam_service: IkariamService, db: Databa
         enter()
         return
 
-    batch_size = TransportGoodsBot.DEFAULT_BATCH_SIZE
+    ship_size = get_transport_ships_size(ikariam_service, routes[0].origin_city['id'], TransportShip.TRANSPORT_SHIP)
+    batch_size = TransportGoodsBot.DEFAULT_NUMBER_OF_SHIPS_IN_BATCH * ship_size
     batch_size = read(
-        msg="Set batch size of sent resources from city (default: {}, min: {}, ship size: {}): "
-            .format(batch_size, TransportGoodsBot.MAXIMUM_SHIP_SIZE, TransportGoodsBot.MAXIMUM_SHIP_SIZE),
-        min=TransportGoodsBot.MAXIMUM_SHIP_SIZE, digit=True, default=batch_size)
+        msg="Set batch size of sent resources from city (default: {},ship size: {}): ".format(batch_size, ship_size),
+        min=ship_size, digit=True, default=batch_size)
 
 
     TransportGoodsBot(
@@ -99,6 +100,7 @@ def transport_goods_bot_configurator(ikariam_service: IkariamService, db: Databa
         bot_config={
             'jobs': routes,
             'batchSize': batch_size,
+            'shipSize': ship_size
         }
     ).start(
         action='Transport Resources',

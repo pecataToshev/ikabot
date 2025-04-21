@@ -5,9 +5,10 @@ import sys
 
 from ikabot import config
 from ikabot.config import actionRequest
-from ikabot.helpers.gui import addThousandSeparator, banner, enter
-from ikabot.helpers.naval import getAvailableShips
 from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
+from ikabot.helpers.gui import addThousandSeparator, banner, enter
+from ikabot.helpers.naval import (TransportShip, get_transport_ships_size,
+                                  getAvailableShips)
 from ikabot.helpers.userInput import read
 
 
@@ -78,7 +79,8 @@ def getArmyAvailable(session, type_army, destination_city_id, origin_city_id, ev
     
     if type_army:
         army_results = re.findall(r'name=\\"cargo_army_([^\\]+)_upkeep\\"\\n\s+value=\\"([^\\"]+)\\"', data)
-        weight_total_ships = int(getAvailableShips(session)) * 500 if type_army else 0
+        ship_size = get_transport_ships_size(session, origin_city_id, TransportShip.TRANSPORT_SHIP)
+        weight_total_ships = int(getAvailableShips(session)) * ship_size if type_army else 0
         weight_results = re.findall(r'<div class=\\"weight\\">(.*?)<\\/div>', data)
     else:
         army_results = re.findall(r'name=\\"cargo_fleet_([^\\]+)_upkeep\\"\\n\s+value=\\"([^\\"]+)\\"', data)

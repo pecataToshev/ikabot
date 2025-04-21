@@ -11,15 +11,21 @@ import requests
 
 from ikabot import config
 from ikabot.bot.transportGoodsBot import TransportGoodsBot, TransportJob
-from ikabot.bot.upgradeBuilding.abstractUpgradeBuildingBot import AbstractUpgradeBuildingBot
-from ikabot.bot.upgradeBuilding.upgradeBuildingGroupBot import UpgradeBuildingGroupBot
-from ikabot.bot.upgradeBuilding.upgradeSingleBuildingBot import UpgradeSingleBuildingBot
-from ikabot.config import actionRequest, city_url, materials_names, materials_names_tec, MAXIMUM_CITY_NAME_LENGTH
+from ikabot.bot.upgradeBuilding.abstractUpgradeBuildingBot import \
+    AbstractUpgradeBuildingBot
+from ikabot.bot.upgradeBuilding.upgradeBuildingGroupBot import \
+    UpgradeBuildingGroupBot
+from ikabot.bot.upgradeBuilding.upgradeSingleBuildingBot import \
+    UpgradeSingleBuildingBot
+from ikabot.config import (MAXIMUM_CITY_NAME_LENGTH, actionRequest, city_url,
+                           materials_names, materials_names_tec)
 from ikabot.helpers.buildings import BuildingTypes
-from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import addThousandSeparator, banner, Colours, decodeUnicodeEscape, enter
-from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
+from ikabot.helpers.getJson import getCity
+from ikabot.helpers.gui import (Colours, addThousandSeparator, banner,
+                                decodeUnicodeEscape, enter)
+from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
+from ikabot.helpers.naval import TransportShip, get_transport_ships_size
 from ikabot.helpers.userInput import askUserYesNo, read
 
 
@@ -287,9 +293,11 @@ def sendResourcesMenu(ikariam_service, beneficent_city_id, missing):
     else:
         print('The resources will be sent and the building will be expanded if possible.')
 
+    ship_size = get_transport_ships_size(ikariam_service, all_routes[0].origin_city['id'], TransportShip.TRANSPORT_SHIP)
     process = TransportGoodsBot(ikariam_service, {
         'jobs': all_routes,
-        'batchSize': TransportGoodsBot.DEFAULT_BATCH_SIZE
+        'batchSize': TransportGoodsBot.DEFAULT_NUMBER_OF_SHIPS_IN_BATCH * ship_size,
+        'shipSize': ship_size
     }).start(
         action='Transport Goods',
         objective='Provide upgrade building resources',

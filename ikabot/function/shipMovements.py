@@ -6,8 +6,12 @@ import time
 from decimal import Decimal
 
 from ikabot.config import materials_names, materials_names_tec
-from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, enter
-from ikabot.helpers.naval import get_military_and_see_movements, getAvailableShips, getTotalShips
+from ikabot.helpers.gui import (Colours, addThousandSeparator, banner,
+                                daysHoursMinutes, enter)
+from ikabot.helpers.naval import (TransportShip,
+                                  get_military_and_see_movements,
+                                  get_transport_ships_size, getAvailableShips,
+                                  getTotalShips)
 
 
 def isHostile(movement):
@@ -67,6 +71,7 @@ def shipMovements(ikariam_service, db, telegram):
                                               movement['event']['missionText'], daysHoursMinutes(time_left),
                                               Colours.Text.RESET))
 
+        ship_size = get_transport_ships_size(ikariam_service, movement['origin']['id'], TransportShip.TRANSPORT_SHIP)
         if movement['isHostile']:
             troops = movement['army']['amount']
             fleets = movement['fleet']['amount']
@@ -93,7 +98,7 @@ def shipMovements(ikariam_service, db, telegram):
                     tradegood = materials_names[index]
                 total_load += int(amount.replace(',', '').replace('.', ''))
                 print('{} of {}'.format(amount, tradegood))
-            ships = int(math.ceil((Decimal(total_load) / Decimal(500))))
+            ships = int(math.ceil((Decimal(total_load) / Decimal(ship_size))))
             print('{:d} Ships'.format(ships))
 
     enter()

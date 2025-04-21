@@ -4,13 +4,15 @@
 from ikabot import config
 from ikabot.bot.transportGoodsBot import TransportGoodsBot, TransportJob
 from ikabot.config import city_url, materials_names
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
-from ikabot.helpers.citiesAndIslands import getIdsOfCities
-from ikabot.helpers.userInput import askUserYesNo, read
+from ikabot.helpers.naval import TransportShip, get_transport_ships_size
 from ikabot.helpers.telegram import Telegram
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.web.ikariamService import IkariamService
+
 
 def __get_route_text(route: TransportJob, resource: int) -> str:
     return '{:>{maxCityLen}} ---> {:<{maxCityLen}} : {} {}'.format(
@@ -69,11 +71,13 @@ def distribute_resources_bot_configurator(ikariam_service: IkariamService, db: D
         enter()
         return
 
+    ship_size = get_transport_ships_size(ikariam_service, routes[0].origin_city['id'], TransportShip.TRANSPORT_SHIP)
     TransportGoodsBot(
         ikariam_service=ikariam_service,
         bot_config={
             'jobs': routes,
-            'batchSize': TransportGoodsBot.DEFAULT_BATCH_SIZE
+            'batchSize': TransportGoodsBot.DEFAULT_NUMBER_OF_SHIPS_IN_BATCH * ship_size,
+            'shipSize': ship_size
         }
     ).start(
         action='Distribute Resources',
