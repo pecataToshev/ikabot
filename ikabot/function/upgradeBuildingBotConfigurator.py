@@ -496,7 +496,12 @@ def upgrade_single_building_bot_configurator(ikariam_service, db, telegram):
         amount = resources_needed[i]
         if amount == 0:
             continue
-        print('- {}: {}'.format(name, addThousandSeparator(amount)))
+        print('- {resourceColor}{resourceName}{resetResourceColor}: {}'.format(
+            addThousandSeparator(amount),
+            resourceColor=Colours.MATERIALS[i],
+            resourceName=name,
+            resetResourceColor=Colours.Text.RESET
+        ))
     print('')
 
     # calculate the resources that are missing
@@ -583,7 +588,12 @@ def upgrade_building_group_bot_configurator(ikariam_service, db, telegram):
         amount = resources_needed[i]
         if amount == 0:
             continue
-        print('- {}: {}'.format(name, addThousandSeparator(amount)))
+        print('- {resourceColor}{resourceName}{resetResourceColor}: {}'.format(
+            addThousandSeparator(amount),
+            resourceColor=Colours.MATERIALS[i],
+            resourceName=name,
+            resetResourceColor=Colours.Text.RESET
+        ))
     print('')
 
     # calculate the resources that are missing
@@ -600,7 +610,12 @@ def upgrade_building_group_bot_configurator(ikariam_service, db, telegram):
             if missing[i] == 0:
                 continue
             name = materials_names[i].lower()
-            print('{} of {}'.format(addThousandSeparator(missing[i]), name))
+            print('{} of {resourceColor}{resourceName}{resetResourceColor}'.format(
+                addThousandSeparator(missing[i]),
+                resourceColor=Colours.MATERIALS[i],
+                resourceName=name,
+                resetResourceColor=Colours.Text.RESET
+            ))
         print('')
 
         # if the user wants, send the resources from the selected cities
