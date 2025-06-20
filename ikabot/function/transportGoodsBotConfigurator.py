@@ -38,7 +38,7 @@ def __plan_route(ikariam_service: IkariamService, routes: List[TransportJob]):
 
     print('Available:')
     for i in range(len(materials_names)):
-        print('{}{}{}:{} '.format(Colours.MATERIALS[i], materials_names[i], Colours.Text.RESET, addThousandSeparator(resources_left[i])), end='')
+        print('{}{}{}: {}; '.format(Colours.MATERIALS[i], materials_names[i], Colours.Text.RESET, addThousandSeparator(resources_left[i])), end='')
     print('')
 
     print('Send:')
