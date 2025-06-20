@@ -26,7 +26,7 @@ from ikabot.helpers.gui import (Colours, addThousandSeparator, banner,
                                 decodeUnicodeEscape, enter)
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.naval import TransportShip, get_transport_ships_size
-from ikabot.helpers.userInput import askUserYesNo, read
+from ikabot.helpers.userInput import askForValue, askUserYesNo, read
 
 
 def getCostsReducers(city):
@@ -219,14 +219,25 @@ def chooseResourceProviders(cities, beneficent_city, resource, missing, send_res
 
         # ask the user it this city should provide resources
         tradegood_initial = tradegood_initials[int(city['tradegood'])]
+        _max_resources_to_get = min(available, missing)
 
-        _msg = '{: >{len}} ({}): {}'.format(decodeUnicodeEscape(city['name']),
-                                            tradegood_initial, addThousandSeparator(available),
-                                            len=MAXIMUM_CITY_NAME_LENGTH)
-        if not askUserYesNo(_msg):
+        _msg = '{: >{len}} ({resourceColor}{resourceInitial}{resetResourceColor}): {amountAvailable}? [type p for partial] (y|n|p) '.format(
+            decodeUnicodeEscape(city['name']),
+            amountAvailable=addThousandSeparator(available),
+            resourceInitial=tradegood_initial,
+            resourceColor=Colours.MATERIALS[resource],
+            resetResourceColor=Colours.Text.RESET,
+            len=MAXIMUM_CITY_NAME_LENGTH
+        )
+        
+        answer = read(msg=_msg,values=['y', 'Y', 'n', 'N', 'p', 'P'],).lower()
+        if answer == 'n':
             continue
+        elif answer == 'p':
+            resources_to_get = askForValue('How many resources to send?', _max_resources_to_get)
+        else:
+            resources_to_get = _max_resources_to_get
 
-        resources_to_get = min(available, missing)
         # if so, save the city and calculate the total amount resources to send
         to_send = [0] * len(materials_names)
         to_send[resource] = resources_to_get
@@ -238,8 +249,9 @@ def chooseResourceProviders(cities, beneficent_city, resource, missing, send_res
             return True, send_resources, expand_anyway, routes
 
     # if we reach this part, there are not enough resources to expand the building
-    print('\nThere are not enough {} resources: {} missing'.format(materials_names[resource],
-                                                                   addThousandSeparator(missing)))
+    print('\nThere are not enough {}{}{} resources: {} missing'.format(
+        Colours.MATERIALS[resource], materials_names[resource], Colours.Text.RESET, 
+        addThousandSeparator(missing)))
 
     if len(routes) > 0 and send_resources is None:
         send_resources = askUserYesNo('Send the resources anyway')

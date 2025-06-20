@@ -6,7 +6,7 @@ from ikabot.bot.transportGoodsBot import TransportGoodsBot, TransportJob
 from ikabot.config import materials_names
 from ikabot.helpers.citiesAndIslands import chooseCity
 from ikabot.helpers.database import Database
-from ikabot.helpers.gui import addThousandSeparator, banner, enter
+from ikabot.helpers.gui import Colours, addThousandSeparator, banner, enter
 from ikabot.helpers.naval import TransportShip, get_transport_ships_size
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import askForValue, askUserYesNo, read
@@ -38,13 +38,13 @@ def __plan_route(ikariam_service: IkariamService, routes: List[TransportJob]):
 
     print('Available:')
     for i in range(len(materials_names)):
-        print('{}:{} '.format(materials_names[i], addThousandSeparator(resources_left[i])), end='')
+        print('{}{}{}:{} '.format(Colours.MATERIALS[i], materials_names[i], Colours.Text.RESET, addThousandSeparator(resources_left[i])), end='')
     print('')
 
     print('Send:')
     send = []
     for i, material in enumerate(materials_names):
-        val = askForValue('{:>10}:'.format(material), resources_left[i])
+        val = askForValue('{}{:>10}{}:'.format(Colours.MATERIALS[i], material, Colours.Text.RESET), resources_left[i])
         send.append(val)
 
     if sum(send) == 0:
@@ -70,7 +70,7 @@ def transport_goods_bot_configurator(ikariam_service: IkariamService, db: Databa
                 send = _route.resources
                 for i in range(len(materials_names)):
                     if send[i] > 0:
-                        print('{:>10}: {} '.format(materials_names[i], addThousandSeparator(send[i])))
+                        print('{}{:>10}{}: {} '.format(Colours.MATERIALS[i], materials_names[i], Colours.Text.RESET, addThousandSeparator(send[i])))
                 print('')
 
                 if askUserYesNo('Proceed'):
