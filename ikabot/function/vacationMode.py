@@ -9,7 +9,7 @@ from ikabot.helpers.citiesAndIslands import getCurrentCityId
 from ikabot.helpers.userInput import askUserYesNo
 
 
-def activateVacationMode(ikariam_service, db, telegram):
+def activate_vacation_mode(ikariam_service, db, telegram):
     """
     Parameters
     ----------
@@ -44,7 +44,7 @@ def vacationMode(ikariam_service, db, telegram):
     if not askUserYesNo('Activate vacation mode'):
         return
 
-    activateVacationMode(ikariam_service)
+    activate_vacation_mode(ikariam_service, db, telegram)
     print('Vacation mode has been activated.')
     enter()
 
