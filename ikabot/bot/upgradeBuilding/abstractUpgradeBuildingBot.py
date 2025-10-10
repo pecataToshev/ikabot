@@ -27,7 +27,7 @@ class AbstractUpgradeBuildingBot(Bot):
     def _start(self) -> None:
         if self.transport_resources_pid is not None:
             self._wait(
-                seconds=30,
+                seconds=60,
                 info='Waiting for process to start sending resources (pid: {})'.format(self.transport_resources_pid)
             )
 
