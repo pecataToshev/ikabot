@@ -7,9 +7,10 @@ import re
 from ikabot.bot.sellResourcesBot import SellResourcesToOfferBot, SellResourcesWithOwnOfferBot
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
+from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, enter
 from ikabot.helpers.market import getCommercialCities, getMarketInfo, storageCapacityOfMarket
-from ikabot.helpers.userInput import read
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService
 
@@ -57,7 +58,7 @@ def getOffers(session, my_market_city, resource_type):
     # Taken from #306
     html = re.sub(r'\s+', ' ', html).strip()
     html = re.findall(r'<td class="short_text80">(.*?)<br/>\((.*?)\).*?tooltip">([\d\s]+)</div>.*?<td style="white-space:nowrap;">(\d+).*?<td>(\d+)</td>.*?href="\?view=takeOffer&destinationCityId=(\d+)', html)
-    html = [(cityname, username, re.sub(r"\s+", "", amount), price, dist, destination_city_id) for cityname, username, amount, price, dist, destination_city_id in html]
+    html = [(cityname.strip(), username.strip(), parse_int(re.sub(r"\s+", "", amount)), parse_int(price), dist, destination_city_id) for cityname, username, amount, price, dist, destination_city_id in html]
 
     return html
 
@@ -80,9 +81,6 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
     for offer in offers:
         cityname, username, amount, price, dist, destination_city_id = offer
         cityname = cityname.strip()
-        amount = amount.replace(',', '').replace('.', '')
-        amount = int(amount)
-        price = int(price)
         msg = '{} ({}): {} at {:d} each ({} in total) [Y/n]'.format(cityname, username, addThousandSeparator(amount),
                                                                     price, addThousandSeparator(price * amount))
         rta = read(msg=msg, values=['y', 'Y', 'n', 'N', ''])
@@ -108,18 +106,13 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
     profit = 0
     for offer in chosen_offers:
         cityname, username, amount, price, dist, destination_city_id = offer
-        cityname = cityname.strip()
-        amount = amount.replace(',', '').replace('.', '')
-        amount = int(amount)
-        price = int(price)
         sell = min(amount, left_to_sell)
         left_to_sell -= sell
         profit += sell * price
-    print('\nSell {} of {} for a total of {}? [Y/n]'.format(addThousandSeparator(amount_to_sell),
-                                                            materials_names[resource_type],
-                                                            addThousandSeparator(profit)))
-    rta = read(values=['y', 'Y', 'n', 'N', ''])
-    if rta.lower() == 'n':
+
+    if not askUserYesNo('Sell {} of {} for a total of {}'.format(addThousandSeparator(amount_to_sell),
+                                                                 materials_names[resource_type],
+                                                                 addThousandSeparator(profit))):
         return
 
     SellResourcesToOfferBot(

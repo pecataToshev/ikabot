@@ -13,8 +13,8 @@ from ikabot.helpers.resources import extract_resource_production, extract_tradeg
     getWineConsumptionPerHour
 
 
-def parse_int(num: str) -> int:
-    return int(num.replace(',', '').replace('.', ''))
+def parse_int(num) -> int:
+    return int(str(num).replace(',', '').replace('.', ''))
 
 
 def getFreeCitizens(html):
@@ -30,7 +30,7 @@ def getFreeCitizens(html):
         an integer representing the amount of free citizens in the given city.
     """
     freeCitizens = re.search(r'js_GlobalMenu_citizens">(.*?)</span>', html).group(1)
-    return int(freeCitizens.replace(',', '').replace('.', ''))
+    return parse_int(freeCitizens)
 
 def getPopulation(html):
     """This function is used in the ``getCity`` function to determine the population in the given city.
@@ -41,11 +41,11 @@ def getPopulation(html):
 
     Returns
     -------
-    freeCitizens : int
-        an integer representing the amount of free citizens in the given city.
+    population : int
+        an integer representing the amount of population in the given city.
     """
-    freeCitizens = re.search(r'js_GlobalMenu_population">(.*?)</span>', html).group(1)
-    return int(freeCitizens.replace(',', '').replace('.', ''))
+    population = re.search(r'js_GlobalMenu_population">(.*?)</span>', html).group(1)
+    return parse_int(population)
 
 
 def getResourcesListedForSale(html):
@@ -107,7 +107,7 @@ def populate_island_city(island: dict, city: dict):
         _ranking = island['avatarScores'][str(city['ownerId'])]
         city['playerRanking'] = _ranking
         city['playerPlace'] = _ranking['place']
-        city['playerPointsWithoutCitizens'] = sum(ceil(int(x.replace(',', '')) / 100) for x in [
+        city['playerPointsWithoutCitizens'] = sum(ceil(parse_int(x) / 100) for x in [
             _ranking['building_score_main'],
             _ranking['research_score_main'],
             _ranking['army_score_main'],

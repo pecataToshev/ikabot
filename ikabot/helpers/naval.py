@@ -8,6 +8,7 @@ import bs4
 
 from ikabot.config import actionRequest
 from ikabot.helpers.citiesAndIslands import getCurrentCityId
+from ikabot.helpers.getJson import parse_int
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -71,7 +72,7 @@ def get_transport_ships_size(ikariam_service: IkariamService, city_id: int, ship
             .split("</span>")[1]
             .strip()
     )
-    return int(size.replace(' ', '').replace('.', ''))
+    return parse_int(size)
 
 
 def get_military_and_see_movements(ikariam_service, city_id=None):

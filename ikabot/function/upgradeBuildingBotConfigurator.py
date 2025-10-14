@@ -21,7 +21,7 @@ from ikabot.config import (MAXIMUM_CITY_NAME_LENGTH, actionRequest, city_url,
                            materials_names, materials_names_tec)
 from ikabot.helpers.buildings import BuildingTypes
 from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
-from ikabot.helpers.getJson import getCity
+from ikabot.helpers.getJson import getCity, parse_int
 from ikabot.helpers.gui import (Colours, addThousandSeparator, banner,
                                 decodeUnicodeEscape, enter)
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
@@ -164,8 +164,7 @@ def getResourcesNeeded(session, city, building, current_level, final_level):
 
             # get the cost of the current resource type
             cost = costs[i]
-            cost = cost.replace(',', '').replace('.', '')
-            cost = 0 if cost == '' else int(cost)
+            cost = 0 if cost == '' else parse_int(cost)
 
             # calculate all the reductions
             real_cost = Decimal(cost)

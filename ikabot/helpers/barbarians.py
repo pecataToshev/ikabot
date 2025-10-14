@@ -6,6 +6,7 @@ from decimal import Decimal
 from ikabot.bot.transportGoodsBot import TransportGoodsBot
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.citiesAndIslands import getCurrentCityId
+from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.naval import (TransportShip,
                                   get_military_and_see_movements,
                                   get_transport_ships_size)
@@ -81,14 +82,14 @@ def get_barbarians_lv(session, island):
     resp = json.loads(resp, strict=False)
 
     level = int(resp[2][1]['js_islandBarbarianLevel']['text'])
-    gold = int(resp[2][1]['js_islandBarbarianResourcegold']['text'].replace(',', ''))
+    gold = parse_int(resp[2][1]['js_islandBarbarianResourcegold']['text'])
 
     resources = [0] * len(materials_names)
     for i in range(len(materials_names)):
         if i == 0:
-            resources[i] = int(resp[2][1]['js_islandBarbarianResourceresource']['text'].replace(',', ''))
+            resources[i] = parse_int(resp[2][1]['js_islandBarbarianResourceresource']['text'])
         else:
-            resources[i] = int(resp[2][1]['js_islandBarbarianResourcetradegood{:d}'.format(i)]['text'].replace(',', ''))
+            resources[i] = parse_int(resp[2][1]['js_islandBarbarianResourcetradegood{:d}'.format(i)]['text'])
 
     html = resp[1][1][1]
     troops = re.findall(r'<div class="army \w*?">\s*<div class=".*?">(.*?)</div>\s*</div>\s*</td>\s*</tr>\s*<tr>\s*<td class="center">\s*(\d+)', html)

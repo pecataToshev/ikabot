@@ -7,6 +7,7 @@ from ikabot.config import actionRequest, city_url
 from ikabot.helpers.buildings import extract_target_building, \
     find_city_with_the_biggest_building, get_building_info
 from ikabot.helpers.database import Database
+from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.gui import addThousandSeparator, banner, clear, enter
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import askUserYesNo
@@ -48,9 +49,9 @@ def buy_ships(ikariam_service: IkariamService, db: Database, telegram: Telegram)
     while True:
         print("\n\n")
 
-        available_gold = int(float(port_info[0][1]["headerData"]["gold"]))
+        available_gold = parse_int(port_info[0][1]["headerData"]["gold"])
         update_template_data = port_info[2][1]
-        ship_cost = int(float((update_template_data['js_transporterCosts'].replace(',', '').replace('.', ''))))
+        ship_cost = parse_int(update_template_data['js_transporterCosts'])
 
         can_buy = "enabled" == update_template_data.get('js_buyTransporterAction', {}).get("buttonState", "")
 

@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from ikabot.config import materials_names, materials_names_tec
 from ikabot.helpers.citiesAndIslands import getCurrentCityId
+from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.gui import (Colours, addThousandSeparator, banner,
                                 daysHoursMinutes, enter)
 from ikabot.helpers.naval import (TransportShip,
@@ -97,7 +98,7 @@ def shipMovements(ikariam_service, db, telegram):
                 if tradegood != 'gold':
                     index = materials_names_tec.index(tradegood)
                     tradegood = materials_names[index]
-                total_load += int(amount.replace(',', '').replace('.', ''))
+                total_load += parse_int(amount)
                 print('{} of {}'.format(amount, tradegood))
             ships = int(math.ceil((Decimal(total_load) / Decimal(ship_size))))
             print('{:d} Ships'.format(ships))
