@@ -191,13 +191,6 @@ class IkariamService:
             logging.info('Attempting authentication with Gameforge...')
             r = self.s.post('https://gameforge.com/api/v1/auth/thin/sessions', json=data)
             logging.info('Authentication response status: %d', r.status_code)
-            
-            if r.status_code == 404:
-                logging.error('Authentication endpoint returned 404. URL: https://gameforge.com/api/v1/auth/thin/sessions')
-                logging.error('Response headers: %s', dict(r.headers))
-                logging.error('Response body: %s', r.text[:500] if r.text else '(empty)')
-                sys.exit('Authentication failed: The authentication API endpoint appears to have changed. '
-                        'Please check the Ikabot-Collective repository for updates or report this issue.')
             if 'gf-challenge-id' in r.headers:
                 
                 while True:
@@ -209,7 +202,9 @@ class IkariamService:
                     
                     if r.status_code == 404:
                         logging.error('Authentication endpoint returned 404 in captcha retry loop')
-                        sys.exit('Authentication failed: The authentication API endpoint appears to have changed.')
+                        print('\n⚠️  Authentication endpoint not found (404). Breaking out of captcha loop.')
+                        print('You will be prompted to enter your token manually.')
+                        break
 
                     challenge_id = r.headers['gf-challenge-id'].split(';')[0]
                     self.headers = {'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'accept-language': 'en-GB,el;q=0.9', 'dnt': '1', 'origin': 'https://lobby.ikariam.gameforge.com', 'referer': 'https://lobby.ikariam.gameforge.com/', 'sec-fetch-dest': 'empty', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site', 'user-agent': user_agent}
@@ -284,7 +279,9 @@ class IkariamService:
                         
                         if r.status_code == 404:
                             logging.error('Authentication endpoint returned 404 after solving captcha')
-                            sys.exit('Authentication failed: The authentication API endpoint appears to have changed.')
+                            print('\n⚠️  Authentication endpoint not found (404) after solving captcha.')
+                            print('Breaking out to allow manual token entry.')
+                            break
                         
                         if 'gf-challenge-id' in r.headers:
                             logging.error("Failed to solve interactive captcha! Trying again.")
@@ -293,8 +290,16 @@ class IkariamService:
                         else:
                             break
 
-            if r.status_code == 403:
-                print('Failed to log in...')
+            if r.status_code == 403 or r.status_code == 404:
+                if r.status_code == 404:
+                    print('\n' + '='*80)
+                    print('⚠️  AUTHENTICATION ENDPOINT NOT FOUND (404)')
+                    print('='*80)
+                    print('The Gameforge authentication API endpoint has changed.')
+                    print('You can still use Ikabot by manually providing your authentication token.')
+                    print()
+                
+                print('Failed to log in automatically...')
                 print('Log into the lobby via browser and then press CTRL + SHIFT + J to open up the javascript console')
                 print('If you can not open the console using CTRL + SHIFT + J then press F12 to open Dev Tools')
                 print('In the dev tools there should be a tab called "Console". Press this tab.')
