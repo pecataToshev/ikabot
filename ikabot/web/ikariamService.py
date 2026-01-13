@@ -15,7 +15,7 @@ import requests
 from urllib3.exceptions import InsecureRequestWarning
 
 from ikabot import config
-from ikabot.config import actionRequest, ConnectionError_wait, user_agent
+from ikabot.config import ConnectionError_wait, actionRequest, user_agent
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
 from ikabot.helpers.userInput import read
@@ -187,7 +187,17 @@ class IkariamService:
             self.s.headers.clear()
             self.s.headers.update(self.headers)
             data = {"identity": self.mail, "password": self.password, "locale": "en_GB", "gfLang": "en", "platformGameId": platformGameId, "gameEnvironmentId": gameEnvironmentId, "autoGameAccountCreation": False, 'blackbox': self.blackbox}
+            
+            logging.info('Attempting authentication with Gameforge...')
             r = self.s.post('https://gameforge.com/api/v1/auth/thin/sessions', json=data)
+            logging.info('Authentication response status: %d', r.status_code)
+            
+            if r.status_code == 404:
+                logging.error('Authentication endpoint returned 404. URL: https://gameforge.com/api/v1/auth/thin/sessions')
+                logging.error('Response headers: %s', dict(r.headers))
+                logging.error('Response body: %s', r.text[:500] if r.text else '(empty)')
+                sys.exit('Authentication failed: The authentication API endpoint appears to have changed. '
+                        'Please check the Ikabot-Collective repository for updates or report this issue.')
             if 'gf-challenge-id' in r.headers:
                 
                 while True:
@@ -196,6 +206,10 @@ class IkariamService:
                     self.s.headers.update(self.headers)
                     data = {"identity": self.mail, "password": self.password, "locale": "en_GB", "gfLang": "en", "platformGameId": platformGameId, "gameEnvironmentId": gameEnvironmentId, "autoGameAccountCreation": False, 'blackbox': self.blackbox}
                     r = self.s.post('https://gameforge.com/api/v1/auth/thin/sessions', json=data)
+                    
+                    if r.status_code == 404:
+                        logging.error('Authentication endpoint returned 404 in captcha retry loop')
+                        sys.exit('Authentication failed: The authentication API endpoint appears to have changed.')
 
                     challenge_id = r.headers['gf-challenge-id'].split(';')[0]
                     self.headers = {'accept': '*/*', 'accept-encoding': 'gzip, deflate, br', 'accept-language': 'en-GB,el;q=0.9', 'dnt': '1', 'origin': 'https://lobby.ikariam.gameforge.com', 'referer': 'https://lobby.ikariam.gameforge.com/', 'sec-fetch-dest': 'empty', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site', 'user-agent': user_agent}
@@ -267,6 +281,11 @@ class IkariamService:
                         self.s.headers.update(self.headers)
                         data = {"identity": self.mail, "password": self.password, "locale": "en_GB", "gfLang": "en", "platformGameId": platformGameId, "gameEnvironmentId": gameEnvironmentId, "autoGameAccountCreation": False, 'blackbox': self.blackbox}
                         r = self.s.post('https://gameforge.com/api/v1/auth/thin/sessions', json=data)
+                        
+                        if r.status_code == 404:
+                            logging.error('Authentication endpoint returned 404 after solving captcha')
+                            sys.exit('Authentication failed: The authentication API endpoint appears to have changed.')
+                        
                         if 'gf-challenge-id' in r.headers:
                             logging.error("Failed to solve interactive captcha! Trying again.")
                             print("Failed to solve interactive captcha, trying again!")
