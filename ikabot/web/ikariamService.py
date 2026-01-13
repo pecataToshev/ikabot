@@ -289,8 +289,23 @@ class IkariamService:
                     sys.exit('Wrong email or password\n')
             else:
                 # get the authentication token and set the cookie
-                ses_json = json.loads(r.text, strict=False)
-                auth_token = ses_json['token']
+                try:
+                    ses_json = json.loads(r.text, strict=False)
+                    auth_token = ses_json['token']
+                except (json.JSONDecodeError, KeyError) as e:
+                    logging.error('Failed to parse login response. Status: %d, Response: %s', r.status_code, r.text)
+                    if r.text.strip() == '':
+                        msg = 'Login failed: Empty response from authentication server'
+                    else:
+                        msg = f'Login failed: Invalid response from authentication server. Status: {r.status_code}'
+                    
+                    if retries > 0:
+                        logging.warning('Retrying login... (%d retries left)', retries)
+                        time.sleep(2)
+                        return self.__login(retries - 1)
+                    
+                    sys.exit(msg)
+                
                 cookie_obj = requests.cookies.create_cookie(domain='.gameforge.com', name='gf-token-production', value=auth_token)
                 self.s.cookies.set_cookie(cookie_obj)
 
@@ -303,14 +318,22 @@ class IkariamService:
         self.s.headers.clear()
         self.s.headers.update(self.headers)
         r = self.s.get('https://lobby.ikariam.gameforge.com/api/users/me/accounts')
-        accounts = json.loads(r.text, strict=False)
+        try:
+            accounts = json.loads(r.text, strict=False)
+        except json.JSONDecodeError:
+            logging.error('Failed to get accounts. Status: %d, Response: %s', r.status_code, r.text)
+            sys.exit('Failed to retrieve accounts from server')
 
         # get servers
         self.headers = {'Host': 'lobby.ikariam.gameforge.com', 'User-Agent': user_agent, 'Accept': 'application/json', 'Accept-Language': 'en-US,en;q=0.5', 'Accept-Encoding': 'gzip, deflate', 'Referer': 'https://lobby.ikariam.gameforge.com/es_AR/hub', 'Authorization': 'Bearer {}'.format(self.s.cookies['gf-token-production']), 'DNT': '1', 'Connection': 'close'}
         self.s.headers.clear()
         self.s.headers.update(self.headers)
         r = self.s.get('https://lobby.ikariam.gameforge.com/api/servers')
-        servers = json.loads(r.text, strict=False)
+        try:
+            servers = json.loads(r.text, strict=False)
+        except json.JSONDecodeError:
+            logging.error('Failed to get servers. Status: %d, Response: %s', r.status_code, r.text)
+            sys.exit('Failed to retrieve servers from server')
 
         if not self.logged:
             self.account = self.db.get_stored_value('account')
@@ -409,7 +432,13 @@ class IkariamService:
                     "blackbox": self.blackbox
                   }
             resp = self.s.post('https://lobby.ikariam.gameforge.com/api/users/me/loginLink', json=data)
-            respJson = json.loads(resp.text)
+            try:
+                respJson = json.loads(resp.text)
+            except json.JSONDecodeError:
+                logging.error('Failed to get login link. Status: %d, Response: %s', resp.status_code, resp.text)
+                if retries > 0:
+                    return self.__login(retries - 1)
+                sys.exit('Failed to get login link from server')
             skipGetCookie = False
             if 'url' not in respJson:
                 if retries > 0:
