@@ -85,11 +85,49 @@ def getProductionPerSecond(session, city_id):
     -------
     production: tuple[Decimal, Decimal, int]
     """
+    import logging
     prod = session.post(params={'action': 'header', 'function': 'changeCurrentCity', 'actionRequest': actionRequest, 'cityId': city_id, 'ajax': '1'})
     prod = json.loads(prod, strict=False)
-    prod = prod[0][1]['headerData']
-    wood_production = Decimal(prod['resourceProduction'])
-    luxury_production = Decimal(prod['tradegoodProduction'])
-    luxury_resource_type = int(prod['producedTradegood'])
+    
+    # Log the response structure for debugging
+    logging.debug(f"changeCurrentCity response type: {type(prod)}")
+    logging.debug(f"changeCurrentCity response: {prod}")
+    
+    # Try to extract headerData from the response structure
+    # The API can return different structures, so we need to handle multiple cases
+    header_data = None
+    
+    try:
+        # Try the original format: prod[0][1]['headerData']
+        if isinstance(prod, list) and len(prod) > 0:
+            if isinstance(prod[0], list) and len(prod[0]) > 1:
+                if isinstance(prod[0][1], dict) and 'headerData' in prod[0][1]:
+                    header_data = prod[0][1]['headerData']
+                elif isinstance(prod[0][1], list):
+                    # Sometimes prod[0][1] is a list, search for headerData in the response
+                    for item in prod[0]:
+                        if isinstance(item, dict) and 'headerData' in item:
+                            header_data = item['headerData']
+                            break
+            # Sometimes the structure is just prod[0] contains headerData directly
+            if header_data is None and isinstance(prod[0], dict):
+                for value in prod[0].values():
+                    if isinstance(value, dict) and 'headerData' in value:
+                        header_data = value['headerData']
+                        break
+                    elif isinstance(value, dict) and all(k in value for k in ['resourceProduction', 'tradegoodProduction', 'producedTradegood']):
+                        header_data = value
+                        break
+    except (IndexError, KeyError, TypeError) as e:
+        logging.error(f"Error extracting header data: {e}")
+        logging.error(f"Response structure: {json.dumps(prod, indent=2)}")
+        raise
+    
+    if header_data is None:
+        raise ValueError(f"Could not find headerData in response. Response structure: {json.dumps(prod, indent=2)}")
+    
+    wood_production = Decimal(header_data['resourceProduction'])
+    luxury_production = Decimal(header_data['tradegoodProduction'])
+    luxury_resource_type = int(header_data['producedTradegood'])
 
     return wood_production, luxury_production, luxury_resource_type
