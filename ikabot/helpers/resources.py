@@ -86,45 +86,45 @@ def getProductionPerSecond(session, city_id):
     production: tuple[Decimal, Decimal, int]
     """
     import logging
-    prod = session.post(params={'action': 'header', 'function': 'changeCurrentCity', 'actionRequest': actionRequest, 'cityId': city_id, 'ajax': '1'})
-    prod = json.loads(prod, strict=False)
     
-    # Log the response structure for debugging
-    logging.debug(f"changeCurrentCity response type: {type(prod)}")
-    logging.debug(f"changeCurrentCity response: {prod}")
+    # First, navigate to the city view to set the context
+    session.get('view=city&cityId={}'.format(city_id), noIndex=True)
     
-    # Try to extract headerData from the response structure
-    # The API can return different structures, so we need to handle multiple cases
+    # Then, get the global data which includes production information
+    data = session.get('view=updateGlobalData&ajax=1', noIndex=True)
+    json_data = json.loads(data, strict=False)
+    
+    logging.debug(f"updateGlobalData response type: {type(json_data)}")
+    logging.debug(f"updateGlobalData response: {json_data}")
+    
+    # Extract headerData from the response
+    # The response structure is typically: [[key, {headerData: ..., ...}], ...]
     header_data = None
     
     try:
-        # Try the original format: prod[0][1]['headerData']
-        if isinstance(prod, list) and len(prod) > 0:
-            if isinstance(prod[0], list) and len(prod[0]) > 1:
-                if isinstance(prod[0][1], dict) and 'headerData' in prod[0][1]:
-                    header_data = prod[0][1]['headerData']
-                elif isinstance(prod[0][1], list):
-                    # Sometimes prod[0][1] is a list, search for headerData in the response
-                    for item in prod[0]:
+        if isinstance(json_data, list) and len(json_data) > 0:
+            if isinstance(json_data[0], list) and len(json_data[0]) > 1:
+                item = json_data[0][1]
+                if isinstance(item, dict) and 'headerData' in item:
+                    header_data = item['headerData']
+                    logging.debug("Found headerData in json_data[0][1]['headerData']")
+            
+            # If not found in the first position, search through all entries
+            if header_data is None:
+                for entry in json_data:
+                    if isinstance(entry, list) and len(entry) > 1:
+                        item = entry[1]
                         if isinstance(item, dict) and 'headerData' in item:
                             header_data = item['headerData']
+                            logging.debug(f"Found headerData in entry: {entry[0]}")
                             break
-            # Sometimes the structure is just prod[0] contains headerData directly
-            if header_data is None and isinstance(prod[0], dict):
-                for value in prod[0].values():
-                    if isinstance(value, dict) and 'headerData' in value:
-                        header_data = value['headerData']
-                        break
-                    elif isinstance(value, dict) and all(k in value for k in ['resourceProduction', 'tradegoodProduction', 'producedTradegood']):
-                        header_data = value
-                        break
     except (IndexError, KeyError, TypeError) as e:
         logging.error(f"Error extracting header data: {e}")
-        logging.error(f"Response structure: {json.dumps(prod, indent=2)}")
+        logging.error(f"Response structure: {json.dumps(json_data, indent=2)}")
         raise
     
     if header_data is None:
-        raise ValueError(f"Could not find headerData in response. Response structure: {json.dumps(prod, indent=2)}")
+        raise ValueError(f"Could not find headerData in response. Response structure: {json.dumps(json_data, indent=2)}")
     
     wood_production = Decimal(header_data['resourceProduction'])
     luxury_production = Decimal(header_data['tradegoodProduction'])
