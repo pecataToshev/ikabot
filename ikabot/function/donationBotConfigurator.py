@@ -27,8 +27,9 @@ def donation_bot_configurator(ikariam_service: IkariamService, db: Database, tel
 (1) Donate exceeding percentage of your storage capacity
 (2) Donate a percentage of production
 (3) Donate specific amount
+(4) Donate percentage of current available resources
     """)
-    donate_method = read(min=1, max=3, digit=True, default=1)
+    donate_method = read(min=1, max=4, digit=True, default=1)
     for cityId in cities_ids:
         tradegood = cities[cityId]['tradegood']
         initial = initials[int(tradegood)]
@@ -74,6 +75,14 @@ def donation_bot_configurator(ikariam_service: IkariamService, db: Database, tel
                               empty=True)  # no point changing the variable's name everywhere just for this
             if percentage == '':
                 percentage = 10000
+            elif percentage == 0:
+                donation_type = None
+        elif donation_type is not None and donate_method == 4:
+            print(
+                'What percentage of your current available resources would you like to donate? (enter 0 to disable, 100 to donate everything) (default: 100%)')
+            percentage = read(min=0, max=100, empty=True)
+            if percentage == '':
+                percentage = 100
             elif percentage == 0:
                 donation_type = None
 

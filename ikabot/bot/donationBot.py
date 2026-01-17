@@ -78,6 +78,13 @@ class DonationBot(Bot):
                     if max_wood <= 0:
                         continue
 
+                elif self.donate_method == 4:
+                    percentage = self.cities_dict[cityId]['percentage']
+                    # donate a percentage of current available resources
+                    to_donate = int(wood * percentage / 100)
+                    if to_donate <= 0:
+                        continue
+
                 island_id = self.cities_dict[cityId]['island']
                 self._set_process_info('Found {}{} Wood{} for donations. Donation type {}'.format(
                     Colours.MATERIALS[0],
