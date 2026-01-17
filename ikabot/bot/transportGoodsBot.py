@@ -42,7 +42,7 @@ class TransportGoodsBot(Bot):
     """
     Performs transportations
     """
-    DEFAULT_NUMBER_OF_SHIPS_IN_BATCH = 20
+    DEFAULT_NUMBER_OF_SHIPS_IN_BATCH = 30
 
     def _get_process_info(self) -> str:
         return 'I execute transportation of resources'
