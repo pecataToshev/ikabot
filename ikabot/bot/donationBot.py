@@ -103,13 +103,13 @@ class DonationBot(Bot):
                                 'donation': forrest, 'backgroundView': 'island', 'templateView': donation_type,
                                 'actionRequest': actionRequest, 'ajax': '1'})
                     logging.info("I donated %d wood to the forest on island %s", forrest, island_id)
-                    self._wait(1, max_random=5, info='Simulating user changing to the tradegood tab')
+                    self._wait(1, max_random=5, info='Simulating user changing window to donate {}{} Wood{} to trading good'.format(Colours.MATERIALS[0], trade, Colours.Text.RESET))
                     self.ikariam_service.post(
                         params={'islandId': island_id, 'type': 'tradegood', 'action': 'IslandScreen',
                                 'function': 'donate',
                                 'donation': trade, 'backgroundView': 'island', 'templateView': donation_type,
                                 'actionRequest': actionRequest, 'ajax': '1'})
-                    logging.info("I donated %d wood to the tradegood on island %s", trade, island_id)
+                    logging.info("I donated %s%d%s Wood{} to the tradegood on island %s", Colours.MATERIALS[0], trade, Colours.Text.RESET, island_id)
                 else:
                     self.ikariam_service.post(
                         params={'islandId': island_id, 'type': donation_type, 'action': 'IslandScreen',
