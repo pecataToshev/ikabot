@@ -3,13 +3,11 @@
 
 from ikabot.bot.donationBot import DonationBot
 from ikabot.config import materials_names
-
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import banner, enter
-from ikabot.helpers.citiesAndIslands import getIdsOfCities
-from ikabot.helpers.userInput import read
-
 from ikabot.helpers.telegram import Telegram
+from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -88,7 +86,7 @@ def donation_bot_configurator(ikariam_service: IkariamService, db: Database, tel
 
         cities_dict[cityId] = {'donation_type': donation_type, 'percentage': percentage}
 
-        print('I will donate every {} minutes.'.format(waiting_time))
+    print('I will donate every {} minutes.'.format(waiting_time))
 
     DonationBot(
         ikariam_service=ikariam_service,

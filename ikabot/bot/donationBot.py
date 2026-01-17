@@ -103,7 +103,7 @@ class DonationBot(Bot):
                                 'donation': forrest, 'backgroundView': 'island', 'templateView': donation_type,
                                 'actionRequest': actionRequest, 'ajax': '1'})
                     logging.info("I donated %d wood to the forest on island %s", forrest, island_id)
-                    self._wait(1, max_random=5, info='Simulating user interaction')
+                    self._wait(1, max_random=5, info='Simulating user changing to the tradegood tab')
                     self.ikariam_service.post(
                         params={'islandId': island_id, 'type': 'tradegood', 'action': 'IslandScreen',
                                 'function': 'donate',
