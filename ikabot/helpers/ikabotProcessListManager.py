@@ -12,7 +12,8 @@ import psutil
 
 from ikabot.config import isWindows
 from ikabot.helpers.database import Database
-from ikabot.helpers.gui import Colours, daysHoursMinutes, formatTimestamp, printTable
+from ikabot.helpers.gui import (Colours, daysHoursMinutes, formatTimestamp,
+                                printTable)
 
 
 def run(command):
@@ -83,6 +84,11 @@ def _determine_process_special_action(process: dict, ika_process_name: str) -> U
 
     except psutil.NoSuchProcess:
         return _ProcessSpecialAction.SET_TERMINATED_STATUS
+    except (OSError, IOError) as e:
+        # Handle cases where /proc is not accessible
+        logging.debug('Unable to check process status for pid %s: %s', process.get('pid'), str(e))
+        # Assume the process is still running if we can't check
+        return None
 
     return None
 
@@ -105,7 +111,13 @@ class IkabotProcessListManager:
 
         # check it's still running
         running_ikabot_processes = []
-        ika_process_name = psutil.Process(pid=os.getpid()).name()
+        try:
+            ika_process_name = psutil.Process(pid=os.getpid()).name()
+        except (OSError, IOError) as e:
+            # Handle cases where /proc is not accessible (e.g., in some Docker environments)
+            logging.warning('Unable to access process information (likely /proc not mounted): %s. Process management will be limited.', str(e))
+            # Fallback: just use 'python' as a generic name
+            ika_process_name = 'python'
         deletion_time = time.time() + 30
         for process in process_list:
             action = _determine_process_special_action(process, ika_process_name)
