@@ -11,22 +11,29 @@ from ikabot.helpers.userInput import read
 
 
 def show_proxy(db):
+    import logging
     proxy_data = db.get_stored_value('proxy')
     msg = 'using proxy:'
     if proxy_data is not None and proxy_data['set'] is True:
         curr_proxy = proxy_data['conf']['https']
+        logging.info('Testing configured proxy: %s', curr_proxy)
         if test_proxy(proxy_data['conf']) is False:
+            logging.warning('Proxy %s does not work, disabling it', curr_proxy)
             proxy_data['set'] = False
             db.store_value('proxy', proxy_data)
-            sys.exit('the {} proxy does not work, it has been removed'.format(curr_proxy))
-        if msg not in config.update_msg:
-            # add proxy message
-            config.update_msg += '{} {}\n'.format(msg, curr_proxy)
+            print('\n⚠️  WARNING: The configured proxy ({}) does not work and has been disabled.'.format(curr_proxy))
+            print('You can reconfigure it later from Options / Settings > Configure Proxy\n')
+            # Don't exit - just continue without the proxy
         else:
-            # delete old proxy message
-            config.update_msg = config.update_msg.replace('\n'.join(config.update_msg.split('\n')[-2:]), '')
-            # add new proxy message
-            config.update_msg += '{} {}\n'.format(msg, curr_proxy)
+            logging.info('Proxy is working')
+            if msg not in config.update_msg:
+                # add proxy message
+                config.update_msg += '{} {}\n'.format(msg, curr_proxy)
+            else:
+                # delete old proxy message
+                config.update_msg = config.update_msg.replace('\n'.join(config.update_msg.split('\n')[-2:]), '')
+                # add new proxy message
+                config.update_msg += '{} {}\n'.format(msg, curr_proxy)
     elif msg in config.update_msg:
         # delete old proxy message
         config.update_msg = config.update_msg.replace('\n'.join(config.update_msg.split('\n')[-2:]), '')

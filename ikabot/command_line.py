@@ -5,45 +5,58 @@ import sys
 import time
 import traceback
 
-from ikabot.function.activateMiracleBotConfigurator import activate_miracle_bot_configurator
-from ikabot.function.attackBarbariansBotConfigurator import attack_barbarians_bot_configurator
-from ikabot.function.attacksMonitoringBotConfigurator import configure_alert_attacks_monitoring_bot
+from ikabot.function.activateMiracleBotConfigurator import \
+    activate_miracle_bot_configurator
+from ikabot.function.attackBarbariansBotConfigurator import \
+    attack_barbarians_bot_configurator
+from ikabot.function.attacksMonitoringBotConfigurator import \
+    configure_alert_attacks_monitoring_bot
 from ikabot.function.autoPiracyBotConfigurator import autoPiracyBotConfigurator
-from ikabot.function.buyResourcesBotConfigurator import buy_resources_bot_configurator
+from ikabot.function.buyResourcesBotConfigurator import \
+    buy_resources_bot_configurator
 from ikabot.function.buyShip import buy_ships
-from ikabot.function.conductExperimentBotConfigurator import configure_conduct_experiment_bot
+from ikabot.function.conductExperimentBotConfigurator import \
+    configure_conduct_experiment_bot
 from ikabot.function.constructBuilding import constructBuilding
 from ikabot.function.decaptchaConf import decaptchaConf
-from ikabot.function.distributeResourcesBotConfigurator import distribute_resources_bot_configurator
+from ikabot.function.distributeResourcesBotConfigurator import \
+    distribute_resources_bot_configurator
 from ikabot.function.donationBotConfigurator import donation_bot_configurator
 from ikabot.function.dumpWorld import dump_world_bot_configurator, view_dump
 from ikabot.function.getStatus import getStatus
 from ikabot.function.getStatusImproved import getStatusForAllCities
 from ikabot.function.importExportCookie import exportCookie, importCookie
-from ikabot.function.islandMonitoringBotConfigurator import island_monitoring_bot_configurator
+from ikabot.function.islandMonitoringBotConfigurator import \
+    island_monitoring_bot_configurator
 from ikabot.function.islandWorkplaces import islandWorkplaces
 from ikabot.function.killTasks import kill_tasks
-from ikabot.function.loginDailyBotConfigurator import login_daily_bot_configurator
+from ikabot.function.loginDailyBotConfigurator import \
+    login_daily_bot_configurator
 from ikabot.function.miracle_donate import miracle_donate
 from ikabot.function.proxyConf import proxyConf, show_proxy
-from ikabot.function.sellResourcesBotConfigurator import sell_resources_bot_configurator
-from ikabot.function.tavern import use_tavern
+from ikabot.function.sellResourcesBotConfigurator import \
+    sell_resources_bot_configurator
 from ikabot.function.shipMovements import shipMovements
 from ikabot.function.showPiracyInfo import showPiracyInfo
 from ikabot.function.stationArmy import stationArmy
 from ikabot.function.studies import study
-from ikabot.function.telegramFunctions import test_telegram_bot, update_telegram_bot
+from ikabot.function.tavern import use_tavern
+from ikabot.function.telegramFunctions import (test_telegram_bot,
+                                               update_telegram_bot)
 from ikabot.function.temple import use_temple
-from ikabot.function.trainArmyBotConfigurator import train_army_bot_configurator
-from ikabot.function.transportGoodsBotConfigurator import transport_goods_bot_configurator
+from ikabot.function.trainArmyBotConfigurator import \
+    train_army_bot_configurator
+from ikabot.function.transportGoodsBotConfigurator import \
+    transport_goods_bot_configurator
 from ikabot.function.update import update
-from ikabot.function.upgradeBuildingBotConfigurator import upgrade_building_group_bot_configurator, \
-    upgrade_single_building_bot_configurator
+from ikabot.function.upgradeBuildingBotConfigurator import (
+    upgrade_building_group_bot_configurator,
+    upgrade_single_building_bot_configurator)
 from ikabot.function.vacationMode import vacationMode
 from ikabot.function.viewArmy import viewArmy
-from ikabot.function.wineMonitoringBotConfigurator import configure_wine_monitoring_bot
+from ikabot.function.wineMonitoringBotConfigurator import \
+    configure_wine_monitoring_bot
 from ikabot.function.workshop import use_workshop
-from ikabot.helpers.checkForUpdate import checkForUpdate
 from ikabot.helpers.gui import banner, clear, enter, formatTimestamp
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.userInput import read
@@ -164,11 +177,14 @@ def menu(ikariam_service, db, telegram):
     db: ikabot.helpers.database.Database
     telegram: ikabot.helpers.telegram.Telegram
     """
-    checkForUpdate()
+    logging.info('Entered menu function')
     show_proxy(db)
+    logging.info('Proxy info displayed')
     process_list_manager = IkabotProcessListManager(db)
+    logging.info('Process list manager initialized')
     consecutive_keyboard_interruptions = False
 
+    logging.info('Entering main menu loop')
     while True:
         banner()
 

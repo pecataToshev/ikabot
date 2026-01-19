@@ -554,9 +554,11 @@ class IkariamService:
 
             if not skipGetCookie:
                 url = respJson["url"]
+                logging.info('Got login URL from API: %s', url[:100])
                 match = re.search(r'https://s\d+-\w{2}\.ikariam\.gameforge\.com/index\.php\?', url)
                 if match is None:
-                    sys.exit('Error')
+                    logging.error('Invalid login URL format: %s', url)
+                    sys.exit('Error: Invalid login URL format')
 
                 # set the headers
                 self.s.headers.clear()
@@ -566,30 +568,46 @@ class IkariamService:
                 self.__update_proxy()
 
                 # use the new cookies instead, invalidate the old ones
+                logging.info('Accessing game server with login URL...')
                 try:
                     html = self.s.get(url, verify=config.do_ssl_verify).text
-                except Exception:
+                    logging.info('Successfully accessed game server, response length: %d', len(html))
+                except Exception as e:
+                    logging.error('Failed to access game server: %s', str(e))
                     self.__proxy_error()
 
+        logging.info('Checking account status...')
         if self.__isInVacation(html):
             msg = 'The account went into vacation mode'
+            logging.warning(msg)
             if self.padre:
                 print(msg)
             else:
                 self.telegram.send_message(msg)
             os._exit(0)
+        logging.info('Account is not in vacation mode')
+        
         if self.isExpired(html):
+            logging.warning('Session appears to be expired immediately after login')
             if retries > 0:
+                logging.info('Retrying login... (%d retries left)', retries)
                 return self.__login(retries-1)
             if self.padre:
-                msg = 'Login error.'
+                msg = 'Login error: Session expired immediately after login'
+                logging.error(msg)
                 print(msg)
+                print('\nThis might indicate:')
+                print('  1. The ikariam cookie is invalid or expired')
+                print('  2. There is a mismatch between the account and cookies')
+                print('  3. The game server is having issues')
                 os._exit(0)
             raise Exception('Couldn\'t log in')
 
         if not used_old_cookies:
+            logging.info('Saving new cookies to database')
             self.__saveNewCookies()
 
+        logging.info('Login completed successfully!')
         self.logged = True
 
     def __backoff(self):

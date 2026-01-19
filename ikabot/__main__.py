@@ -8,8 +8,8 @@ from ikabot import config
 from ikabot.command_line import menu
 from ikabot.helpers.database import Database
 from ikabot.helpers.logs import setup_logging
-from ikabot.helpers.userInput import read
 from ikabot.helpers.telegram import Telegram
+from ikabot.helpers.userInput import read
 from ikabot.migrations.migrate import apply_migrations
 from ikabot.web.ikariamService import IkariamService
 
@@ -28,18 +28,30 @@ def main():
     apply_migrations()
 
     config.BOT_NAME = read(msg='Please provide the unique bot identifier for this account: ')
+    logging.info('Bot identifier: %s', config.BOT_NAME)
 
     db = Database(config.BOT_NAME)
+    logging.info('Database initialized')
     telegram = Telegram(db, True)
+    logging.info('Telegram initialized')
 
+    logging.info('Initializing Ikariam service (this will perform login)...')
     ikariam_service = IkariamService(db, telegram)
+    logging.info('Ikariam service initialized successfully')
+    
     try:
+        logging.info('Starting command menu...')
         menu(ikariam_service, db, telegram)
-    except Exception:
-        logging.error("Error when trying to close the main function\n%s", traceback.format_exc())
+        logging.info('Menu exited normally')
+    except Exception as e:
+        logging.error("Error in main function: %s\n%s", str(e), traceback.format_exc())
+        print(f'\n⚠️  An error occurred: {str(e)}')
+        print('Check the logs for more details.')
     finally:
+        logging.info('Cleaning up...')
         ikariam_service.logout()
         db.close_db_conn()
+        logging.info('Cleanup complete')
 
 
 def __parse_param_value(param: str):
