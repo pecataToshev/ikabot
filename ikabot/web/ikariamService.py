@@ -80,9 +80,17 @@ class IkariamService:
             self.headers = {'Host': 'lobby.ikariam.gameforge.com', 'User-Agent': user_agent, 'Accept': '*/*', 'Accept-Language': 'en-US,en;q=0.5', 'Accept-Encoding': 'gzip, deflate', 'DNT': '1', 'Connection': 'close', 'Referer': 'https://lobby.ikariam.gameforge.com/', 'Authorization': 'Bearer ' + self.s.cookies['gf-token-production']}
             self.s.headers.clear()
             self.s.headers.update(self.headers)
-            if self.s.get('https://lobby.ikariam.gameforge.com/api/users/me').status_code == 200:
+            logging.info('Testing lobby cookie at /api/users/me...')
+            response = self.s.get('https://lobby.ikariam.gameforge.com/api/users/me')
+            logging.info('Lobby cookie test response status: %d', response.status_code)
+            if response.status_code == 200:
+                logging.info('Lobby cookie is valid')
                 return True
+            else:
+                logging.warning('Lobby cookie test failed. Status: %d, Response: %s', response.status_code, response.text[:200])
             self.s.cookies.clear()
+        else:
+            logging.warning('No gf-token-production cookie found in session')
         return False
 
     def __login(self, retries=0):
@@ -307,10 +315,23 @@ class IkariamService:
                 print("document.cookie.split(';').forEach(x => {if (x.includes('production')) console.log(x)})")
                 
                 auth_token = read(msg='\nEnter gf-token-production manually:').split('=')[-1]
+                auth_token = auth_token.strip()  # Remove any whitespace
+                logging.info('Manual token entered, length: %d characters', len(auth_token))
                 cookie_obj = requests.cookies.create_cookie(domain='.gameforge.com', name='gf-token-production', value=auth_token)
                 self.s.cookies.set_cookie(cookie_obj)
+                logging.info('Testing manually entered token...')
                 if not self.__test_lobby_cookie():
-                    sys.exit('Wrong email or password\n')
+                    print('\n' + '='*80)
+                    print('⚠️  TOKEN VALIDATION FAILED')
+                    print('='*80)
+                    print('The token you entered could not be validated.')
+                    print('\nPossible issues:')
+                    print('  1. The token has expired (tokens expire quickly)')
+                    print('  2. The token was copied incorrectly (check for extra spaces)')
+                    print('  3. Wrong credentials were used initially')
+                    print('\nPlease try again with a fresh token.')
+                    sys.exit('Invalid authentication token\n')
+                logging.info('Manual token validated successfully')
             else:
                 # get the authentication token and set the cookie
                 try:
@@ -341,22 +362,50 @@ class IkariamService:
         self.headers = {'Host': 'lobby.ikariam.gameforge.com', 'User-Agent': user_agent, 'Accept': 'application/json', 'Accept-Language': 'en-US,en;q=0.5', 'Accept-Encoding': 'gzip, deflate', 'Referer': 'https://lobby.ikariam.gameforge.com/es_AR/hub', 'Authorization': 'Bearer {}'.format(self.s.cookies['gf-token-production']), 'DNT': '1', 'Connection': 'close'}
         self.s.headers.clear()
         self.s.headers.update(self.headers)
+        logging.info('Fetching accounts from Gameforge API...')
         r = self.s.get('https://lobby.ikariam.gameforge.com/api/users/me/accounts')
+        logging.info('Accounts response status: %d', r.status_code)
         try:
             accounts = json.loads(r.text, strict=False)
-        except json.JSONDecodeError:
-            logging.error('Failed to get accounts. Status: %d, Response: %s', r.status_code, r.text)
+            logging.info('Successfully retrieved %d accounts', len(accounts))
+        except json.JSONDecodeError as e:
+            logging.error('Failed to parse accounts JSON. Status: %d, Response: %s', r.status_code, r.text[:500])
+            print('\n' + '='*80)
+            print('⚠️  FAILED TO RETRIEVE ACCOUNTS')
+            print('='*80)
+            print(f'HTTP Status: {r.status_code}')
+            print(f'Response preview: {r.text[:200]}...')
+            print('\nThis usually means:')
+            print('  1. The gf-token-production token has expired or is invalid')
+            print('  2. The Gameforge API is having issues')
+            print('  3. The token was entered incorrectly')
+            print('\nPlease try:')
+            print('  - Getting a fresh token from your browser')
+            print('  - Waiting a few minutes and trying again')
+            print('  - Checking if you can access the Ikariam lobby in your browser')
             sys.exit('Failed to retrieve accounts from server')
 
         # get servers
         self.headers = {'Host': 'lobby.ikariam.gameforge.com', 'User-Agent': user_agent, 'Accept': 'application/json', 'Accept-Language': 'en-US,en;q=0.5', 'Accept-Encoding': 'gzip, deflate', 'Referer': 'https://lobby.ikariam.gameforge.com/es_AR/hub', 'Authorization': 'Bearer {}'.format(self.s.cookies['gf-token-production']), 'DNT': '1', 'Connection': 'close'}
         self.s.headers.clear()
         self.s.headers.update(self.headers)
+        logging.info('Fetching servers from Gameforge API...')
         r = self.s.get('https://lobby.ikariam.gameforge.com/api/servers')
+        logging.info('Servers response status: %d', r.status_code)
         try:
             servers = json.loads(r.text, strict=False)
-        except json.JSONDecodeError:
-            logging.error('Failed to get servers. Status: %d, Response: %s', r.status_code, r.text)
+            logging.info('Successfully retrieved %d servers', len(servers))
+        except json.JSONDecodeError as e:
+            logging.error('Failed to parse servers JSON. Status: %d, Response: %s', r.status_code, r.text[:500])
+            print('\n' + '='*80)
+            print('⚠️  FAILED TO RETRIEVE SERVERS LIST')
+            print('='*80)
+            print(f'HTTP Status: {r.status_code}')
+            print(f'Response preview: {r.text[:200]}...')
+            print('\nThis usually means:')
+            print('  1. The gf-token-production token has expired or is invalid')
+            print('  2. The Gameforge API is having issues')
+            print('\nPlease try getting a fresh token from your browser.')
             sys.exit('Failed to retrieve servers from server')
 
         if not self.logged:
