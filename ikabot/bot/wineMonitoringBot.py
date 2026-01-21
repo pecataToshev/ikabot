@@ -1,12 +1,13 @@
 import logging
+import time
 from decimal import Decimal
-from typing import List
+from typing import List, Optional
 
 from ikabot.bot.bot import Bot
-from ikabot.config import city_url, SECONDS_IN_HOUR
+from ikabot.config import SECONDS_IN_HOUR, city_url
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import Colours, daysHoursMinutes
-from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.resources import getProductionPerSecond
 
 
@@ -21,20 +22,26 @@ class WineMonitoringBot(Bot):
         return '\nI alert if the wine runs out in less than {} hours\n'.format(self.bot_config['minimumWineHours'])
 
     def _start(self) -> None:
-        alert_was_triggered = {}
+        # Dictionary to store city_id -> timestamp (or None if no issue)
+        # timestamp = when the threshold was first reached
+        # None = no issue detected
+        alert_timestamps = {}
+        
         while True:
             __problems: List[List[str]] = []
             self._set_process_info(self.__process_info_working)
     
             # getIdsOfCities is called on a loop because the amount of cities may change
             _, cities = getIdsOfCities(self.ikariam_service)
+            current_time = time.time()
+            
             for city_id in cities:
                 logging.debug('Checking city: %s', city_id)
                 city = getCity(self.ikariam_service.get(city_url + city_id))
                 self._set_process_info(self.__process_info_working, target_city=city['name'])
 
                 consumption_per_hour = city['wineConsumptionPerHour']
-                was_alerted = alert_was_triggered.get(city_id, False)
+                alert_timestamp: Optional[float] = alert_timestamps.get(city_id, None)
 
                 # is a wine city
                 if cities[city_id]['tradegood'] == '1':
@@ -42,16 +49,21 @@ class WineMonitoringBot(Bot):
                     if consumption_per_hour > wine_production:
                         consumption_per_hour -= wine_production
                     else:
-                        alert_was_triggered[city_id] = False
+                        # Issue resolved: wine production is sufficient
+                        alert_timestamps[city_id] = None
                         continue
     
                 if consumption_per_hour == 0:
                     logging.debug('No wine consumption in %s', city['name'])
                     __problems.append([Colours.Text.Light.YELLOW, city['name'], 'noConsumption'])
-                    if not was_alerted:
+                    
+                    # Check if we need to send/resend alert
+                    should_alert = alert_timestamp is None or (current_time - alert_timestamp >= 24 * SECONDS_IN_HOUR)
+                    
+                    if should_alert:
                         msg = 'The city {} is not consuming wine!'.format(city['name'])
                         self.telegram.send_message(msg)
-                        alert_was_triggered[city_id] = True
+                        alert_timestamps[city_id] = current_time
                     continue
 
                 consumption_per_sec = Decimal(consumption_per_hour) / Decimal(SECONDS_IN_HOUR)
@@ -63,12 +75,17 @@ class WineMonitoringBot(Bot):
                 if seconds_left < self.minimum_available_wine_seconds:
                     time_left = daysHoursMinutes(int(seconds_left))
                     __problems.append([Colours.Text.Light.RED, city['name'], time_left])
-                    if was_alerted is False:
-                        msg = 'In {}, the wine will run out in {}'.format(time_left, city['name'])
+                    
+                    # Check if we need to send/resend alert (first time or 24h passed)
+                    should_alert = alert_timestamp is None or (current_time - alert_timestamp >= 24 * SECONDS_IN_HOUR)
+                    
+                    if should_alert:
+                        msg = 'In {}, the wine will run out in {}'.format(city['name'], time_left)
                         self.telegram.send_message(msg)
-                        alert_was_triggered[city_id] = True
+                        alert_timestamps[city_id] = current_time
                 else:
-                    alert_was_triggered[city_id] = False
+                    # Issue resolved: wine is above threshold
+                    alert_timestamps[city_id] = None
 
             self._set_process_info('Finished checking for low wine', target_city='')
 
@@ -81,4 +98,4 @@ class WineMonitoringBot(Bot):
                     Colours.Text.RESET,
                 )
 
-            self._wait(20*60, __msg + Colours.Text.RESET)
+            self._wait(SECONDS_IN_HOUR, __msg + Colours.Text.RESET)
