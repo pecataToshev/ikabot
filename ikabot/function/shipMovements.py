@@ -84,9 +84,9 @@ def shipMovements(ikariam_service, db, telegram):
             fleets = 0
             for mov in movement['fleet']['ships']:
                 if mov['cssClass'] == 'ship_transport':
-                    ships += int(mov['amount'])
+                    ships += parse_int(mov['amount'])
                 else:
-                    fleets += int(mov['amount'])
+                    fleets += parse_int(mov['amount'])
             print('Troops:{}\nFleets:{}\n Ships:{}'.format(addThousandSeparator(troops), addThousandSeparator(fleets), addThousandSeparator(ships)))
         else:
             assert len(materials_names) == 5
