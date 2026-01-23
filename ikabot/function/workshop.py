@@ -224,8 +224,24 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
         'ajax': '1'
     }
     ships_response = ikariam_service.post(noIndex=True, params=ships_params)
-    ships_html = ships_response[1][1][1] if len(ships_response) > 1 and len(ships_response[1]) > 1 else ''
-    has_upgrade_ships, ships = extract_units_data(ships_html)
+    
+    # Extract ships HTML - handle both possible response structures
+    ships_html = ''
+    try:
+        if isinstance(ships_response, list) and len(ships_response) > 1:
+            # Response format: [["updateGlobalData", ...], ["changeView", ["workshop", "HTML"]], ...]
+            for response_item in ships_response:
+                if isinstance(response_item, list) and len(response_item) > 1:
+                    if response_item[0] == "changeView" and len(response_item[1]) > 1:
+                        ships_html = response_item[1][1]
+                        break
+    except (IndexError, TypeError, KeyError):
+        print('Warning: Could not fetch ships data')
+    
+    has_upgrade_ships = False
+    ships = []
+    if ships_html:
+        has_upgrade_ships, ships = extract_units_data(ships_html)
     
     # Combine units and ships
     units.extend(ships)
