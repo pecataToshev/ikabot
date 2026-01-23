@@ -57,6 +57,8 @@ from ikabot.function.viewArmy import viewArmy
 from ikabot.function.wineMonitoringBotConfigurator import \
     configure_wine_monitoring_bot
 from ikabot.function.workshop import use_workshop
+from ikabot.function.workshopUpgradeBotConfigurator import \
+    workshop_upgrade_bot_configurator
 from ikabot.helpers.gui import banner, clear, enter, formatTimestamp
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
 from ikabot.helpers.userInput import read
@@ -123,7 +125,11 @@ _global_menu = [
         ['Conduct Experiments', configure_conduct_experiment_bot],
     ]],
     ['Taverns', use_tavern],
-    ['Workshops', use_workshop],
+    ['Workshops', [
+        __command_back,
+        ['Use Workshop', use_workshop],
+        ['Auto-Upgrade Workshop Units', workshop_upgrade_bot_configurator],
+    ]],
     ['Buys Ships', buy_ships],
     ['Game Account Functions', [
         __command_back,
