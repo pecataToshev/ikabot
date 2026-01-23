@@ -24,7 +24,7 @@ class WorkshopUpgradeBot(Bot):
             # Get current workshop data (both units and ships)
             data = get_building_info(self.ikariam_service, self.city['id'], self.building)
             change_view_data = data[1][1][1]
-            has_upgrade, units = fetch_workshop_units_and_ships(
+            has_upgrade, units, upgrade_info = fetch_workshop_units_and_ships(
                 self.ikariam_service, 
                 self.city, 
                 self.building, 
@@ -35,9 +35,20 @@ class WorkshopUpgradeBot(Bot):
             if has_upgrade:
                 waiting_time = self.__extract_upgrade_time(change_view_data)
                 if waiting_time > 0:
+                    # Build info message about what's being upgraded
+                    info_msg = 'Upgrade in progress'
+                    if upgrade_info:
+                        if 'unit_name' in upgrade_info and 'upgrade_name' in upgrade_info:
+                            info_msg = 'Upgrading {} - {}'.format(
+                                upgrade_info['unit_name'],
+                                upgrade_info['upgrade_name']
+                            )
+                        elif 'unit_name' in upgrade_info:
+                            info_msg = 'Upgrading {}'.format(upgrade_info['unit_name'])
+                    
                     self._wait(
                         seconds=waiting_time + 5,
-                        info='Upgrade in progress',
+                        info=info_msg,
                         max_random=30
                     )
                     # Wait additional random time after upgrade completes

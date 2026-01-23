@@ -30,7 +30,7 @@ def workshop_upgrade_bot_configurator(ikariam_service: IkariamService, db: Datab
 
     # Get current workshop data (both units and ships)
     change_view_data = data[1][1][1]
-    has_upgrade, units = fetch_workshop_units_and_ships(ikariam_service, city, building, change_view_data)
+    has_upgrade, units, upgrade_info = fetch_workshop_units_and_ships(ikariam_service, city, building, change_view_data)
 
     if len(units) == 0:
         print('No units found in workshop. This might be a parsing error or the workshop has no units.')
@@ -39,6 +39,11 @@ def workshop_upgrade_bot_configurator(ikariam_service: IkariamService, db: Datab
 
     if has_upgrade:
         print("There's currently an upgrade in progress. The bot will wait for it to complete.")
+        if upgrade_info:
+            if 'unit_name' in upgrade_info:
+                print('  Unit: {}'.format(decodeUnicodeEscape(upgrade_info['unit_name'])))
+            if 'upgrade_name' in upgrade_info:
+                print('  Upgrade: {}'.format(decodeUnicodeEscape(upgrade_info['upgrade_name'])))
         print()
 
     # Display available units

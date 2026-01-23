@@ -23,17 +23,40 @@ def extract_url_parameters(url: str) -> dict:
     return dict(re.findall(r'(\w+)=(\w+)', url))
 
 
-def extract_units_data(html: str) -> Tuple[bool, List[dict]]:
+def extract_units_data(html: str) -> Tuple[bool, List[dict], dict]:
     soup = BeautifulSoup(html, 'html.parser')
     _groups = soup.find_all(lambda tag: tag.name == 'div' and tag.get('id') in ['tabUnits', 'tabShips'])
 
     _units = []
     _has_upgrade = False
+    _upgrade_info = {}
     
     # Check if there's an upgrade in progress (appears before tabUnits/tabShips)
     upgrade_in_progress_div = soup.find('div', {'class': 'upgradeInProgress'})
     if upgrade_in_progress_div is not None:
         _has_upgrade = True
+        
+        # Extract information about what's being upgraded
+        unit_pic = upgrade_in_progress_div.find('div', {'class': 'unitPic'})
+        upgrade_pic_img = upgrade_in_progress_div.find('div', {'class': 'upgradePic'})
+        upgrade_desc_title = upgrade_in_progress_div.find('div', {'class': 'upgradeDescriptionTitle'})
+        upgrade_effect = upgrade_in_progress_div.find('div', {'class': 'upgradeEffect'})
+        
+        if unit_pic and 'title' in unit_pic.attrs:
+            _upgrade_info['unit_name'] = unit_pic['title']
+        
+        if upgrade_pic_img:
+            img = upgrade_pic_img.find('img')
+            if img and 'title' in img.attrs:
+                _upgrade_info['upgrade_name'] = img['title']
+        
+        if upgrade_desc_title:
+            spans = upgrade_desc_title.find_all('span')
+            if len(spans) >= 2:
+                _upgrade_info['upgrade_type'] = spans[1].text.strip()
+        
+        if upgrade_effect:
+            _upgrade_info['effect'] = upgrade_effect.text.strip()
 
     for _group in _groups:
         _units_tab_params = extract_url_parameters(soup.find(id='js_'+_group.get('id'))['onclick'])
@@ -200,10 +223,10 @@ def extract_units_data(html: str) -> Tuple[bool, List[dict]]:
 
                     _units.append(_unit)
 
-    return _has_upgrade, _units
+    return _has_upgrade, _units, _upgrade_info
 
 
-def fetch_workshop_units_and_ships(ikariam_service: IkariamService, city: dict, building: dict, units_html: str) -> Tuple[bool, List[dict]]:
+def fetch_workshop_units_and_ships(ikariam_service: IkariamService, city: dict, building: dict, units_html: str) -> Tuple[bool, List[dict], dict]:
     """
     Fetch both units and ships data from the workshop.
     
@@ -214,10 +237,10 @@ def fetch_workshop_units_and_ships(ikariam_service: IkariamService, city: dict, 
         units_html: The HTML string from the units tab
     
     Returns:
-        Tuple of (has_upgrade, combined_units_and_ships_list)
+        Tuple of (has_upgrade, combined_units_and_ships_list, upgrade_info)
     """
     # Extract units data from the provided HTML
-    has_upgrade_units, units = extract_units_data(units_html)
+    has_upgrade_units, units, upgrade_info = extract_units_data(units_html)
     
     # Fetch ships tab data
     ships_params = {
@@ -265,13 +288,13 @@ def fetch_workshop_units_and_ships(ikariam_service: IkariamService, city: dict, 
     has_upgrade_ships = False
     ships = []
     if ships_html:
-        has_upgrade_ships, ships = extract_units_data(ships_html)
+        has_upgrade_ships, ships, _ = extract_units_data(ships_html)
     
     # Combine units and ships
     units.extend(ships)
     has_upgrade = has_upgrade_units or has_upgrade_ships
     
-    return has_upgrade, units
+    return has_upgrade, units, upgrade_info
 
 
 def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegram):
@@ -287,7 +310,19 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
     print(city['name'])
 
     change_view_data = data[1][1][1]
-    has_upgrade, units = fetch_workshop_units_and_ships(ikariam_service, city, building, change_view_data)
+    has_upgrade, units, upgrade_info = fetch_workshop_units_and_ships(ikariam_service, city, building, change_view_data)
+    
+    if has_upgrade and upgrade_info:
+        print('\nCurrently upgrading:')
+        if 'unit_name' in upgrade_info:
+            print('  Unit: {}'.format(decodeUnicodeEscape(upgrade_info['unit_name'])))
+        if 'upgrade_name' in upgrade_info:
+            print('  Upgrade: {}'.format(decodeUnicodeEscape(upgrade_info['upgrade_name'])))
+        if 'upgrade_type' in upgrade_info:
+            print('  Type: {}'.format(decodeUnicodeEscape(upgrade_info['upgrade_type'])))
+        if 'effect' in upgrade_info:
+            print('  Effect: {}'.format(decodeUnicodeEscape(upgrade_info['effect'])))
+        print()
     
     if len(units) == 0:
         print('No units or ships found in workshop. This might be a parsing error.')
