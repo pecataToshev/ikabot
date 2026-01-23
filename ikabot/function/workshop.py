@@ -30,6 +30,10 @@ def extract_units_data(html: str, debug: bool = False) -> Tuple[bool, List[dict]
         print(f'Found {len(_groups)} groups (tabUnits/tabShips)')
         for g in _groups:
             print(f'  Group ID: {g.get("id")}')
+        
+        # Debug: check what top-level divs exist
+        all_divs_with_id = soup.find_all('div', id=True)
+        print(f'All divs with IDs: {[d.get("id") for d in all_divs_with_id[:10]]}')  # First 10
 
     _units = []
     _has_upgrade = False
@@ -237,8 +241,22 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
     ships_html = ''
     try:
         if isinstance(ships_response, str):
-            # Direct HTML string response
-            ships_html = ships_response
+            # Check if it's JSON that needs parsing
+            import json
+            try:
+                parsed_json = json.loads(ships_response)
+                # Look for changeView in the parsed response
+                for item in parsed_json:
+                    if isinstance(item, list) and len(item) >= 2 and item[0] == "changeView":
+                        if isinstance(item[1], list) and len(item[1]) >= 2:
+                            ships_html = item[1][1]
+                            break
+                if not ships_html:
+                    # If no changeView found, might be direct HTML
+                    ships_html = ships_response
+            except (json.JSONDecodeError, ValueError):
+                # Not JSON, treat as direct HTML
+                ships_html = ships_response
         elif isinstance(ships_response, list):
             # Response format: [["updateGlobalData", ...], ["changeView", ["workshop", "HTML"]], ...]
             for response_item in ships_response:
