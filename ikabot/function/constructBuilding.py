@@ -5,8 +5,8 @@ import json
 import re
 
 from ikabot.config import actionRequest
-from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.citiesAndIslands import chooseCity
+from ikabot.helpers.gui import banner, enter
 from ikabot.helpers.userInput import read
 
 

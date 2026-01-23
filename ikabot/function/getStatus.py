@@ -7,7 +7,8 @@ from decimal import Decimal
 from ikabot.config import materials_names
 from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
 from ikabot.helpers.database import Database
-from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, enter
+from ikabot.helpers.gui import (Colours, addThousandSeparator, banner,
+                                daysHoursMinutes, enter)
 from ikabot.helpers.resources import getProductionPerSecond
 from ikabot.helpers.telegram import Telegram
 from ikabot.web.ikariamService import IkariamService

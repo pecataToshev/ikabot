@@ -8,7 +8,8 @@ from ikabot.config import actionRequest, city_url, island_url, materials_names
 from ikabot.helpers.citiesAndIslands import chooseCity
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity, getIsland, parse_int
-from ikabot.helpers.gui import addThousandSeparator, banner, Colours, daysHoursMinutes, decodeUnicodeEscape, enter
+from ikabot.helpers.gui import (Colours, addThousandSeparator, banner,
+                                daysHoursMinutes, decodeUnicodeEscape, enter)
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.web.ikariamService import IkariamService

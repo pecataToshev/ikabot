@@ -4,8 +4,8 @@
 import time
 
 from ikabot.bot.conductExperimentBot import ConductExperimentBot
-from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.citiesAndIslands import chooseCity
+from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.userInput import read
 
 

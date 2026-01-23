@@ -4,7 +4,7 @@ from typing import Tuple, Union
 
 from ikabot.config import actionRequest, city_url
 from ikabot.helpers.citiesAndIslands import getCityWithCache, getIdsOfCities
-from ikabot.helpers.gui import (decodeUnicodeEscape, enter,
+from ikabot.helpers.gui import (decodeUnicodeEscape, enter, format_city_name,
                                 select_option_from_list)
 from ikabot.web.ikariamService import IkariamService
 
@@ -93,7 +93,7 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
         If user selects exit (option 0) or no cities have the building
     """
     from ikabot.helpers.menuExceptions import ExitFromMenu
-    
+
     # Get all cities and filter to only those with the specified building
     (ids, cities) = getIdsOfCities(ikariam_service)
     cities_with_building = []
@@ -117,7 +117,11 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
     city, building = select_option_from_list(
         cities_with_building,
         prompt='Select city with {}'.format(building_type),
-        formatter=lambda item: '{} - {}'.format(decodeUnicodeEscape(item[0]['name']), item[1]['level'])
+        formatter=lambda item: format_city_name(
+            decodeUnicodeEscape(item[0]['name']),
+            item[0]['tradegood'],
+            suffix=' - {}'.format(item[1]['level'])
+        )
     )
     
     # Get building data

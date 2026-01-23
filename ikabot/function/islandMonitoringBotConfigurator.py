@@ -1,13 +1,14 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from ikabot.bot.islandMonitoringBot import IslandMonitoringBot, IslandMonitoringNotifications
+from ikabot.bot.islandMonitoringBot import (IslandMonitoringBot,
+                                            IslandMonitoringNotifications)
 from ikabot.helpers.citiesAndIslands import chooseCity
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getIsland
 from ikabot.helpers.gui import banner, enter
-from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.telegram import Telegram
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.web.ikariamService import IkariamService
 
 

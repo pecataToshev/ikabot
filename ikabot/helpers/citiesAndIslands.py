@@ -8,7 +8,7 @@ import time
 from ikabot.config import MAXIMUM_CITY_NAME_LENGTH, city_url, island_url
 from ikabot.helpers.getJson import getCity, getIsland
 from ikabot.helpers.gui import (banner, decodeUnicodeEscape, enter,
-                                select_option_from_list)
+                                format_city_name, select_option_from_list)
 from ikabot.helpers.menuExceptions import ExitFromMenu
 from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
@@ -44,14 +44,12 @@ def chooseCity(ikariam_service: IkariamService, foreign=False):
     (ids, cities) = getIdsOfCities(ikariam_service)
     
     # Prepare city list with formatted display
-    resources_abbreviations = {'1': '(W)', '2': '(M)', '3': '(C)', '4': '(S)'}
     longest_city_name_length = max([len(decodeUnicodeEscape(cities[city_id]['name'])) for city_id in ids])
     
     def format_city(city_id):
         city_name = decodeUnicodeEscape(cities[city_id]['name'])
-        resource_abb = resources_abbreviations[str(cities[city_id]['tradegood'])]
-        padding = ' ' * (longest_city_name_length - len(city_name) + 2)
-        return f'{city_name}{padding}{resource_abb}'
+        tradegood = cities[city_id]['tradegood']
+        return format_city_name(city_name, tradegood, max_length=longest_city_name_length)
     
     # Special handling for foreign city option
     if foreign:

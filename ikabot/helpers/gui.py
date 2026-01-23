@@ -295,6 +295,49 @@ class Colours:
     }
 
 
+def format_city_name(city_name, tradegood, max_length=None, suffix=''):
+    """
+    Formats a city name with colored trade resource indicator.
+    
+    Parameters
+    ----------
+    city_name : str
+        The city name to format
+    tradegood : int
+        The tradegood type (1=Wine, 2=Marble, 3=Crystal, 4=Sulfur)
+    max_length : int, optional
+        If provided, pads the city name to this length
+    suffix : str, optional
+        Additional text to append after the trade indicator (e.g., building level)
+    
+    Returns
+    -------
+    str
+        Formatted city name with color: "CityName (X)" or "CityName    (X)" if padded
+    
+    Examples
+    --------
+    >>> format_city_name("Athens", 1)
+    'Athens (W)'  # in magenta color
+    >>> format_city_name("Athens", 1, max_length=10, suffix=' - 5')
+    'Athens     (W) - 5'  # in magenta color with padding
+    """
+    resources_abbreviations = {1: '(W)', 2: '(M)', 3: '(C)', 4: '(S)'}
+    resource_abb = resources_abbreviations[tradegood]
+    
+    # Get color for the tradegood
+    color = Colours.MATERIALS[tradegood]
+    reset = Colours.Text.RESET
+    
+    # Add padding if max_length is specified
+    if max_length:
+        padding = ' ' * (max_length - len(city_name) + 2)
+    else:
+        padding = ' '
+    
+    return f'{color}{city_name}{padding}{resource_abb}{reset}{suffix}'
+
+
 def select_option_from_list(options, prompt='Select option', formatter=None, return_index=False):
     """
     Generic menu selection with consistent formatting across the application.

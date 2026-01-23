@@ -8,12 +8,13 @@ from typing import Dict, List
 from ikabot.bot.trainArmyBot import TrainArmyBot
 from ikabot.config import city_url, materials_names
 from ikabot.helpers.buildings import extract_target_building, get_building_info
+from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import addThousandSeparator, banner, daysHoursMinutes, enter
-from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
-from ikabot.helpers.userInput import askUserYesNo, read
+from ikabot.helpers.gui import (addThousandSeparator, banner, daysHoursMinutes,
+                                enter)
 from ikabot.helpers.telegram import Telegram
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.web.ikariamService import IkariamService
 
 
