@@ -4,8 +4,8 @@ from typing import Tuple, Union
 
 from ikabot.config import actionRequest, city_url
 from ikabot.helpers.citiesAndIslands import getCityWithCache, getIdsOfCities
-from ikabot.helpers.gui import decodeUnicodeEscape, enter
-from ikabot.helpers.userInput import read
+from ikabot.helpers.gui import (decodeUnicodeEscape, enter,
+                                select_option_from_list)
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -107,21 +107,16 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
         return None
     
     # Let user select from cities with the building
-    print('Select city with {}:\n'.format(building_type))
-    print('(0) Exit')
-    for idx, (city, building) in enumerate(cities_with_building, 1):
-        print('({}) {} - {}'.format(
-            idx, 
-            decodeUnicodeEscape(city['name']), 
-            building['level']
-        ))
-    print()
+    selected = select_option_from_list(
+        cities_with_building,
+        prompt='Select city with {}'.format(building_type),
+        formatter=lambda item: '{} - {}'.format(decodeUnicodeEscape(item[0]['name']), item[1]['level'])
+    )
     
-    selection = read(min=0, max=len(cities_with_building), digit=True)
-    if selection == 0:
+    if selected is None:
         return None
     
-    city, building = cities_with_building[selection - 1]
+    city, building = selected
     
     # Get building data
     data = get_building_info(ikariam_service, city['id'], building)

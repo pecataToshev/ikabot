@@ -7,11 +7,11 @@ import time
 
 from ikabot.config import MAXIMUM_CITY_NAME_LENGTH, city_url, island_url
 from ikabot.helpers.getJson import getCity, getIsland
-from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
+from ikabot.helpers.gui import (banner, decodeUnicodeEscape, enter,
+                                select_option_from_list)
 from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
 
-menu_cities = ''
 ids_cache = None
 cities_cache = None
 
@@ -35,40 +35,45 @@ def chooseCity(ikariam_service: IkariamService, foreign=False):
     city : City
         a city object representing the chosen city
     """
-    global menu_cities
     (ids, cities) = getIdsOfCities(ikariam_service)
-    if menu_cities == '':
-        longest_city_name_length: int = max([len(decodeUnicodeEscape(cities[city_id]['name'])) for city_id in ids])
-
-        def pad(city_name):
-            return ' ' * (longest_city_name_length - len(city_name) + 2)
-
-        resources_abbreviations = {'1': '(W)', '2': '(M)', '3': '(C)', '4': '(S)'}
-
-        i = 0
-        if foreign:
-            print(' 0: foreign city')
+    
+    # Prepare city list with formatted display
+    resources_abbreviations = {'1': '(W)', '2': '(M)', '3': '(C)', '4': '(S)'}
+    longest_city_name_length = max([len(decodeUnicodeEscape(cities[city_id]['name'])) for city_id in ids])
+    
+    def format_city(city_id):
+        city_name = decodeUnicodeEscape(cities[city_id]['name'])
+        resource_abb = resources_abbreviations[str(cities[city_id]['tradegood'])]
+        padding = ' ' * (longest_city_name_length - len(city_name) + 2)
+        return f'{city_name}{padding}{resource_abb}'
+    
+    # Special handling for foreign city option
+    if foreign:
+        print('Select city:\n')
+        print('   0: Foreign city')
+        for idx, city_id in enumerate(ids, 1):
+            print('{:>4}: {}'.format(idx, format_city(city_id)))
+        print()
+        selected_city_index = read(min=0, max=len(ids), digit=True)
+        
+        if selected_city_index == 0:
+            return chooseForeignCity(ikariam_service)
         else:
-            print('')
-        for city_id in ids:
-            i += 1
-            resource_index = str(cities[city_id]['tradegood'])
-            resource_abb = resources_abbreviations[resource_index]
-            city_name = decodeUnicodeEscape(cities[city_id]['name'])
-            menu_cities += '{: >2}: {}{}{}\n'.format(i, city_name, pad(city_name), resource_abb)
-        menu_cities = menu_cities[:-1]
-    if foreign:
-        print(' 0: foreign city')
-    print(menu_cities)
-
-    if foreign:
-        selected_city_index = read(min=0, max=len(ids))
+            html = ikariam_service.get(city_url + ids[selected_city_index - 1])
+            return getCity(html)
     else:
-        selected_city_index = read(min=1, max=len(ids))
-    if selected_city_index == 0:
-        return chooseForeignCity(ikariam_service)
-    else:
-        html = ikariam_service.get(city_url + ids[selected_city_index - 1])
+        # Use the standard selection for own cities
+        selected_idx = select_option_from_list(
+            ids,
+            prompt='Select city',
+            formatter=format_city,
+            return_index=True
+        )
+        
+        if selected_idx is None:
+            return None
+        
+        html = ikariam_service.get(city_url + ids[selected_idx])
         return getCity(html)
 
 
@@ -102,20 +107,30 @@ def chooseForeignCity(session):
     html = session.get(island_url + island_id)
     island = getIsland(html)
 
-    i = 0
     city_options = []
     for city in island['cities']:
         if city['type'] == 'city' and city['state'] == '' and city['ownerName'] != session.username:
-            i += 1
-            num = ' ' + str(i) if i < 10 else str(i)
-            print('{: >2}: {: >{max_city_name_length}} ({})'.format(num, decodeUnicodeEscape(city['name']), decodeUnicodeEscape(city['Name']), max_city_name_length=MAXIMUM_CITY_NAME_LENGTH))
             city_options.append(city)
-    if i == 0:
+    
+    if len(city_options) == 0:
         print('There are no cities where to send resources on this island')
         enter()
         return chooseCity(session, foreign=True)
-    selected_city_index = read(min=1, max=i)
-    city = city_options[selected_city_index - 1]
+    
+    selected_city = select_option_from_list(
+        city_options,
+        prompt='Select foreign city',
+        formatter=lambda c: '{: <{max_len}} ({})'.format(
+            decodeUnicodeEscape(c['name']),
+            decodeUnicodeEscape(c['Name']),
+            max_len=MAXIMUM_CITY_NAME_LENGTH
+        )
+    )
+    
+    if selected_city is None:
+        return chooseCity(session, foreign=True)
+    
+    city = selected_city
     city['islandId'] = island['id']
     city['cityName'] = decodeUnicodeEscape(city['name'])
     city['isOwnCity'] = False

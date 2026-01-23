@@ -293,3 +293,64 @@ class Colours:
         "sad": Text.BLUE,
         "outraged": Text.RED
     }
+
+
+def select_option_from_list(options, prompt='Select option', formatter=None, return_index=False):
+    """
+    Generic menu selection with consistent formatting across the application.
+    Displays options with right-aligned 4-character numbering and ':' separator.
+    Always includes '   0: Exit' option.
+    
+    Parameters
+    ----------
+    options : list
+        List of items to select from (can be any type)
+    prompt : str
+        The prompt message to display (default: 'Select option')
+    formatter : callable, optional
+        Function that takes an item and returns a string for display.
+        If None, items are converted to string directly.
+    return_index : bool
+        If True, returns the 0-based index. If False, returns the item itself (default: False)
+    
+    Returns
+    -------
+    selected_item or int or None
+        The selected item (or index if return_index=True), or None if user selected exit (0)
+    
+    Examples
+    --------
+    >>> cities = [{'name': 'Athens', 'level': 5}, {'name': 'Sparta', 'level': 3}]
+    >>> selected = select_option_from_list(
+    ...     cities,
+    ...     prompt='Select city',
+    ...     formatter=lambda c: f"{c['name']} - {c['level']}"
+    ... )
+    """
+    from ikabot.helpers.userInput import read
+    
+    if len(options) == 0:
+        print('No options available')
+        enter()
+        return None
+    
+    print(f'{prompt}:\n')
+    print('   0: Exit')
+    
+    for idx, option in enumerate(options, 1):
+        if formatter:
+            display_text = formatter(option)
+        else:
+            display_text = str(option)
+        print('{:>4}: {}'.format(idx, display_text))
+    
+    print()
+    selection = read(min=0, max=len(options), digit=True)
+    
+    if selection == 0:
+        return None
+    
+    if return_index:
+        return selection - 1
+    else:
+        return options[selection - 1]
