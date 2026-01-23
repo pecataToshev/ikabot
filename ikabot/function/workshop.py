@@ -29,6 +29,11 @@ def extract_units_data(html: str) -> Tuple[bool, List[dict]]:
 
     _units = []
     _has_upgrade = False
+    
+    # Check if there's an upgrade in progress (appears before tabUnits/tabShips)
+    upgrade_in_progress_div = soup.find('div', {'class': 'upgradeInProgress'})
+    if upgrade_in_progress_div is not None:
+        _has_upgrade = True
 
     for _group in _groups:
         _units_tab_params = extract_url_parameters(soup.find(id='js_'+_group.get('id'))['onclick'])
