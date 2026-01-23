@@ -93,7 +93,7 @@ def extract_units_data(html: str) -> Tuple[bool, List[dict]]:
                     
                     _unit = {
                         'tab': _group.get('id'),
-                        'tableName': _unit_name if _added_unit_definition else _units_type,
+                        'tableName': _unit_name,  # Always use unit name, not the type
                         'type': _units_type,
                         'name': _unit_name,
                         'improvement': _improvement,
@@ -176,7 +176,7 @@ def extract_units_data(html: str) -> Tuple[bool, List[dict]]:
                     
                     _unit = {
                         'tab': _group.get('id'),
-                        'tableName': _unit_name if _added_unit_definition else _units_type,
+                        'tableName': _unit_name,  # Always use unit name, not the type
                         'type': _units_type,
                         'name': _unit_name,
                         'improvement': _improvement,
@@ -228,20 +228,25 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
     # Extract ships HTML - handle both possible response structures
     ships_html = ''
     try:
-        if isinstance(ships_response, list) and len(ships_response) > 1:
+        if isinstance(ships_response, list):
             # Response format: [["updateGlobalData", ...], ["changeView", ["workshop", "HTML"]], ...]
             for response_item in ships_response:
-                if isinstance(response_item, list) and len(response_item) > 1:
-                    if response_item[0] == "changeView" and len(response_item[1]) > 1:
-                        ships_html = response_item[1][1]
-                        break
-    except (IndexError, TypeError, KeyError):
-        print('Warning: Could not fetch ships data')
+                if isinstance(response_item, list) and len(response_item) >= 2:
+                    if response_item[0] == "changeView":
+                        # response_item[1] should be ["workshop", "HTML_STRING"]
+                        if isinstance(response_item[1], list) and len(response_item[1]) >= 2:
+                            ships_html = response_item[1][1]
+                            break
+    except (IndexError, TypeError, KeyError) as e:
+        print(f'Warning: Could not fetch ships data: {e}')
     
     has_upgrade_ships = False
     ships = []
     if ships_html:
         has_upgrade_ships, ships = extract_units_data(ships_html)
+        print(f'Found {len(ships)} ship upgrades')
+    else:
+        print('Warning: No ships data found')
     
     # Combine units and ships
     units.extend(ships)
