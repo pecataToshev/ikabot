@@ -14,7 +14,68 @@ from ikabot.helpers.resources import extract_resource_production, extract_tradeg
 
 
 def parse_int(num) -> int:
-    return int(str(num).replace(',', '').replace('.', ''))
+    """Parse an integer from a string, handling abbreviated formats.
+    
+    Supports formats like:
+    - "1,234" or "1.234" -> 1234
+    - "1.5K" or "1,5K" -> 1500
+    - "117M" or "1.17M" -> 117000000
+    - "1kkk" -> 1000000000 (billions)
+    - "1kk" -> 1000000 (millions)
+    """
+    num_str = str(num).strip().upper()
+    
+    # Handle abbreviated formats
+    multiplier = 1
+    if 'KKK' in num_str:
+        multiplier = 1000000000
+        num_str = num_str.replace('KKK', '')
+    elif 'KK' in num_str:
+        multiplier = 1000000
+        num_str = num_str.replace('KK', '')
+    elif 'M' in num_str:
+        multiplier = 1000000
+        num_str = num_str.replace('M', '')
+    elif 'K' in num_str:
+        multiplier = 1000
+        num_str = num_str.replace('K', '')
+    
+    # Remove thousand separators (both comma and dot can be used as separators)
+    # We need to be careful: "1.5K" means 1500, but "1.234.567" means 1234567
+    # Generally, if there's only one dot/comma and it's followed by 1-2 digits, it's decimal
+    # Otherwise, they're thousand separators
+    
+    # Count dots and commas
+    dot_count = num_str.count('.')
+    comma_count = num_str.count(',')
+    
+    if dot_count + comma_count == 0:
+        # No separators, simple case
+        return int(float(num_str) * multiplier)
+    
+    # If there's only one separator and it's followed by 1-2 digits at the end, treat as decimal
+    # If followed by exactly 3 digits, treat as thousand separator
+    if dot_count == 1 and comma_count == 0:
+        parts = num_str.split('.')
+        if len(parts) == 2 and len(parts[1]) <= 2 and parts[1].isdigit():
+            # Decimal number like "1.5" or "1.23"
+            return int(float(num_str) * multiplier)
+        else:
+            # Thousand separator like "1.234" or "1.234.567"
+            num_str = num_str.replace('.', '')
+    elif comma_count == 1 and dot_count == 0:
+        parts = num_str.split(',')
+        if len(parts) == 2 and len(parts[1]) <= 2 and parts[1].isdigit():
+            # Decimal number like "1,5" or "1,23"
+            return int(float(num_str.replace(',', '.')) * multiplier)
+        else:
+            # Thousand separator like "1,234"
+            num_str = num_str.replace(',', '')
+    else:
+        # Multiple separators - remove all as thousand separators
+        num_str = num_str.replace('.', '').replace(',', '')
+    
+    return int(float(num_str) * multiplier)
 
 
 def getFreeCitizens(html):
