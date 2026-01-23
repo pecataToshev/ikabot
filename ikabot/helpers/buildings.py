@@ -3,8 +3,7 @@ from enum import Enum
 from typing import Tuple, Union
 
 from ikabot.config import actionRequest, city_url
-from ikabot.helpers.citiesAndIslands import getIdsOfCities
-from ikabot.helpers.getJson import getCity
+from ikabot.helpers.citiesAndIslands import getCityWithCache, getIdsOfCities
 from ikabot.helpers.gui import decodeUnicodeEscape, enter
 from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
@@ -74,6 +73,7 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
     """
     Prompts the user to select from cities that have the specified building type.
     Only shows cities with the building, not all cities.
+    Uses cached city data (valid for 5 minutes) to reduce HTTP requests.
     
     Parameters
     ----------
@@ -92,7 +92,8 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
     cities_with_building = []
     
     for city_id in ids:
-        city = getCity(ikariam_service.get(city_url + str(city_id)))
+        # Use cached city data to reduce requests
+        city = getCityWithCache(ikariam_service, city_id)
         building = extract_target_building(city, building_type)
         if building is not None:
             cities_with_building.append((city, building))
@@ -123,12 +124,14 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
 def find_city_with_the_biggest_building(ikariam_service: IkariamService, building_type: str) -> Union[dict, None]:
     """
     Finds and returns the city with the highest building level of given type.
+    Uses cached city data (valid for 5 minutes) to reduce HTTP requests.
     """
     [cities_ids, _] = getIdsOfCities(ikariam_service)
     great_city = None
     max_level = 0
     for city_id in cities_ids:
-        city = getCity(ikariam_service.get(city_url + city_id))
+        # Use cached city data to reduce requests
+        city = getCityWithCache(ikariam_service, city_id)
         for building in city['position']:
             if building['building'] == building_type and building['level'] > max_level:
                 great_city = city

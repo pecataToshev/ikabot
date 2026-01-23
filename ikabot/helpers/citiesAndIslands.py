@@ -3,8 +3,9 @@
 
 import json
 import re
+import time
 
-from ikabot.config import city_url, island_url, MAXIMUM_CITY_NAME_LENGTH
+from ikabot.config import MAXIMUM_CITY_NAME_LENGTH, city_url, island_url
 from ikabot.helpers.getJson import getCity, getIsland
 from ikabot.helpers.gui import banner, decodeUnicodeEscape, enter
 from ikabot.helpers.userInput import read
@@ -13,6 +14,11 @@ from ikabot.web.ikariamService import IkariamService
 menu_cities = ''
 ids_cache = None
 cities_cache = None
+
+# Cache for full city data (including buildings)
+# Structure: {city_id: {'data': city_object, 'timestamp': time}}
+full_city_cache = {}
+CITY_CACHE_TTL = 5 * 60  # 5 minutes in seconds
 
 
 def chooseCity(ikariam_service: IkariamService, foreign=False):
@@ -184,3 +190,57 @@ def getCurrentCityId(session):
     """
     html = session.get()
     return re.search(r'currentCityId:\s(\d+),', html).group(1)
+
+
+def getCityWithCache(ikariam_service: IkariamService, city_id: str, use_cache: bool = True):
+    """
+    Gets city data with optional caching to reduce HTTP requests.
+    Cache is valid for 5 minutes.
+    
+    Parameters
+    ----------
+    ikariam_service : IkariamService
+        Session object
+    city_id : str
+        The city ID to fetch
+    use_cache : bool
+        Whether to use cached data (default: True)
+    
+    Returns
+    -------
+    city : dict
+        City object with building positions
+    """
+    global full_city_cache
+    
+    current_time = time.time()
+    
+    # Check if we should use cache
+    if use_cache and city_id in full_city_cache:
+        cached_entry = full_city_cache[city_id]
+        age = current_time - cached_entry['timestamp']
+        
+        # Return cached data if it's less than 5 minutes old
+        if age < CITY_CACHE_TTL:
+            return cached_entry['data']
+    
+    # Fetch fresh data
+    html = ikariam_service.get(city_url + str(city_id))
+    city = getCity(html)
+    
+    # Store in cache
+    full_city_cache[city_id] = {
+        'data': city,
+        'timestamp': current_time
+    }
+    
+    return city
+
+
+def clearCityCache():
+    """
+    Clears the full city data cache.
+    Useful when you know city data has changed (e.g., after building upgrade).
+    """
+    global full_city_cache
+    full_city_cache = {}
