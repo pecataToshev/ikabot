@@ -10,7 +10,7 @@ from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.gui import (Colours, addThousandSeparator, banner, enter,
-                                select_city_from_list)
+                                printTable, select_city_from_list)
 from ikabot.helpers.market import (getCommercialCities, getMarketInfo,
                                    storageCapacityOfMarket)
 from ikabot.helpers.telegram import Telegram
@@ -50,48 +50,120 @@ def getOffers(session, my_market_city, resource_type):
         resource_type = 'resource'
     else:
         resource_type = str(resource_type)
-    data = {'cityId': my_market_city['id'], 'position': my_market_city['marketPosition'], 'view': 'branchOffice',
-            'activeTab': 'bargain', 'type': '333', 'searchResource': resource_type, 'range': my_market_city['rango'],
-            'backgroundView': 'city', 'currentCityId': my_market_city['id'], 'templateView': 'branchOffice',
-            'currentTab': 'bargain', 'actionRequest': actionRequest, 'ajax': '1'}
-    resp = session.post(params=data)
-    html = json.loads(resp, strict=False)[1][1][1]
+    
+    all_offers = []
+    offset = 0
+    
+    while True:
+        # Build params dictionary - matches the game's actual request
+        data = {
+            'cityId': my_market_city['id'], 
+            'position': my_market_city['marketPosition'], 
+            'view': 'branchOffice',
+            'activeTab': 'bargain',
+            'type': '333', 
+            'searchResource': resource_type,
+            'range': my_market_city['rango'],
+            'backgroundView': 'city', 
+            'currentCityId': my_market_city['id'],
+            'templateView': 'branchOffice',
+            'currentTab': 'bargain',
+            'offset': offset,
+            'actionRequest': actionRequest, 
+            'ajax': '1'
+        }
+        
+        # Use POST with params dictionary
+        resp = session.post(params=data)
+        
+        # Check if response is valid JSON
+        if not resp or resp.strip() == '':
+            break
+            
+        html = json.loads(resp, strict=False)[1][1][1]
 
-    # Taken from #306
-    html = re.sub(r'\s+', ' ', html).strip()
-    html = re.findall(r'<td class="short_text80">(.*?)<br/>\((.*?)\).*?tooltip">([\d\s.,]+)</div>.*?<td style="white-space:nowrap;">(\d+).*?<td>(\d+)</td>.*?href="\?view=takeOffer&destinationCityId=(\d+)', html)
-    html = [(cityname.strip(), username.strip(), parse_int(re.sub(r"\s+", "", amount)), parse_int(price), dist, destination_city_id) for cityname, username, amount, price, dist, destination_city_id in html]
-
-    return html
+        # Taken from #306
+        html_cleaned = re.sub(r'\s+', ' ', html).strip()
+        page_offers = re.findall(r'<td class="short_text80">(.*?)<br/>\((.*?)\).*?tooltip">([\d\s.,]+)</div>.*?<td style="white-space:nowrap;">(\d+).*?<td>(\d+)</td>.*?href="\?view=takeOffer&destinationCityId=(\d+)', html_cleaned)
+        page_offers = [(cityname.strip(), username.strip(), parse_int(re.sub(r"\s+", "", amount)), parse_int(price), dist, destination_city_id) for cityname, username, amount, price, dist, destination_city_id in page_offers]
+        
+        all_offers.extend(page_offers)
+        
+        # If we got no offers on this page, we're done
+        if len(page_offers) == 0:
+            break
+        
+        # Check if there's a next page by looking for ALL offset values in pagination links
+        all_offsets = re.findall(r'offset=(\d+)', html)
+        
+        if all_offsets:
+            # Convert to integers and find the maximum
+            offset_values = [int(o) for o in all_offsets]
+            max_offset = max(offset_values)
+            
+            if max_offset > offset:
+                offset = max_offset
+                print('.', end='', flush=True)  # Progress indicator
+            else:
+                break
+        else:
+            break
+    
+    if offset > 0:
+        print()  # New line after progress dots
+    
+    return all_offers
 
 
 def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_type):
     banner()
 
     offers = getOffers(ikariam_service, city_to_buy_from, resource_type)
-
+    
     if len(offers) == 0:
         print('No offers available.')
         enter()
         return
 
-    print('Available offers to sell to:\n')
-    print('(0) Exit')
+    print('Available offers to sell to:')
     
-    # Display all offers with numbers
+    # Convert offers to list of dicts for printTable
+    table_data = []
     for idx, offer in enumerate(offers, 1):
         cityname, username, amount, price, dist, destination_city_id = offer
-        cityname = cityname.strip()
-        total_for_offer = price * amount
-        print('({:d}) {} ({}): {} at {:d} each = {} gold (distance: {})'.format(
-            idx, 
-            cityname, 
-            username, 
-            addThousandSeparator(amount),
-            price, 
-            addThousandSeparator(total_for_offer),
-            dist
-        ))
+        table_data.append({
+            'id': idx,
+            'city': cityname.strip(),
+            'player': username,
+            'amount': amount,
+            'price': price,
+            'total': price * amount,
+            'distance': dist
+        })
+    
+    # Add Exit option at the beginning
+    table_data.insert(0, {
+        'id': 0,
+        'city': 'Exit',
+        'player': '',
+        'amount': '',
+        'price': '',
+        'total': '',
+        'distance': ''
+    })
+    
+    # Configure table columns
+    table_config = [
+        {'key': 'id', 'title': 'ID', 'align': '>'},
+        {'key': 'city', 'title': 'City', 'align': '<'},
+        {'key': 'player', 'title': 'Player', 'align': '<'},
+        {'key': 'amount', 'title': 'Amount', 'align': '>', 'fmt': lambda x: addThousandSeparator(x) if x != '' else ''},
+        {'key': 'price', 'title': 'Price', 'align': '>'},
+        {'key': 'total', 'title': 'Total Gold', 'align': '>', 'fmt': lambda x: addThousandSeparator(x) if x != '' else ''},
+        {'key': 'distance', 'title': 'Distance', 'align': '>'}
+    ]
+    
+    printTable(table_config, table_data, print_row_separator=lambda i: i == 0)
     
     print('\nSelect offers to sell to (e.g., "1,3,5" or "all" for all offers):')
     selection = read(msg='Selection: ', empty=False)
@@ -126,9 +198,30 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
 
     banner()
     print('Selected {} offers:'.format(len(chosen_offers)))
+    
+    # Convert selected offers to list of dicts for printTable
+    selected_table_data = []
     for cityname, username, amount, price, dist, destination_city_id in chosen_offers:
-        print('  - {} ({}): {} at {:d} each'.format(cityname.strip(), username, addThousandSeparator(amount), price))
-    print('\nTotal demand: {}'.format(addThousandSeparator(total_amount)))
+        selected_table_data.append({
+            'city': cityname.strip(),
+            'player': username,
+            'amount': amount,
+            'price': price,
+            'total': price * amount
+        })
+    
+    # Configure table columns for selected offers
+    selected_table_config = [
+        {'key': 'city', 'title': 'City', 'align': '<'},
+        {'key': 'player', 'title': 'Player', 'align': '<'},
+        {'key': 'amount', 'title': 'Amount', 'align': '>', 'fmt': addThousandSeparator},
+        {'key': 'price', 'title': 'Price', 'align': '>'},
+        {'key': 'total', 'title': 'Total Gold', 'align': '>', 'fmt': addThousandSeparator}
+    ]
+    
+    printTable(selected_table_config, selected_table_data)
+    
+    print('Total demand: {}'.format(addThousandSeparator(total_amount)))
     print('Available to sell: {}'.format(addThousandSeparator(available)))
     print('Maximum profit: {}'.format(addThousandSeparator(profit)))
     print('\nHow much do you want to sell? [max = {}]'.format(addThousandSeparator(amount_to_sell)))

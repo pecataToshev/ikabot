@@ -1,15 +1,16 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import json
 import re
 
 from ikabot.bot.buyResourcesBot import BuyResourcesBot
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import (addThousandSeparator, banner, enter,
-                                select_city_from_list)
-from ikabot.helpers.market import getCommercialCities, getGold, getMarketHtml
-from ikabot.helpers.userInput import askUserYesNo, read
+                                printTable, select_city_from_list)
+from ikabot.helpers.market import getCommercialCities, getGold
 from ikabot.helpers.telegram import Telegram
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -59,40 +60,93 @@ def getOffers(session, city):
     -------
     offers : list[dict]
     """
-    html = getMarketHtml(session, city)
-    hits = re.findall(r'short_text80">(.*?) *<br/>\((.*?)\)\s *</td>\s *<td>(\d+)</td>\s *<td>(.*?)/td>\s *<td><img src="(.*?)\.png[\s\S]*?white-space:nowrap;">(\d+)\s[\s\S]*?href="\?view=takeOffer&destinationCityId=(\d+)&oldView=branchOffice&activeTab=bargain&cityId=(\d+)&position=(\d+)&type=(\d+)&resource=(\w+)"', html)
-    offers = []
-    for hit in hits:
-        offer = {
-            'ciudadDestino': hit[0],
-            'jugadorAComprar': hit[1],
-            'bienesXminuto': int(hit[2]),
-            'amountAvailable': int(hit[3].replace(',', '').replace('.', '').replace('<', '')),
-            'tipo': hit[4],
-            'precio': int(hit[5]),
-            'destinationCityId': hit[6],
-            'cityId': hit[7],
-            'position': hit[8],
-            'type': hit[9],
-            'resource': hit[10]
+    all_offers = []
+    offset = 0
+    
+    while True:
+        # Build params dictionary - matches the game's actual request
+        # Note: resource type already set by chooseResource
+        params = {
+            'cityId': city['id'], 
+            'position': city['marketPosition'],
+            'view': 'branchOffice', 
+            'activeTab': 'bargain',
+            'backgroundView': 'city', 
+            'currentCityId': city['id'], 
+            'templateView': 'branchOffice',
+            'offset': offset,  # Always include offset, even when 0
+            'actionRequest': actionRequest, 
+            'ajax': '1'
         }
         
-        #Parse CDN Images to material type
-        if offer["tipo"] == '//gf2.geo.gfsrv.net/cdn19/c3527b2f694fb882563c04df6d8972':
-             offer["tipo"] = 'wood'
-        elif offer["tipo"] == '//gf1.geo.gfsrv.net/cdnc6/94ddfda045a8f5ced3397d791fd064':
-            offer["tipo"] = 'wine'     
-        elif  offer["tipo"] == '//gf3.geo.gfsrv.net/cdnbf/fc258b990c1a2a36c5aeb9872fc08a':
-             offer["tipo"] = 'marble'
-        elif  offer["tipo"] == '//gf2.geo.gfsrv.net/cdn1e/417b4059940b2ae2680c070a197d8c':
-             offer["tipo"] = 'glass'
-        elif  offer["tipo"] == '//gf1.geo.gfsrv.net/cdn9b/5578a7dfa3e98124439cca4a387a61':
-             offer["tipo"] = 'sulfur'
-        else:
-            continue
+        # Use POST with params dictionary
+        data = session.post(params=params)
+        
+        # Check if response is valid JSON
+        if not data or data.strip() == '':
+            break
             
-        offers.append(offer)
-    return offers
+        html = json.loads(data, strict=False)[1][1][1]
+        
+        hits = re.findall(r'short_text80">(.*?) *<br/>\((.*?)\)\s *</td>\s *<td>(\d+)</td>\s *<td>(.*?)/td>\s *<td><img src="(.*?)\.png[\s\S]*?white-space:nowrap;">(\d+)\s[\s\S]*?href="\?view=takeOffer&destinationCityId=(\d+)&oldView=branchOffice&activeTab=bargain&cityId=(\d+)&position=(\d+)&type=(\d+)&resource=(\w+)"', html)
+        
+        offers_before = len(all_offers)
+        
+        for hit in hits:
+            offer = {
+                'ciudadDestino': hit[0],
+                'jugadorAComprar': hit[1],
+                'bienesXminuto': int(hit[2]),
+                'amountAvailable': int(hit[3].replace(',', '').replace('.', '').replace('<', '')),
+                'tipo': hit[4],
+                'precio': int(hit[5]),
+                'destinationCityId': hit[6],
+                'cityId': hit[7],
+                'position': hit[8],
+                'type': hit[9],
+                'resource': hit[10]
+            }
+            
+            #Parse CDN Images to material type
+            if offer["tipo"] == '//gf2.geo.gfsrv.net/cdn19/c3527b2f694fb882563c04df6d8972':
+                 offer["tipo"] = 'wood'
+            elif offer["tipo"] == '//gf1.geo.gfsrv.net/cdnc6/94ddfda045a8f5ced3397d791fd064':
+                offer["tipo"] = 'wine'     
+            elif  offer["tipo"] == '//gf3.geo.gfsrv.net/cdnbf/fc258b990c1a2a36c5aeb9872fc08a':
+                 offer["tipo"] = 'marble'
+            elif  offer["tipo"] == '//gf2.geo.gfsrv.net/cdn1e\/417b4059940b2ae2680c070a197d8c':
+                 offer["tipo"] = 'glass'
+            elif  offer["tipo"] == '//gf1.geo.gfsrv.net/cdn9b/5578a7dfa3e98124439cca4a387a61':
+                 offer["tipo"] = 'sulfur'
+            else:
+                continue
+                
+            all_offers.append(offer)
+        
+        # If we got no new offers on this page, we're done
+        if len(all_offers) == offers_before:
+            break
+        
+        # Check if there's a next page by looking for ALL offset values in pagination links
+        all_offsets = re.findall(r'offset=(\d+)', html)
+        
+        if all_offsets:
+            # Convert to integers and find the maximum
+            offset_values = [int(o) for o in all_offsets]
+            max_offset = max(offset_values)
+            
+            if max_offset > offset:
+                offset = max_offset
+                print('.', end='', flush=True)  # Progress indicator
+            else:
+                break
+        else:
+            break
+    
+    if offset > 0:
+        print()  # New line after progress dots
+    
+    return all_offers
 
 
 def calculateCost(offers, total_amount_to_buy):
@@ -160,18 +214,43 @@ def buy_resources_bot_configurator(ikariam_service: IkariamService, db: Database
         return
 
     # display offers to the user
+    print('Available offers to buy from:')
+    
+    # Convert offers to list of dicts for printTable
+    table_data = []
     total_price = 0
     total_amount = 0
-    for offer in offers:
+    
+    for idx, offer in enumerate(offers, 1):
         amount = offer['amountAvailable']
         price = offer['precio']
         cost = amount * price
-        print('amount:{}'.format(addThousandSeparator(amount)))
-        print('price :{:d}'.format(price))
-        print('cost  :{}'.format(addThousandSeparator(cost)))
-        print('')
+        cityname = offer['ciudadDestino']
+        username = offer['jugadorAComprar']
+        
+        table_data.append({
+            'id': idx,
+            'city': cityname.strip(),
+            'player': username,
+            'amount': amount,
+            'price': price,
+            'total': cost
+        })
+        
         total_price += cost
         total_amount += amount
+    
+    # Configure table columns
+    table_config = [
+        {'key': 'id', 'title': 'ID', 'align': '>'},
+        {'key': 'city', 'title': 'City', 'align': '<'},
+        {'key': 'player', 'title': 'Player', 'align': '<'},
+        {'key': 'amount', 'title': 'Amount', 'align': '>', 'fmt': addThousandSeparator},
+        {'key': 'price', 'title': 'Price', 'align': '>'},
+        {'key': 'total', 'title': 'Total Gold', 'align': '>', 'fmt': addThousandSeparator}
+    ]
+    
+    printTable(table_config, table_data)
 
     # ask how much to buy
     print('Total amount available to purchase: {}, for {}'.format(addThousandSeparator(total_amount), addThousandSeparator(total_price)))
