@@ -141,8 +141,11 @@ def printTable(table_config, table_data, missing_value='', column_align='>',
                 for ci, c in enumerate(tr)]
         ) + Colours.Text.RESET)
         if print_row_separator(tri):
-            print(row_additional_indentation + '-' * (sum(_max_len) +
-                                                      (len(_max_len) - 1) * get_visible_length(column_separator)))
+            # Build separator with '+' at column intersections
+            separator_parts = ['-' * _max_len[i] for i in range(len(_max_len))]
+            # Replace column_separator spaces with '+' for intersections
+            separator_join = column_separator.replace(' ', '-').replace('|', '+')
+            print(row_additional_indentation + separator_join.join(separator_parts))
 
     print()
 
