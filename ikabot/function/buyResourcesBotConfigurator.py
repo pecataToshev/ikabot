@@ -8,8 +8,8 @@ from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import (addThousandSeparator, banner,
                                 decodeUnicodeEscape, enter, format_city_name,
-                                printTable, select_city_from_list)
-from ikabot.helpers.market import getCommercialCities, getGold
+                                printTable)
+from ikabot.helpers.market import choose_commercial_city, getGold
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.web.ikariamService import IkariamService
@@ -172,38 +172,12 @@ def calculateCost(offers, total_amount_to_buy):
     return total_cost
 
 
-def chooseCommertialCity(commercial_cities):
-    """
-    Parameters
-    ----------
-    commercial_cities : list[dict]
-
-    Returns
-    -------
-    commercial_city : dict
-    """
-    return select_city_from_list(
-        commercial_cities,
-        prompt='From which city do you want to buy resources'
-    )
-
-
 def buy_resources_bot_configurator(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     banner()
 
-    # get all the cities with a store
-    commercial_cities = getCommercialCities(ikariam_service)
-    if len(commercial_cities) == 0:
-        print('There is no store build')
-        enter()
-        return
-
-    # choose which city to buy from
-    if len(commercial_cities) == 1:
-        city = commercial_cities[0]
-    else:
-        city = chooseCommertialCity(commercial_cities)
-        banner()
+    # Choose city with branch office (handles error if none exist)
+    city = choose_commercial_city(ikariam_service, prompt='From which city do you want to buy resources')
+    banner()
 
     # choose resource to buy
     resource = chooseResource(ikariam_service, city)

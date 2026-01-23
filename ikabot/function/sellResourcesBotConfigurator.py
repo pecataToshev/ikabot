@@ -11,28 +11,12 @@ from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.gui import (Colours, addThousandSeparator, banner,
                                 decodeUnicodeEscape, enter, format_city_name,
-                                printTable, select_city_from_list)
-from ikabot.helpers.market import (getCommercialCities, getMarketInfo,
+                                printTable)
+from ikabot.helpers.market import (choose_commercial_city, getMarketInfo,
                                    storageCapacityOfMarket)
 from ikabot.helpers.telegram import Telegram
 from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.web.ikariamService import IkariamService
-
-
-def chooseCommercialCity(commercial_cities):
-    """
-    Parameters
-    ----------
-    commercial_cities : list[dict]
-
-    Returns
-    -------
-    commercial_city : dict
-    """
-    return select_city_from_list(
-        commercial_cities,
-        prompt='In which city do you want to sell resources'
-    )
 
 
 def getOffers(session, my_market_city, resource_type):
@@ -309,17 +293,9 @@ def createOffer(ikariam_service: IkariamService, my_offering_market_city, resour
 def sell_resources_bot_configurator(ikariam_service: IkariamService, db: Database, telegram: Telegram):
     banner()
 
-    commercial_cities = getCommercialCities(ikariam_service)
-    if len(commercial_cities) == 0:
-        print('There is no store built')
-        enter()
-        return
-
-    if len(commercial_cities) == 1:
-        city = commercial_cities[0]
-    else:
-        city = chooseCommercialCity(commercial_cities)
-        banner()
+    # Choose city with branch office (handles error if none exist)
+    city = choose_commercial_city(ikariam_service, prompt='In which city do you want to sell resources')
+    banner()
 
     print('What resource do you want to sell?')
     for index, material_name in enumerate(materials_names):

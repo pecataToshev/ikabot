@@ -10,42 +10,62 @@ from ikabot.config import actionRequest, city_url
 from ikabot.helpers.citiesAndIslands import getCityWithCache, getIdsOfCities
 
 
-def getCommercialCities(session):
+def choose_commercial_city(ikariam_service, prompt='Select city with branch office'):
     """
+    Prompts the user to select from cities that have a branch office (market).
+    Only shows cities with the building, not all cities.
+    Uses cached city data (valid for 5 minutes) to reduce HTTP requests.
+    Calculates market range using the formula: ceil(building_level / 2).
+    
     Parameters
     ----------
-    session : ikabot.web.ikariamService.IkariamService
-
+    ikariam_service : IkariamService
+        Session object
+    prompt : str
+        The prompt message to display when selecting a city
+    
     Returns
     -------
-    commercial_cities : list[dict]
+    city : dict
+        Selected city with 'marketPosition' and 'rango' fields added
+    
+    Raises
+    ------
+    ExitFromMenu
+        If user selects exit (option 0) or no cities have a branch office
     """
-    cities_ids = getIdsOfCities(session)[0]
+    from math import ceil
+    from ikabot.helpers.gui import enter, select_city_from_list
+    from ikabot.helpers.menuExceptions import ExitFromMenu
+    
+    (cities_ids, _) = getIdsOfCities(ikariam_service)
     commercial_cities = []
+    
+    print('Loading cities', end='', flush=True)
     for city_id in cities_ids:
-        city = getCityWithCache(session, city_id)
+        # Use cached city data to reduce requests
+        city = getCityWithCache(ikariam_service, city_id)
         for building in city['position']:
             if building['building'] == 'branchOffice':
                 city['marketPosition'] = building['position']
-                html = getMarketHtml(session, city)
-                positions = re.findall(r'<option.*?>(\d+)</option>', html)
-                city['rango'] = int(positions[-1])
+                # Calculate range using formula: ceil(building_level / 2)
+                city['rango'] = ceil(building['level'] / 2)
                 commercial_cities.append(city)
                 break
-    return commercial_cities
-
-
-def getMarketHtml(session, city):
-    """
-    Parameters
-    ----------
-    session : ikabot.web.ikariamService.IkariamService
-    city : dict
-    """
-    url = 'view=branchOffice&cityId={}&position={:d}&currentCityId={}&backgroundView=city&actionRequest={}&ajax=1'.format(city['id'], city['marketPosition'], city['id'], actionRequest)
-    data = session.post(url)
-    json_data = json.loads(data, strict=False)
-    return json_data[1][1][1]
+    print(' Done!')
+    print()
+    
+    if len(commercial_cities) == 0:
+        print('There is no branch office built in any city!')
+        enter()
+        raise ExitFromMenu()
+    
+    # If only one city, return it directly
+    if len(commercial_cities) == 1:
+        return commercial_cities[0]
+    
+    # Let user select from cities with branch office
+    return select_city_from_list(commercial_cities, prompt=prompt)
 
 
 def storageCapacityOfMarket(html):
