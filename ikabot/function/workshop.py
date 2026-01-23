@@ -198,22 +198,23 @@ def extract_units_data(html: str) -> Tuple[bool, List[dict]]:
     return _has_upgrade, _units
 
 
-def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegram):
-
-    banner()
-    _selected_building_data = choose_city_with_building(ikariam_service, 'workshop')
-    if _selected_building_data is None:
-        return
-
-    (city, building, data) = _selected_building_data
-
-    banner()
-    print(city['name'])
-
-    change_view_data = data[1][1][1]
-    has_upgrade_units, units = extract_units_data(change_view_data)
+def fetch_workshop_units_and_ships(ikariam_service: IkariamService, city: dict, building: dict, units_html: str) -> Tuple[bool, List[dict]]:
+    """
+    Fetch both units and ships data from the workshop.
     
-    # Fetch ships tab data as well
+    Args:
+        ikariam_service: The Ikariam service instance
+        city: The city dictionary containing 'id'
+        building: The building dictionary containing 'position'
+        units_html: The HTML string from the units tab
+    
+    Returns:
+        Tuple of (has_upgrade, combined_units_and_ships_list)
+    """
+    # Extract units data from the provided HTML
+    has_upgrade_units, units = extract_units_data(units_html)
+    
+    # Fetch ships tab data
     ships_params = {
         'view': 'workshop',
         'activeTab': 'tabShips',
@@ -250,12 +251,11 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
             for response_item in ships_response:
                 if isinstance(response_item, list) and len(response_item) >= 2:
                     if response_item[0] == "changeView":
-                        # response_item[1] should be ["workshop", "HTML_STRING"]
                         if isinstance(response_item[1], list) and len(response_item[1]) >= 2:
                             ships_html = response_item[1][1]
                             break
-    except (IndexError, TypeError, KeyError) as e:
-        print(f'Warning: Could not fetch ships data: {e}')
+    except (IndexError, TypeError, KeyError):
+        pass  # Silently continue if ships data can't be fetched
     
     has_upgrade_ships = False
     ships = []
@@ -265,6 +265,24 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
     # Combine units and ships
     units.extend(ships)
     has_upgrade = has_upgrade_units or has_upgrade_ships
+    
+    return has_upgrade, units
+
+
+def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegram):
+
+    banner()
+    _selected_building_data = choose_city_with_building(ikariam_service, 'workshop')
+    if _selected_building_data is None:
+        return
+
+    (city, building, data) = _selected_building_data
+
+    banner()
+    print(city['name'])
+
+    change_view_data = data[1][1][1]
+    has_upgrade, units = fetch_workshop_units_and_ships(ikariam_service, city, building, change_view_data)
     
     if len(units) == 0:
         print('No units or ships found in workshop. This might be a parsing error.')

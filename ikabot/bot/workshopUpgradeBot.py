@@ -3,7 +3,7 @@
 
 from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest
-from ikabot.function.workshop import extract_units_data
+from ikabot.function.workshop import fetch_workshop_units_and_ships
 from ikabot.helpers.buildings import get_building_info
 from ikabot.helpers.gui import addThousandSeparator
 
@@ -21,10 +21,15 @@ class WorkshopUpgradeBot(Bot):
 
     def _start(self) -> None:
         while True:
-            # Get current workshop data
+            # Get current workshop data (both units and ships)
             data = get_building_info(self.ikariam_service, self.city['id'], self.building)
             change_view_data = data[1][1][1]
-            has_upgrade, units = extract_units_data(change_view_data)
+            has_upgrade, units = fetch_workshop_units_and_ships(
+                self.ikariam_service, 
+                self.city, 
+                self.building, 
+                change_view_data
+            )
 
             # If an upgrade is in progress, wait for it to complete
             if has_upgrade:

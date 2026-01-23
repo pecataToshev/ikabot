@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from ikabot.bot.workshopUpgradeBot import WorkshopUpgradeBot
-from ikabot.function.workshop import extract_units_data
+from ikabot.function.workshop import fetch_workshop_units_and_ships
 from ikabot.helpers.buildings import choose_city_with_building
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, decodeUnicodeEscape, enter, printTable
@@ -28,9 +28,9 @@ def workshop_upgrade_bot_configurator(ikariam_service: IkariamService, db: Datab
     print('Workshop in: {}'.format(city['name']))
     print()
 
-    # Get current workshop data
+    # Get current workshop data (both units and ships)
     change_view_data = data[1][1][1]
-    has_upgrade, units = extract_units_data(change_view_data)
+    has_upgrade, units = fetch_workshop_units_and_ships(ikariam_service, city, building, change_view_data)
 
     if len(units) == 0:
         print('No units found in workshop. This might be a parsing error or the workshop has no units.')
