@@ -94,7 +94,7 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
     print('Loading cities', end='', flush=True)
     for city_id in ids:
         # Use cached city data to reduce requests
-        city = getCityWithCache(ikariam_service, city_id, show_progress=True)
+        city = getCityWithCache(ikariam_service, city_id)
         building = extract_target_building(city, building_type)
         if building is not None:
             cities_with_building.append((city, building))
@@ -108,15 +108,19 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
     
     # Let user select from cities with the building
     print('Select city with {}:\n'.format(building_type))
+    print('(0) Exit')
     for idx, (city, building) in enumerate(cities_with_building, 1):
-        print('({}) {} - {} Level {}'.format(
+        print('({}) {} - {}'.format(
             idx, 
             decodeUnicodeEscape(city['name']), 
-            building_type.capitalize(),
             building['level']
         ))
+    print()
     
-    selection = read(min=1, max=len(cities_with_building), digit=True)
+    selection = read(min=0, max=len(cities_with_building), digit=True)
+    if selection == 0:
+        return None
+    
     city, building = cities_with_building[selection - 1]
     
     # Get building data
@@ -124,10 +128,11 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
     return city, building, data
 
 
-def find_city_with_the_biggest_building(ikariam_service: IkariamService, building_type: str, show_progress: bool = False) -> Union[dict, None]:
+def find_city_with_the_biggest_building(ikariam_service: IkariamService, building_type: str) -> Union[dict, None]:
     """
     Finds and returns the city with the highest building level of given type.
     Uses cached city data (valid for 5 minutes) to reduce HTTP requests.
+    Always shows progress when loading cities.
     
     Parameters
     ----------
@@ -135,25 +140,21 @@ def find_city_with_the_biggest_building(ikariam_service: IkariamService, buildin
         Session object
     building_type : str
         The building type to search for
-    show_progress : bool
-        Whether to show progress dots while loading (default: False)
     """
     [cities_ids, _] = getIdsOfCities(ikariam_service)
     great_city = None
     max_level = 0
     
-    if show_progress:
-        print('Searching cities', end='', flush=True)
+    print('Searching cities', end='', flush=True)
     
     for city_id in cities_ids:
         # Use cached city data to reduce requests
-        city = getCityWithCache(ikariam_service, city_id, show_progress=show_progress)
+        city = getCityWithCache(ikariam_service, city_id)
         for building in city['position']:
             if building['building'] == building_type and building['level'] > max_level:
                 great_city = city
                 max_level = building['level']
     
-    if show_progress:
-        print(' Done!')
+    print(' Done!')
 
     return great_city

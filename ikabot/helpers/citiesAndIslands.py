@@ -192,10 +192,11 @@ def getCurrentCityId(session):
     return re.search(r'currentCityId:\s(\d+),', html).group(1)
 
 
-def getCityWithCache(ikariam_service: IkariamService, city_id: str, use_cache: bool = True, show_progress: bool = False):
+def getCityWithCache(ikariam_service: IkariamService, city_id: str, use_cache: bool = True):
     """
     Gets city data with optional caching to reduce HTTP requests.
     Cache is valid for 5 minutes.
+    Always shows a progress dot when making HTTP requests.
     
     Parameters
     ----------
@@ -205,8 +206,6 @@ def getCityWithCache(ikariam_service: IkariamService, city_id: str, use_cache: b
         The city ID to fetch
     use_cache : bool
         Whether to use cached data (default: True)
-    show_progress : bool
-        Whether to print progress messages (default: False)
     
     Returns
     -------
@@ -222,15 +221,12 @@ def getCityWithCache(ikariam_service: IkariamService, city_id: str, use_cache: b
         cached_entry = full_city_cache[city_id]
         age = current_time - cached_entry['timestamp']
         
-        # Return cached data if it's less than 5 minutes old
+        # Return cached data if it's less than 5 minutes old (no progress indicator)
         if age < CITY_CACHE_TTL:
-            if show_progress:
-                print('.', end='', flush=True)
             return cached_entry['data']
     
-    # Fetch fresh data
-    if show_progress:
-        print('.', end='', flush=True)
+    # Fetch fresh data - show progress dot for HTTP request
+    print('.', end='', flush=True)
     html = ikariam_service.get(city_url + str(city_id))
     city = getCity(html)
     
