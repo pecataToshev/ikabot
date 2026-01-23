@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import json
 import re
 import time
 from typing import List, Tuple
@@ -22,18 +23,9 @@ def extract_url_parameters(url: str) -> dict:
     return dict(re.findall(r'(\w+)=(\w+)', url))
 
 
-def extract_units_data(html: str, debug: bool = False) -> Tuple[bool, List[dict]]:
+def extract_units_data(html: str) -> Tuple[bool, List[dict]]:
     soup = BeautifulSoup(html, 'html.parser')
     _groups = soup.find_all(lambda tag: tag.name == 'div' and tag.get('id') in ['tabUnits', 'tabShips'])
-
-    if debug:
-        print(f'Found {len(_groups)} groups (tabUnits/tabShips)')
-        for g in _groups:
-            print(f'  Group ID: {g.get("id")}')
-        
-        # Debug: check what top-level divs exist
-        all_divs_with_id = soup.find_all('div', id=True)
-        print(f'All divs with IDs: {[d.get("id") for d in all_divs_with_id[:10]]}')  # First 10
 
     _units = []
     _has_upgrade = False
@@ -42,9 +34,6 @@ def extract_units_data(html: str, debug: bool = False) -> Tuple[bool, List[dict]
         _units_tab_params = extract_url_parameters(soup.find(id='js_'+_group.get('id'))['onclick'])
         _units_type = _group.find('h3', {'class': 'header'}).text.strip()
         _units_html = _group.find_all('div', {'class': 'units'})
-        
-        if debug:
-            print(f'  Group "{_units_type}" has {len(_units_html)} unit divs')
         for _u in _units_html:
             # Try to find unit name in different possible locations
             _unit_name_element = _u.find('div', {'class': 'object'})
@@ -242,7 +231,6 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
     try:
         if isinstance(ships_response, str):
             # Check if it's JSON that needs parsing
-            import json
             try:
                 parsed_json = json.loads(ships_response)
                 # Look for changeView in the parsed response
@@ -272,15 +260,16 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
     has_upgrade_ships = False
     ships = []
     if ships_html:
-        print(f'Ships HTML length: {len(ships_html)} chars')
-        has_upgrade_ships, ships = extract_units_data(ships_html, debug=True)
-        print(f'Found {len(ships)} ship upgrades')
-    else:
-        print('Warning: No ships data found')
+        has_upgrade_ships, ships = extract_units_data(ships_html)
     
     # Combine units and ships
     units.extend(ships)
     has_upgrade = has_upgrade_units or has_upgrade_ships
+    
+    if len(units) == 0:
+        print('No units or ships found in workshop. This might be a parsing error.')
+        enter()
+        return
 
     def __determine_action_color(action: str, row: dict):
         if row['insufficientResources'] or has_upgrade:
