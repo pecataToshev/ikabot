@@ -8,7 +8,8 @@ import time
 from ikabot.config import MAXIMUM_CITY_NAME_LENGTH, city_url, island_url
 from ikabot.helpers.getJson import getCity, getIsland
 from ikabot.helpers.gui import (banner, decodeUnicodeEscape, enter,
-                                format_city_name, select_option_from_list)
+                                format_city_name, select_city_from_list,
+                                select_option_from_list)
 from ikabot.helpers.menuExceptions import ExitFromMenu
 from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
@@ -43,16 +44,16 @@ def chooseCity(ikariam_service: IkariamService, foreign=False):
     """
     (ids, cities) = getIdsOfCities(ikariam_service)
     
-    # Prepare city list with formatted display
-    longest_city_name_length = max([len(decodeUnicodeEscape(cities[city_id]['name'])) for city_id in ids])
-    
-    def format_city(city_id):
-        city_name = decodeUnicodeEscape(cities[city_id]['name'])
-        tradegood = cities[city_id]['tradegood']
-        return format_city_name(city_name, tradegood, max_length=longest_city_name_length)
-    
     # Special handling for foreign city option
     if foreign:
+        # Prepare city list with formatted display
+        longest_city_name_length = max([len(decodeUnicodeEscape(cities[city_id]['name'])) for city_id in ids])
+        
+        def format_city(city_id):
+            city_name = decodeUnicodeEscape(cities[city_id]['name'])
+            tradegood = cities[city_id]['tradegood']
+            return format_city_name(city_name, tradegood, max_length=longest_city_name_length)
+        
         print('Select city:\n')
         print('   0: Foreign city')
         for idx, city_id in enumerate(ids, 1):
@@ -66,11 +67,11 @@ def chooseCity(ikariam_service: IkariamService, foreign=False):
             html = ikariam_service.get(city_url + ids[selected_city_index - 1])
             return getCity(html)
     else:
-        # Use the standard selection for own cities (raises ExitFromMenu if user exits)
-        selected_idx = select_option_from_list(
-            ids,
+        # Use the standard city selection (raises ExitFromMenu if user exits)
+        cities_list = [cities[city_id] for city_id in ids]
+        selected_idx = select_city_from_list(
+            cities_list,
             prompt='Select city',
-            formatter=format_city,
             return_index=True
         )
         

@@ -4,14 +4,17 @@
 import json
 import re
 
-from ikabot.bot.sellResourcesBot import SellResourcesToOfferBot, SellResourcesWithOwnOfferBot
+from ikabot.bot.sellResourcesBot import (SellResourcesToOfferBot,
+                                         SellResourcesWithOwnOfferBot)
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import parse_int
-from ikabot.helpers.gui import addThousandSeparator, banner, Colours, enter
-from ikabot.helpers.market import getCommercialCities, getMarketInfo, storageCapacityOfMarket
-from ikabot.helpers.userInput import askUserYesNo, read
+from ikabot.helpers.gui import (Colours, addThousandSeparator, banner, enter,
+                                select_city_from_list)
+from ikabot.helpers.market import (getCommercialCities, getMarketInfo,
+                                   storageCapacityOfMarket)
 from ikabot.helpers.telegram import Telegram
+from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -25,11 +28,10 @@ def chooseCommercialCity(commercial_cities):
     -------
     commercial_city : dict
     """
-    print('In which city do you want to sell resources?\n')
-    for i, city in enumerate(commercial_cities):
-        print('({:d}) {}'.format(i + 1, city['name']))
-    ind = read(min=1, max=len(commercial_cities))
-    return commercial_cities[ind - 1]
+    return select_city_from_list(
+        commercial_cities,
+        prompt='In which city do you want to sell resources'
+    )
 
 
 def getOffers(session, my_market_city, resource_type):

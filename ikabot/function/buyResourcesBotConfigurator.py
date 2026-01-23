@@ -5,7 +5,8 @@ import re
 from ikabot.bot.buyResourcesBot import BuyResourcesBot
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
-from ikabot.helpers.gui import addThousandSeparator, banner, enter
+from ikabot.helpers.gui import (addThousandSeparator, banner, enter,
+                                select_city_from_list)
 from ikabot.helpers.market import getCommercialCities, getGold, getMarketHtml
 from ikabot.helpers.userInput import askUserYesNo, read
 from ikabot.helpers.telegram import Telegram
@@ -124,11 +125,10 @@ def chooseCommertialCity(commercial_cities):
     -------
     commercial_city : dict
     """
-    print('From which city do you want to buy resources?\n')
-    for i, city in enumerate(commercial_cities):
-        print('({:d}) {}'.format(i + 1, city['name']))
-    selected_city_index = read(min=1, max=len(commercial_cities))
-    return commercial_cities[selected_city_index - 1]
+    return select_city_from_list(
+        commercial_cities,
+        prompt='From which city do you want to buy resources'
+    )
 
 
 def buy_resources_bot_configurator(ikariam_service: IkariamService, db: Database, telegram: Telegram):

@@ -338,6 +338,62 @@ def format_city_name(city_name, tradegood, max_length=None, suffix=''):
     return f'{color}{city_name}{padding}{resource_abb}{reset}{suffix}'
 
 
+def select_city_from_list(cities, prompt='Select city', suffix_formatter=None, return_index=False):
+    """
+    Specialized city selection menu with automatic padding and colored trade resources.
+    
+    Parameters
+    ----------
+    cities : list[dict]
+        List of city objects (must have 'name' and 'tradegood' keys)
+    prompt : str
+        The prompt message to display (default: 'Select city')
+    suffix_formatter : callable, optional
+        Function that takes a city and returns additional text to append (e.g., lambda c: f" - {c['level']}")
+    return_index : bool
+        If True, returns the 0-based index. If False, returns the city itself (default: False)
+    
+    Returns
+    -------
+    city or int
+        The selected city (or index if return_index=True)
+    
+    Raises
+    ------
+    ExitFromMenu
+        If user selects exit (option 0)
+    
+    Examples
+    --------
+    >>> cities = [{'name': 'Athens', 'tradegood': 1}, {'name': 'Sparta', 'tradegood': 2}]
+    >>> selected = select_city_from_list(cities, prompt='Select your city')
+    
+    >>> # With suffix for building level
+    >>> selected = select_city_from_list(
+    ...     cities_with_buildings,
+    ...     suffix_formatter=lambda city: f" - {city['building_level']}"
+    ... )
+    """
+    # Calculate longest city name for automatic padding
+    longest_city_name = max([len(decodeUnicodeEscape(city['name'])) for city in cities])
+    
+    def format_city_item(city):
+        suffix = suffix_formatter(city) if suffix_formatter else ''
+        return format_city_name(
+            decodeUnicodeEscape(city['name']),
+            city['tradegood'],
+            max_length=longest_city_name,
+            suffix=suffix
+        )
+    
+    return select_option_from_list(
+        cities,
+        prompt=prompt,
+        formatter=format_city_item,
+        return_index=return_index
+    )
+
+
 def select_option_from_list(options, prompt='Select option', formatter=None, return_index=False):
     """
     Generic menu selection with consistent formatting across the application.
