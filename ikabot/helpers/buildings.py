@@ -3,9 +3,10 @@ from enum import Enum
 from typing import Tuple, Union
 
 from ikabot.config import actionRequest, city_url
-from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
+from ikabot.helpers.citiesAndIslands import getIdsOfCities
 from ikabot.helpers.getJson import getCity
-from ikabot.helpers.gui import enter
+from ikabot.helpers.gui import decodeUnicodeEscape, enter
+from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
 
 
@@ -70,17 +71,51 @@ def get_building_info(ikariam_service: IkariamService, city_id: int, building: d
 
 def choose_city_with_building(ikariam_service: IkariamService, building_type: str) \
         -> Union[None, Tuple[dict, dict, dict]]:
-
-    print('Choose city with {}:'.format(building_type))
-    city = chooseCity(ikariam_service)
-    city = getCity(ikariam_service.get(city_url + city['id']))
-
-    building = extract_target_building(city, building_type)
-    if building is None:
-        print('There is no {} in {}'.format(building_type, city['name']))
+    """
+    Prompts the user to select from cities that have the specified building type.
+    Only shows cities with the building, not all cities.
+    
+    Parameters
+    ----------
+    ikariam_service : IkariamService
+        Session object
+    building_type : str
+        The building type to filter by (e.g., 'workshop', 'barracks', 'academy')
+    
+    Returns
+    -------
+    tuple or None
+        (city, building, data) tuple for the selected city, or None if no cities have the building
+    """
+    # Get all cities and filter to only those with the specified building
+    (ids, cities) = getIdsOfCities(ikariam_service)
+    cities_with_building = []
+    
+    for city_id in ids:
+        city = getCity(ikariam_service.get(city_url + str(city_id)))
+        building = extract_target_building(city, building_type)
+        if building is not None:
+            cities_with_building.append((city, building))
+    
+    if len(cities_with_building) == 0:
+        print('No {} found in any city!'.format(building_type))
         enter()
         return None
-
+    
+    # Let user select from cities with the building
+    print('Select city with {}:\n'.format(building_type))
+    for idx, (city, building) in enumerate(cities_with_building, 1):
+        print('({}) {} - {} Level {}'.format(
+            idx, 
+            decodeUnicodeEscape(city['name']), 
+            building_type.capitalize(),
+            building['level']
+        ))
+    
+    selection = read(min=1, max=len(cities_with_building), digit=True)
+    city, building = cities_with_building[selection - 1]
+    
+    # Get building data
     data = get_building_info(ikariam_service, city['id'], building)
     return city, building, data
 

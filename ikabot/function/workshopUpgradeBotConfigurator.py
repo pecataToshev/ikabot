@@ -3,7 +3,7 @@
 
 from ikabot.bot.workshopUpgradeBot import WorkshopUpgradeBot
 from ikabot.function.workshop import extract_units_data
-from ikabot.helpers.buildings import choose_city_with_building, get_building_info
+from ikabot.helpers.buildings import choose_city_with_building
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import addThousandSeparator, banner, Colours, decodeUnicodeEscape, enter, printTable
 from ikabot.helpers.telegram import Telegram
@@ -17,11 +17,11 @@ def workshop_upgrade_bot_configurator(ikariam_service: IkariamService, db: Datab
     """
     banner()
     
-    # Select city with workshop
+    # Select city with workshop (only shows cities that have workshops)
     selected_building_data = choose_city_with_building(ikariam_service, 'workshop')
     if selected_building_data is None:
         return
-
+    
     (city, building, data) = selected_building_data
 
     banner()
