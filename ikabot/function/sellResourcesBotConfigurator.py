@@ -9,7 +9,8 @@ from ikabot.bot.sellResourcesBot import (SellResourcesToOfferBot,
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import parse_int
-from ikabot.helpers.gui import (Colours, addThousandSeparator, banner, enter,
+from ikabot.helpers.gui import (Colours, addThousandSeparator, banner,
+                                decodeUnicodeEscape, enter, format_city_name,
                                 printTable, select_city_from_list)
 from ikabot.helpers.market import (getCommercialCities, getMarketInfo,
                                    storageCapacityOfMarket)
@@ -53,6 +54,7 @@ def getOffers(session, my_market_city, resource_type):
     
     all_offers = []
     offset = 0
+    page_num = 1
     
     while True:
         # Build params dictionary - matches the game's actual request
@@ -72,6 +74,10 @@ def getOffers(session, my_market_city, resource_type):
             'actionRequest': actionRequest, 
             'ajax': '1'
         }
+        
+        # Show loading message for pages after the first
+        if page_num > 1:
+            print('Loading offers page {}...'.format(page_num))
         
         # Use POST with params dictionary
         resp = session.post(params=data)
@@ -103,14 +109,11 @@ def getOffers(session, my_market_city, resource_type):
             
             if max_offset > offset:
                 offset = max_offset
-                print('.', end='', flush=True)  # Progress indicator
+                page_num += 1
             else:
                 break
         else:
             break
-    
-    if offset > 0:
-        print()  # New line after progress dots
     
     return all_offers
 
@@ -125,7 +128,18 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
         enter()
         return
 
-    print('Available offers to sell to:')
+    # Display current city info
+    city_display = format_city_name(
+        decodeUnicodeEscape(city_to_buy_from['name']),
+        city_to_buy_from['tradegood']
+    )
+    available = int(city_to_buy_from['availableResources'][resource_type])
+    resource_name = materials_names[resource_type]
+    
+    print('Selling from: {}'.format(city_display))
+    print('Available {}: {}'.format(resource_name, addThousandSeparator(available)))
+    print('\nAvailable offers to sell to:')
+    print('0) Exit\n')
     
     # Convert offers to list of dicts for printTable
     table_data = []
@@ -140,17 +154,6 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
             'total': price * amount,
             'distance': dist
         })
-    
-    # Add Exit option at the beginning
-    table_data.insert(0, {
-        'id': 0,
-        'city': 'Exit',
-        'player': '',
-        'amount': '',
-        'price': '',
-        'total': '',
-        'distance': ''
-    })
     
     # Configure table columns
     table_config = [
@@ -219,7 +222,7 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
         {'key': 'total', 'title': 'Total Gold', 'align': '>', 'fmt': addThousandSeparator}
     ]
     
-    printTable(selected_table_config, selected_table_data)
+    printTable(selected_table_config, selected_table_data, print_row_separator=lambda i: i == 0)
     
     print('Total demand: {}'.format(addThousandSeparator(total_amount)))
     print('Available to sell: {}'.format(addThousandSeparator(available)))

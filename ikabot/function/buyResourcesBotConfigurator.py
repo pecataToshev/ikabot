@@ -6,7 +6,8 @@ import re
 from ikabot.bot.buyResourcesBot import BuyResourcesBot
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
-from ikabot.helpers.gui import (addThousandSeparator, banner, enter,
+from ikabot.helpers.gui import (addThousandSeparator, banner,
+                                decodeUnicodeEscape, enter, format_city_name,
                                 printTable, select_city_from_list)
 from ikabot.helpers.market import getCommercialCities, getGold
 from ikabot.helpers.telegram import Telegram
@@ -62,6 +63,7 @@ def getOffers(session, city):
     """
     all_offers = []
     offset = 0
+    page_num = 1
     
     while True:
         # Build params dictionary - matches the game's actual request
@@ -78,6 +80,10 @@ def getOffers(session, city):
             'actionRequest': actionRequest, 
             'ajax': '1'
         }
+        
+        # Show loading message for pages after the first
+        if page_num > 1:
+            print('Loading offers page {}...'.format(page_num))
         
         # Use POST with params dictionary
         data = session.post(params=params)
@@ -137,14 +143,11 @@ def getOffers(session, city):
             
             if max_offset > offset:
                 offset = max_offset
-                print('.', end='', flush=True)  # Progress indicator
+                page_num += 1
             else:
                 break
         else:
             break
-    
-    if offset > 0:
-        print()  # New line after progress dots
     
     return all_offers
 
@@ -213,8 +216,18 @@ def buy_resources_bot_configurator(ikariam_service: IkariamService, db: Database
         enter()
         return
 
-    # display offers to the user
-    print('Available offers to buy from:')
+    # display current city info
+    city_display = format_city_name(
+        decodeUnicodeEscape(city['name']),
+        city['tradegood']
+    )
+    free_space = int(city['freeSpaceForResources'][resource])
+    resource_name = materials_names[resource]
+    
+    print('Buying for: {}'.format(city_display))
+    print('Free storage for {}: {}'.format(resource_name, addThousandSeparator(free_space)))
+    print('\nAvailable offers to buy from:')
+    print('0) Exit\n')
     
     # Convert offers to list of dicts for printTable
     table_data = []
@@ -250,10 +263,10 @@ def buy_resources_bot_configurator(ikariam_service: IkariamService, db: Database
         {'key': 'total', 'title': 'Total Gold', 'align': '>', 'fmt': addThousandSeparator}
     ]
     
-    printTable(table_config, table_data)
+    printTable(table_config, table_data, print_row_separator=lambda i: i == 0)
 
     # ask how much to buy
-    print('Total amount available to purchase: {}, for {}'.format(addThousandSeparator(total_amount), addThousandSeparator(total_price)))
+    print('\nTotal amount available to purchase: {}, for {}'.format(addThousandSeparator(total_amount), addThousandSeparator(total_price)))
     available = city['freeSpaceForResources'][resource]
     if available < total_amount:
         print('You just can buy {} due to storing capacity'.format(addThousandSeparator(available)))
