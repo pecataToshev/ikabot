@@ -33,12 +33,22 @@ def extract_units_data(html: str) -> Tuple[bool, List[dict]]:
         _units_type = _group.find('h3', {'class': 'header'}).text.strip()
         _units_html = _group.find_all('div', {'class': 'units'})
         for _u in _units_html:
-            _unit_name = _u.find('div', {'class': 'object'})['title']
+            _unit_name_element = _u.find('div', {'class': 'object'})
+            if _unit_name_element is None:
+                # Skip this unit if we can't find the name element
+                continue
+            _unit_name = _unit_name_element['title']
             _added_unit_definition = False
             for _t in _u.find_all('table'):
                 _res = _t.find('td', {'class': 'res'})
+                if _res is None:
+                    # Skip if we can't find resource info
+                    continue
 
                 _upgrade_html = _t.find('td', {'class': 'upgrade_desc'})
+                if _upgrade_html is None:
+                    # Skip if we can't find upgrade description
+                    continue
                 _action_buttons = _upgrade_html.find_all('div', {'class': 'actionButton'})
                 if len(_action_buttons) > 0:
                     _action = _action_buttons[0].find('a')['title']
@@ -55,16 +65,34 @@ def extract_units_data(html: str) -> Tuple[bool, List[dict]]:
                     _action = _upgrade_html.find_all('span')[0].text
 
                 _can_upgrade = len(_action_buttons) == 1
+                
+                # Extract improvement title safely
+                _img = _t.find('img')
+                _improvement = _img['title'].strip() if _img and 'title' in _img.attrs else 'Unknown'
+                
+                # Extract resources safely
+                _glass_elem = _res.find('li', {'class': 'glass'})
+                _gold_elem = _res.find('li', {'class': 'gold'})
+                _time_elem = _res.find('li', {'class': 'time'})
+                
+                if not all([_glass_elem, _gold_elem, _time_elem]):
+                    # Skip if we can't find resource elements
+                    continue
+                
+                # Extract upgrade description safely
+                _upgrade_p = _upgrade_html.find('p')
+                _upgrade_desc = re.sub(r'\s+', ' ', _upgrade_p.text.strip()) if _upgrade_p else ''
+                
                 _unit = {
                     'tab': _group.get('id'),
                     'tableName': _unit_name if _added_unit_definition else _units_type,
                     'type': _units_type,
                     'name': _unit_name,
-                    'improvement': _t.find('img')['title'].strip(),
-                    'glass': parse_int(_res.find('li', {'class': 'glass'}).text),
-                    'gold': parse_int(_res.find('li', {'class': 'gold'}).text),
-                    'time': _res.find('li', {'class': 'time'}).text.strip(),
-                    'upgrade': re.sub(r'\s+', ' ', _upgrade_html.find('p').text.strip()),
+                    'improvement': _improvement,
+                    'glass': parse_int(_glass_elem.text),
+                    'gold': parse_int(_gold_elem.text),
+                    'time': _time_elem.text.strip(),
+                    'upgrade': _upgrade_desc,
                     'action': _action,
                     'canUpgrade': _can_upgrade,
                     'insufficientResources': len(_action_buttons) == 2,

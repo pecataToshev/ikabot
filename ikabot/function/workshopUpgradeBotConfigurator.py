@@ -32,6 +32,11 @@ def workshop_upgrade_bot_configurator(ikariam_service: IkariamService, db: Datab
     change_view_data = data[1][1][1]
     has_upgrade, units = extract_units_data(change_view_data)
 
+    if len(units) == 0:
+        print('No units found in workshop. This might be a parsing error or the workshop has no units.')
+        enter()
+        return
+
     if has_upgrade:
         print("There's currently an upgrade in progress. The bot will wait for it to complete.")
         print()
