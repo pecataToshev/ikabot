@@ -229,14 +229,21 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
     ships_html = ''
     try:
         if isinstance(ships_response, list):
+            print(f'Ships response has {len(ships_response)} items')
             # Response format: [["updateGlobalData", ...], ["changeView", ["workshop", "HTML"]], ...]
-            for response_item in ships_response:
+            for idx, response_item in enumerate(ships_response):
                 if isinstance(response_item, list) and len(response_item) >= 2:
+                    print(f'  Item {idx}: type={response_item[0]}, has {len(response_item)} parts')
                     if response_item[0] == "changeView":
                         # response_item[1] should be ["workshop", "HTML_STRING"]
                         if isinstance(response_item[1], list) and len(response_item[1]) >= 2:
                             ships_html = response_item[1][1]
+                            print(f'  Found changeView with HTML length: {len(ships_html)}')
                             break
+                        else:
+                            print(f'  changeView item[1] is not a list or too short: {type(response_item[1])}')
+        else:
+            print(f'Ships response is not a list: {type(ships_response)}')
     except (IndexError, TypeError, KeyError) as e:
         print(f'Warning: Could not fetch ships data: {e}')
     
