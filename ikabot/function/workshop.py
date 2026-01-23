@@ -22,9 +22,14 @@ def extract_url_parameters(url: str) -> dict:
     return dict(re.findall(r'(\w+)=(\w+)', url))
 
 
-def extract_units_data(html: str) -> Tuple[bool, List[dict]]:
+def extract_units_data(html: str, debug: bool = False) -> Tuple[bool, List[dict]]:
     soup = BeautifulSoup(html, 'html.parser')
     _groups = soup.find_all(lambda tag: tag.name == 'div' and tag.get('id') in ['tabUnits', 'tabShips'])
+
+    if debug:
+        print(f'Found {len(_groups)} groups (tabUnits/tabShips)')
+        for g in _groups:
+            print(f'  Group ID: {g.get("id")}')
 
     _units = []
     _has_upgrade = False
@@ -33,6 +38,9 @@ def extract_units_data(html: str) -> Tuple[bool, List[dict]]:
         _units_tab_params = extract_url_parameters(soup.find(id='js_'+_group.get('id'))['onclick'])
         _units_type = _group.find('h3', {'class': 'header'}).text.strip()
         _units_html = _group.find_all('div', {'class': 'units'})
+        
+        if debug:
+            print(f'  Group "{_units_type}" has {len(_units_html)} unit divs')
         for _u in _units_html:
             # Try to find unit name in different possible locations
             _unit_name_element = _u.find('div', {'class': 'object'})
@@ -246,7 +254,8 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
     has_upgrade_ships = False
     ships = []
     if ships_html:
-        has_upgrade_ships, ships = extract_units_data(ships_html)
+        print(f'Ships HTML length: {len(ships_html)} chars')
+        has_upgrade_ships, ships = extract_units_data(ships_html, debug=True)
         print(f'Found {len(ships)} ship upgrades')
     else:
         print('Warning: No ships data found')
