@@ -91,12 +91,15 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
     (ids, cities) = getIdsOfCities(ikariam_service)
     cities_with_building = []
     
+    print('Loading cities', end='', flush=True)
     for city_id in ids:
         # Use cached city data to reduce requests
-        city = getCityWithCache(ikariam_service, city_id)
+        city = getCityWithCache(ikariam_service, city_id, show_progress=True)
         building = extract_target_building(city, building_type)
         if building is not None:
             cities_with_building.append((city, building))
+    print(' Done!')
+    print()
     
     if len(cities_with_building) == 0:
         print('No {} found in any city!'.format(building_type))
@@ -121,20 +124,36 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
     return city, building, data
 
 
-def find_city_with_the_biggest_building(ikariam_service: IkariamService, building_type: str) -> Union[dict, None]:
+def find_city_with_the_biggest_building(ikariam_service: IkariamService, building_type: str, show_progress: bool = False) -> Union[dict, None]:
     """
     Finds and returns the city with the highest building level of given type.
     Uses cached city data (valid for 5 minutes) to reduce HTTP requests.
+    
+    Parameters
+    ----------
+    ikariam_service : IkariamService
+        Session object
+    building_type : str
+        The building type to search for
+    show_progress : bool
+        Whether to show progress dots while loading (default: False)
     """
     [cities_ids, _] = getIdsOfCities(ikariam_service)
     great_city = None
     max_level = 0
+    
+    if show_progress:
+        print('Searching cities', end='', flush=True)
+    
     for city_id in cities_ids:
         # Use cached city data to reduce requests
-        city = getCityWithCache(ikariam_service, city_id)
+        city = getCityWithCache(ikariam_service, city_id, show_progress=show_progress)
         for building in city['position']:
             if building['building'] == building_type and building['level'] > max_level:
                 great_city = city
                 max_level = building['level']
+    
+    if show_progress:
+        print(' Done!')
 
     return great_city
