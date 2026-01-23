@@ -3,10 +3,9 @@
 
 from ikabot import config
 from ikabot.bot.transportGoodsBot import TransportGoodsBot, TransportJob
-from ikabot.config import city_url, materials_names
-from ikabot.helpers.citiesAndIslands import getIdsOfCities
+from ikabot.config import materials_names
+from ikabot.helpers.citiesAndIslands import getCityWithCache, getIdsOfCities
 from ikabot.helpers.database import Database
-from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
 from ikabot.helpers.naval import TransportShip, get_transport_ships_size
 from ikabot.helpers.telegram import Telegram
@@ -100,8 +99,7 @@ def distribute_evenly(session, resource_type):
     allCities = {}
     for cityID in cityIDs:
 
-        html = session.get(city_url + cityID)  # load html from the get request for that particular city
-        city = getCity(html)  # convert the html to a city object
+        city = getCityWithCache(session, cityID)  # get city data (cached)
 
         resourceTotal += city['availableResources'][resource_type]  # the cities resources are added to the total
         allCities[cityID] = city  # adds the city to all cities
@@ -186,8 +184,7 @@ def distribute_unevenly(session, resource_type):
     for destination_city_id in cities_ids:
         is_city_mining_this_resource = cities[destination_city_id]['tradegood'] == resource_type
         if is_city_mining_this_resource:
-            html = session.get(city_url + destination_city_id)
-            city = getCity(html)
+            city = getCityWithCache(session, destination_city_id)
             if resource_type == 1:  # wine
                 city['available_amount_of_resource'] = city['availableResources'][resource_type] - city['wineConsumptionPerHour'] - 1
             else:
@@ -197,8 +194,7 @@ def distribute_unevenly(session, resource_type):
             total_available_resources_from_all_cities += city['available_amount_of_resource']
             origin_cities[destination_city_id] = city
         else:
-            html = session.get(city_url + destination_city_id)
-            city = getCity(html)
+            city = getCityWithCache(session, destination_city_id)
             city['free_storage_for_resource'] = city['freeSpaceForResources'][resource_type]
             if city['free_storage_for_resource'] > 0:
                 destination_cities[destination_city_id] = city

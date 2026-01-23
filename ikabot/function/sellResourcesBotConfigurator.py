@@ -59,7 +59,7 @@ def getOffers(session, my_market_city, resource_type):
 
     # Taken from #306
     html = re.sub(r'\s+', ' ', html).strip()
-    html = re.findall(r'<td class="short_text80">(.*?)<br/>\((.*?)\).*?tooltip">([\d\s]+)</div>.*?<td style="white-space:nowrap;">(\d+).*?<td>(\d+)</td>.*?href="\?view=takeOffer&destinationCityId=(\d+)', html)
+    html = re.findall(r'<td class="short_text80">(.*?)<br/>\((.*?)\).*?tooltip">([\d\s.,]+)</div>.*?<td style="white-space:nowrap;">(\d+).*?<td>(\d+)</td>.*?href="\?view=takeOffer&destinationCityId=(\d+)', html)
     html = [(cityname.strip(), username.strip(), parse_int(re.sub(r"\s+", "", amount)), parse_int(price), dist, destination_city_id) for cityname, username, amount, price, dist, destination_city_id in html]
 
     return html
@@ -75,30 +75,62 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
         enter()
         return
 
-    print('Which offers do you want to sell to?\n')
-
-    chosen_offers = []
-    total_amount = 0
-    profit = 0
-    for offer in offers:
+    print('Available offers to sell to:\n')
+    print('(0) Exit')
+    
+    # Display all offers with numbers
+    for idx, offer in enumerate(offers, 1):
         cityname, username, amount, price, dist, destination_city_id = offer
         cityname = cityname.strip()
-        msg = '{} ({}): {} at {:d} each ({} in total) [Y/n]'.format(cityname, username, addThousandSeparator(amount),
-                                                                    price, addThousandSeparator(price * amount))
-        rta = read(msg=msg, values=['y', 'Y', 'n', 'N', ''])
-        if rta.lower() == 'n':
-            continue
-        chosen_offers.append(offer)
-        total_amount += amount
-        profit += amount * price
-
-    if len(chosen_offers) == 0:
+        total_for_offer = price * amount
+        print('({:d}) {} ({}): {} at {:d} each = {} gold (distance: {})'.format(
+            idx, 
+            cityname, 
+            username, 
+            addThousandSeparator(amount),
+            price, 
+            addThousandSeparator(total_for_offer),
+            dist
+        ))
+    
+    print('\nSelect offers to sell to (e.g., "1,3,5" or "all" for all offers):')
+    selection = read(msg='Selection: ', empty=False)
+    
+    if selection == '0':
         return
+    
+    # Parse selection
+    chosen_offers = []
+    if selection.lower() == 'all':
+        chosen_offers = offers
+    else:
+        try:
+            indices = [int(x.strip()) for x in selection.split(',')]
+            chosen_offers = [offers[i-1] for i in indices if 1 <= i <= len(offers)]
+        except (ValueError, IndexError):
+            print('Invalid selection')
+            enter()
+            return
+    
+    if len(chosen_offers) == 0:
+        print('No offers selected')
+        enter()
+        return
+    
+    # Calculate totals for selected offers
+    total_amount = sum(amount for _, _, amount, _, _, _ in chosen_offers)
+    profit = sum(amount * price for _, _, amount, price, _, _ in chosen_offers)
 
     available = city_to_buy_from['availableResources'][resource_type]
     amount_to_sell = min(available, total_amount)
 
     banner()
+    print('Selected {} offers:'.format(len(chosen_offers)))
+    for cityname, username, amount, price, dist, destination_city_id in chosen_offers:
+        print('  - {} ({}): {} at {:d} each'.format(cityname.strip(), username, addThousandSeparator(amount), price))
+    print('\nTotal demand: {}'.format(addThousandSeparator(total_amount)))
+    print('Available to sell: {}'.format(addThousandSeparator(available)))
+    print('Maximum profit: {}'.format(addThousandSeparator(profit)))
     print('\nHow much do you want to sell? [max = {}]'.format(addThousandSeparator(amount_to_sell)))
     amount_to_sell = read(min=0, max=amount_to_sell)
     if amount_to_sell == 0:
@@ -122,7 +154,7 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
         bot_config={
             'left_to_sell': left_to_sell,
             'amount_to_sell': amount_to_sell,
-            'offers': offers,
+            'offers': chosen_offers,
             'resource_type': resource_type,
             'city_to_buy_from': city_to_buy_from,
         }

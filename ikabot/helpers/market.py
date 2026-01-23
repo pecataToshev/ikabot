@@ -1,13 +1,13 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import re
 import json
+import re
+
+from bs4 import BeautifulSoup
 
 from ikabot.config import actionRequest, city_url
-from ikabot.helpers.getJson import getCity
-from ikabot.helpers.citiesAndIslands import getIdsOfCities
-from bs4 import BeautifulSoup
+from ikabot.helpers.citiesAndIslands import getCityWithCache, getIdsOfCities
 
 
 def getCommercialCities(session):
@@ -23,8 +23,7 @@ def getCommercialCities(session):
     cities_ids = getIdsOfCities(session)[0]
     commercial_cities = []
     for city_id in cities_ids:
-        html = session.get(city_url + city_id)
-        city = getCity(html)
+        city = getCityWithCache(session, city_id)
         for building in city['position']:
             if building['building'] == 'branchOffice':
                 city['marketPosition'] = building['position']
