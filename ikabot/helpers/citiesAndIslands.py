@@ -9,6 +9,7 @@ from ikabot.config import MAXIMUM_CITY_NAME_LENGTH, city_url, island_url
 from ikabot.helpers.getJson import getCity, getIsland
 from ikabot.helpers.gui import (banner, decodeUnicodeEscape, enter,
                                 select_option_from_list)
+from ikabot.helpers.menuExceptions import ExitFromMenu
 from ikabot.helpers.userInput import read
 from ikabot.web.ikariamService import IkariamService
 
@@ -34,6 +35,11 @@ def chooseCity(ikariam_service: IkariamService, foreign=False):
     -------
     city : City
         a city object representing the chosen city
+    
+    Raises
+    ------
+    ExitFromMenu
+        If user selects exit (option 0)
     """
     (ids, cities) = getIdsOfCities(ikariam_service)
     
@@ -62,16 +68,13 @@ def chooseCity(ikariam_service: IkariamService, foreign=False):
             html = ikariam_service.get(city_url + ids[selected_city_index - 1])
             return getCity(html)
     else:
-        # Use the standard selection for own cities
+        # Use the standard selection for own cities (raises ExitFromMenu if user exits)
         selected_idx = select_option_from_list(
             ids,
             prompt='Select city',
             formatter=format_city,
             return_index=True
         )
-        
-        if selected_idx is None:
-            return None
         
         html = ikariam_service.get(city_url + ids[selected_idx])
         return getCity(html)
@@ -117,7 +120,8 @@ def chooseForeignCity(session):
         enter()
         return chooseCity(session, foreign=True)
     
-    selected_city = select_option_from_list(
+    # This will raise ExitFromMenu if user selects 0
+    city = select_option_from_list(
         city_options,
         prompt='Select foreign city',
         formatter=lambda c: '{: <{max_len}} ({})'.format(
@@ -126,11 +130,6 @@ def chooseForeignCity(session):
             max_len=MAXIMUM_CITY_NAME_LENGTH
         )
     )
-    
-    if selected_city is None:
-        return chooseCity(session, foreign=True)
-    
-    city = selected_city
     city['islandId'] = island['id']
     city['cityName'] = decodeUnicodeEscape(city['name'])
     city['isOwnCity'] = False

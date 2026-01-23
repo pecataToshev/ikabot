@@ -61,6 +61,7 @@ from ikabot.function.workshopUpgradeBotConfigurator import \
     workshop_upgrade_bot_configurator
 from ikabot.helpers.gui import banner, clear, enter, formatTimestamp
 from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager
+from ikabot.helpers.menuExceptions import ExitFromMenu
 from ikabot.helpers.userInput import read
 
 __function_refresh = 'refresh'
@@ -213,6 +214,11 @@ def menu(ikariam_service, db, telegram):
 
             # we've selected a function, let's execute it
             selected(ikariam_service, db, telegram)
+        except ExitFromMenu:
+            # User selected exit from a submenu, return to main menu
+            logging.debug('User exited from submenu')
+            consecutive_keyboard_interruptions = False
+            continue
         except KeyboardInterrupt:
             logging.debug('Received keyboard interruption in command line, consecutive_keyboard_interruptions: %s',
                           consecutive_keyboard_interruptions)

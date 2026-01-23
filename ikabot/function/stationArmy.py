@@ -7,6 +7,7 @@ from ikabot import config
 from ikabot.config import actionRequest
 from ikabot.helpers.citiesAndIslands import chooseCity, getIdsOfCities
 from ikabot.helpers.gui import addThousandSeparator, banner, enter
+from ikabot.helpers.menuExceptions import ExitFromMenu
 from ikabot.helpers.naval import (TransportShip, get_transport_ships_size,
                                   getAvailableShips)
 from ikabot.helpers.userInput import read
@@ -212,6 +213,9 @@ def stationArmy(session,event, stdin_fd, predetermined_input):
                             print('No maritime units available in {}.'.format(city['name']))
             enter()
             event.set()               
+    except ExitFromMenu:
+        event.set()
+        return
     except KeyboardInterrupt:
         event.set()
         return  

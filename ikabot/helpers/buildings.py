@@ -69,7 +69,7 @@ def get_building_info(ikariam_service: IkariamService, city_id: int, building: d
 
 
 def choose_city_with_building(ikariam_service: IkariamService, building_type: str) \
-        -> Union[None, Tuple[dict, dict, dict]]:
+        -> Tuple[dict, dict, dict]:
     """
     Prompts the user to select from cities that have the specified building type.
     Only shows cities with the building, not all cities.
@@ -84,9 +84,16 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
     
     Returns
     -------
-    tuple or None
-        (city, building, data) tuple for the selected city, or None if no cities have the building
+    tuple
+        (city, building, data) tuple for the selected city
+    
+    Raises
+    ------
+    ExitFromMenu
+        If user selects exit (option 0) or no cities have the building
     """
+    from ikabot.helpers.menuExceptions import ExitFromMenu
+    
     # Get all cities and filter to only those with the specified building
     (ids, cities) = getIdsOfCities(ikariam_service)
     cities_with_building = []
@@ -104,19 +111,14 @@ def choose_city_with_building(ikariam_service: IkariamService, building_type: st
     if len(cities_with_building) == 0:
         print('No {} found in any city!'.format(building_type))
         enter()
-        return None
+        raise ExitFromMenu()
     
-    # Let user select from cities with the building
-    selected = select_option_from_list(
+    # Let user select from cities with the building (raises ExitFromMenu if user exits)
+    city, building = select_option_from_list(
         cities_with_building,
         prompt='Select city with {}'.format(building_type),
         formatter=lambda item: '{} - {}'.format(decodeUnicodeEscape(item[0]['name']), item[1]['level'])
     )
-    
-    if selected is None:
-        return None
-    
-    city, building = selected
     
     # Get building data
     data = get_building_info(ikariam_service, city['id'], building)

@@ -315,8 +315,13 @@ def select_option_from_list(options, prompt='Select option', formatter=None, ret
     
     Returns
     -------
-    selected_item or int or None
-        The selected item (or index if return_index=True), or None if user selected exit (0)
+    selected_item or int
+        The selected item (or index if return_index=True)
+    
+    Raises
+    ------
+    ExitFromMenu
+        If user selects exit (option 0)
     
     Examples
     --------
@@ -327,12 +332,13 @@ def select_option_from_list(options, prompt='Select option', formatter=None, ret
     ...     formatter=lambda c: f"{c['name']} - {c['level']}"
     ... )
     """
+    from ikabot.helpers.menuExceptions import ExitFromMenu
     from ikabot.helpers.userInput import read
     
     if len(options) == 0:
         print('No options available')
         enter()
-        return None
+        raise ExitFromMenu()
     
     print(f'{prompt}:\n')
     print('   0: Exit')
@@ -348,7 +354,7 @@ def select_option_from_list(options, prompt='Select option', formatter=None, ret
     selection = read(min=0, max=len(options), digit=True)
     
     if selection == 0:
-        return None
+        raise ExitFromMenu()
     
     if return_index:
         return selection - 1
