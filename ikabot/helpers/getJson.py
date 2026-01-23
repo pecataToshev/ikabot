@@ -5,12 +5,14 @@ import json
 import re
 from math import ceil
 
-from ikabot.config import materials_names, SECONDS_IN_HOUR
+from ikabot.config import SECONDS_IN_HOUR, materials_names
 from ikabot.helpers.gui import decodeUnicodeEscape
-from ikabot.helpers.resources import extract_resource_production, extract_tradegood, extract_tradegood_production, \
-    getAvailableResources, \
-    getWarehouseCapacity, \
-    getWineConsumptionPerHour
+from ikabot.helpers.resources import (extract_resource_production,
+                                      extract_tradegood,
+                                      extract_tradegood_production,
+                                      getAvailableResources,
+                                      getWarehouseCapacity,
+                                      getWineConsumptionPerHour)
 
 
 def parse_int(num) -> int:

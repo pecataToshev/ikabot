@@ -210,7 +210,26 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
     print(city['name'])
 
     change_view_data = data[1][1][1]
-    has_upgrade, units = extract_units_data(change_view_data)
+    has_upgrade_units, units = extract_units_data(change_view_data)
+    
+    # Fetch ships tab data as well
+    ships_params = {
+        'view': 'workshop',
+        'activeTab': 'tabShips',
+        'cityId': city['id'],
+        'position': building['position'],
+        'backgroundView': 'city',
+        'currentCityId': city['id'],
+        'actionRequest': actionRequest,
+        'ajax': '1'
+    }
+    ships_response = ikariam_service.post(noIndex=True, params=ships_params)
+    ships_html = ships_response[1][1][1] if len(ships_response) > 1 and len(ships_response[1]) > 1 else ''
+    has_upgrade_ships, ships = extract_units_data(ships_html)
+    
+    # Combine units and ships
+    units.extend(ships)
+    has_upgrade = has_upgrade_units or has_upgrade_ships
 
     def __determine_action_color(action: str, row: dict):
         if row['insufficientResources'] or has_upgrade:
