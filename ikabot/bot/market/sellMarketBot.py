@@ -8,15 +8,16 @@ from ikabot.bot.bot import Bot
 from ikabot.config import actionRequest, city_url, materials_names
 from ikabot.helpers.getJson import parse_int
 from ikabot.helpers.gui import addThousandSeparator
-from ikabot.helpers.market import (getMarketInfo, onSellInMarket,
-                                   storageCapacityOfMarket)
+from ikabot.helpers.market import (execute_market_offer_transfer, getMarketInfo,
+                                   onSellInMarket, storageCapacityOfMarket)
 from ikabot.helpers.naval import TransportShip, get_transport_ships_size
 from ikabot.helpers.planRoutes import waitForAvailableShips
 
 
-class SellResourcesWithOwnOfferBot(Bot):
+class SellMarketWithOwnOfferBot(Bot):
     def __init__(self, ikariam_service, bot_config):
         super().__init__(ikariam_service, bot_config)
+# ... (SellResourcesWithOwnOfferBot remains unchanged inheritance-wise as it was Bot) ...
         self.amount_to_sell = bot_config['amount_to_sell']
         self.price = bot_config['price']
         self.resource_type = bot_config['resource_type']
@@ -103,7 +104,7 @@ class SellResourcesWithOwnOfferBot(Bot):
             self._wait(60 * 60 * 2, 'Waiting all offers to be bought')
 
 
-class SellResourcesToOfferBot(Bot):
+class SellMarketToOfferBot(Bot):
     def __init__(self, ikariam_service, bot_config):
         super().__init__(ikariam_service, bot_config)
         self.left_to_sell = bot_config['left_to_sell']
@@ -135,44 +136,24 @@ class SellResourcesToOfferBot(Bot):
                 self.left_to_sell -= amount_to_sell
                 amount_to_buy -= amount_to_sell
 
-                data = {
-                    'action': 'transportOperations',
-                    'function': 'sellGoodsAtAnotherBranchOffice',
-                    'cityId': self.city_to_buy_from['id'],
-                    'destinationCityId': destination_city_id,
-                    'oldView': 'branchOffice',
-                    'position': self.city_to_buy_from['marketPosition'],
-                    'avatar2Name': username,
-                    'city2Name': cityname,
-                    'type': '333',
-                    'activeTab': 'bargain',
-                    'transportDisplayPrice': '0',
-                    'premiumTransporter': '0',
-                    'normalTransportersMax': ships_available,
-                }
-
-                if self.resource_type == 0:
-                    data['resourcePrice'] = precio
-                    data['cargo_resource'] = amount_to_sell
-                else:
-                    data['tradegood{:d}Price'.format(self.resource_type)] = precio
-                    data['cargo_tradegood{:d}'.format(self.resource_type)] = amount_to_sell
-
-                data.update({
-                    'capacity': '5',
-                    'max_capacity': '5',
-                    'jetPropulsion': '0',
-                    'transporters': str(ships_used),
-                    'backgroundView': 'city',
-                    'currentCityId': self.city_to_buy_from['id'],
-                    'templateView': 'takeOffer',
-                    'currentTab': 'bargain',
-                    'actionRequest': actionRequest,
-                    'ajax': '1'
-                })
-
                 self.ikariam_service.get(city_url + self.city_to_buy_from['id'], noIndex=True)
-                self.ikariam_service.post(params=data)
+                
+                execute_market_offer_transfer(
+                    session=self.ikariam_service,
+                    city_id=self.city_to_buy_from['id'],
+                    destination_city_id=destination_city_id,
+                    market_position=self.city_to_buy_from['marketPosition'],
+                    function_name='sellGoodsAtAnotherBranchOffice',
+                    resource_type=self.resource_type,
+                    amount=amount_to_sell,
+                    price=precio,
+                    ships_available=ships_available,
+                    ships_used=ships_used,
+                    other_player_name=username,
+                    other_city_name=cityname,
+                    offer_type='333',
+                    action_request=actionRequest
+                )
 
                 if self.left_to_sell == 0:
                     return

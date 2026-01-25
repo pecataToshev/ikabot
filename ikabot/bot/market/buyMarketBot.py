@@ -7,15 +7,15 @@ import re
 from decimal import Decimal
 
 from ikabot.bot.bot import Bot
-from ikabot.bot.transportGoodsBot import TransportGoodsBot
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.citiesAndIslands import getCurrentCityId
 from ikabot.helpers.gui import addThousandSeparator
+from ikabot.helpers.market import execute_market_offer_transfer
 from ikabot.helpers.naval import TransportShip, get_transport_ships_size
 from ikabot.helpers.planRoutes import waitForAvailableShips
 
 
-class BuyResourcesBot(Bot):
+class BuyMarketBot(Bot):
     def __init__(self, ikariam_service, bot_config):
         super().__init__(ikariam_service, bot_config)
         self.offers = bot_config['offers']
@@ -49,47 +49,42 @@ class BuyResourcesBot(Bot):
                 break
 
     def __buy(self, offer, amount_to_buy, ship_size, ships_available):
-        ships = int(math.ceil((Decimal(amount_to_buy) / Decimal(ship_size))))
-        data_dict = {
-            'action': 'transportOperations',
-            'function': 'buyGoodsAtAnotherBranchOffice',
-            'cityId': offer['cityId'],
-            'destinationCityId': offer['destinationCityId'],
-            'oldView': 'branchOffice',
-            'position': self.building_position,
-            'avatar2Name': offer['jugadorAComprar'],
-            'city2Name': offer['ciudadDestino'],
-            'type': int(offer['type']),
-            'activeTab': 'bargain',
-            'transportDisplayPrice': 0,
-            'premiumTransporter': 0,
-            'normalTransportersMax': ships_available,
-            'capacity': 5,
-            'max_capacity': 5,
-            'jetPropulsion': 0,
-            'transporters': ships,
-            'backgroundView': 'city',
-            'currentCityId': offer['cityId'],
-            'templateView': 'takeOffer',
-            'currentTab': 'bargain',
-            'actionRequest': actionRequest,
-            'ajax': 1
-        }
+        ships_used = int(math.ceil((Decimal(amount_to_buy) / Decimal(ship_size))))
+        
+        # Get price from the takeOffer view
         url = 'view=takeOffer&destinationCityId={}&oldView=branchOffice&activeTab=bargain&cityId={}&position={}&type={}&resource={}&backgroundView=city&currentCityId={}&templateView=branchOffice&actionRequest={}&ajax=1'.format(offer['destinationCityId'], offer['cityId'], offer['position'], offer['type'], offer['resource'], offer['cityId'], actionRequest)
         data = self.ikariam_service.post(url)
         html = json.loads(data, strict=False)[1][1][1]
-        hits = re.findall(r'"tradegood(\d)Price"\s*value="(\d+)', html)
-        for hit in hits:
-            data_dict['tradegood{}Price'.format(hit[0])] = int(hit[1])
-            data_dict['cargo_tradegood{}'.format(hit[0])] = 0
-        hit = re.search(r'"resourcePrice"\s*value="(\d+)', html)
-        if hit:
-            data_dict['resourcePrice'] = int(hit.group(1))
-            data_dict['cargo_resource'] = 0
-        resource = offer['resource']
-        if resource == 'resource':
-            data_dict['cargo_resource'] = amount_to_buy
-        else:
-            data_dict['cargo_tradegood{}'.format(resource)] = amount_to_buy
-        self.ikariam_service.post(params=data_dict)
+        
+        price = 0
+        resource_type = offer['resource']
+        
+        if resource_type == 'resource': # Wood
+            hit = re.search(r'"resourcePrice"\s*value="(\d+)', html)
+            if hit:
+                price = int(hit.group(1))
+        else: # Tradegood
+            hits = re.findall(r'"tradegood(\d)Price"\s*value="(\d+)', html)
+            for hit in hits:
+                if hit[0] == str(resource_type):
+                    price = int(hit[1])
+                    break
+        
+        execute_market_offer_transfer(
+            session=self.ikariam_service,
+            city_id=offer['cityId'],
+            destination_city_id=offer['destinationCityId'],
+            market_position=self.building_position,
+            function_name='buyGoodsAtAnotherBranchOffice',
+            resource_type=resource_type,
+            amount=amount_to_buy,
+            price=price,
+            ships_available=ships_available,
+            ships_used=ships_used,
+            other_player_name=offer['jugadorAComprar'],
+            other_city_name=offer['ciudadDestino'],
+            offer_type=int(offer['type']),
+            action_request=actionRequest
+        )
+        
         logging.info('I buy %s to %s from %s', addThousandSeparator(amount_to_buy), offer['ciudadDestino'], offer['jugadorAComprar'])

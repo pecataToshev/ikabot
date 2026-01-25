@@ -158,3 +158,64 @@ def getMarketInfo(session, city):
               'actionRequest': actionRequest, 'ajax': '1'}
     resp = session.post(params=params, noIndex=True)
     return json.loads(resp, strict=False)[1][1][1]
+
+
+def execute_market_offer_transfer(session, city_id, destination_city_id, market_position,
+                                  function_name,  # 'buyGoodsAtAnotherBranchOffice' or 'sellGoodsAtAnotherBranchOffice'
+                                  resource_type, amount, price,
+                                  ships_available, ships_used,
+                                  other_player_name, other_city_name,
+                                  offer_type,
+                                  action_request):
+    """
+    Executes a buy or sell transaction at the market (Branch Office).
+    Constructs the payload with the specific order of fields required by the server.
+    """
+    
+    # 1. Base Core Data
+    data = {
+        'action': 'transportOperations',
+        'function': function_name,
+        'cityId': city_id,
+        'destinationCityId': destination_city_id,
+        'oldView': 'branchOffice',
+        'position': market_position,
+        'avatar2Name': other_player_name,
+        'city2Name': other_city_name,
+        'type': offer_type,
+        'activeTab': 'bargain',
+        'transportDisplayPrice': '0',
+        'premiumTransporter': '0',
+        'normalTransportersMax': ships_available,
+    }
+
+    # 2. Resource/Price Data
+    # Handle resource_type (can be 'resource', 0, or integers 1-4)
+    is_resource = str(resource_type) == '0' or str(resource_type) == 'resource'
+    
+    if is_resource:
+        data['resourcePrice'] = price
+        data['cargo_resource'] = amount
+    else:
+        # For tradegoods (1-4)
+        r_type_int = int(resource_type)
+        data['tradegood{:d}Price'.format(r_type_int)] = price
+        data['cargo_tradegood{:d}'.format(r_type_int)] = amount
+
+    # 3. Tail Data
+    data.update({
+        'capacity': '5',
+        'max_capacity': '5',
+        'jetPropulsion': '0',
+        'transporters': str(ships_used),
+        'backgroundView': 'city',
+        'currentCityId': city_id,
+        'templateView': 'takeOffer',
+        'currentTab': 'bargain',
+        'actionRequest': action_request,
+        'ajax': '1'
+    })
+
+    # Execute Request
+    return session.post(params=data)
+

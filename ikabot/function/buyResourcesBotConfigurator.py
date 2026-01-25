@@ -3,7 +3,7 @@
 import json
 import re
 
-from ikabot.bot.buyResourcesBot import BuyResourcesBot
+from ikabot.bot.market.buyMarketBot import BuyMarketBot
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
 from ikabot.helpers.gui import (addThousandSeparator, banner,
@@ -261,7 +261,7 @@ def buy_resources_bot_configurator(ikariam_service: IkariamService, db: Database
     print('It will be purchased {}'.format(addThousandSeparator(amount_to_buy)))
     enter()
 
-    BuyResourcesBot(
+    BuyMarketBot(
         ikariam_service=ikariam_service,
         bot_config={
             'amountToBuy': amount_to_buy,

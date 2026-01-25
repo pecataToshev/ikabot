@@ -4,8 +4,8 @@
 import json
 import re
 
-from ikabot.bot.sellResourcesBot import (SellResourcesToOfferBot,
-                                         SellResourcesWithOwnOfferBot)
+from ikabot.bot.market.sellMarketBot import (SellMarketToOfferBot,
+                                             SellMarketWithOwnOfferBot)
 from ikabot.config import actionRequest, materials_names
 from ikabot.helpers.database import Database
 from ikabot.helpers.getJson import parse_int
@@ -229,7 +229,7 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
                                                                  addThousandSeparator(profit))):
         return
 
-    SellResourcesToOfferBot(
+    SellMarketToOfferBot(
         ikariam_service=ikariam_service,
         bot_config={
             'left_to_sell': amount_to_sell,
@@ -272,7 +272,7 @@ def createOffer(ikariam_service: IkariamService, my_offering_market_city, resour
     if rta.lower() == 'n':
         return
 
-    SellResourcesWithOwnOfferBot(
+    SellMarketWithOwnOfferBot(
         ikariam_service=ikariam_service,
         bot_config={
             'amount_to_sell': amount_to_sell,
