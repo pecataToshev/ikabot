@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+import signal
 import subprocess
 import time
 from datetime import datetime
@@ -33,6 +34,7 @@ class ProcessStatus:
     WAITING = 'waiting'
     ZOMBIE = 'zombie'
     ERROR = 'error'
+    PAUSED = 'paused'
 
     @staticmethod
     def get_colour(status, row):
@@ -40,6 +42,8 @@ class ProcessStatus:
             return Colours.Text.Light.RED
         if status in [ProcessStatus.TERMINATED, ProcessStatus.ZOMBIE]:
             return Colours.Text.Light.YELLOW
+        if status in [ProcessStatus.PAUSED]:
+            return Colours.Text.Light.CYAN
         if status in [ProcessStatus.DONE]:
             return Colours.Text.Light.GREEN
         return Colours.Text.RESET
@@ -140,6 +144,17 @@ class IkabotProcessListManager:
                 process['nextActionTime'] = deletion_time
                 self.__db.set_process(process)
 
+            # Check for paused status (Unix only, Windows doesn't easily show suspended status)
+            if not isWindows:
+                try:
+                    proc = psutil.Process(pid=process['pid'])
+                    if proc.status() == 'stopped':
+                        process['status'] = ProcessStatus.PAUSED
+                except Exception:
+                    # In some environments (Docker, restricted VPS), psutil might fail to read process status.
+                    # We just ignore it and rely on the DB status set by suspend_process.
+                    pass
+
             running_ikabot_processes.append(process)
 
         return running_ikabot_processes
@@ -229,3 +244,50 @@ class IkabotProcessListManager:
                 {'key': 'info', 'title': 'Info'},
             ],
         )
+
+    def suspend_process(self, process):
+        """
+        Suspends the given process
+        """
+        logging.info("Suspending process: %s", process)
+        try:
+            if isWindows:
+                proc = psutil.Process(pid=process['pid'])
+                proc.suspend()
+            else:
+                os.kill(process['pid'], signal.SIGSTOP)
+            
+            # We can update the DB immediately to reflect the change, 
+            # though get_processes will also detect it dynamically.
+            process['status'] = ProcessStatus.PAUSED
+            self.__db.set_process(process)
+        except Exception as e:
+            logging.error("Failed to suspend process %s: %s", process.get('pid'), str(e))
+
+    def resume_process(self, process):
+        """
+        Resumes the given process
+        """
+        logging.info("Resuming process: %s", process)
+        try:
+            if isWindows:
+                proc = psutil.Process(pid=process['pid'])
+                proc.resume()
+            else:
+                os.kill(process['pid'], signal.SIGCONT)
+
+            # We assume it goes back to running, though it might be waiting.
+            # Best to let the process itself update the status, or just wait for detection.
+            # But we can optimistically set it to RUNNING (or whatever it was before if we knew).
+            # For now, let's just not force the DB status back, as the process will continue its execution loop.
+            # However, to stop showing "PAUSED" immediately in the UI if we don't refresh:
+            # We'll rely on the next refresh to clear the PAUSED status because proc.status() won't be 'stopped'.
+            # But let's verify if we should clear the 'paused' from DB if we wrote it there.
+            if process['status'] == ProcessStatus.PAUSED:
+                 # It was paused. We don't know the previous status. 
+                 # Safe guess: RUNNING. It will correct itself quickly.
+                 process['status'] = ProcessStatus.RUNNING 
+                 self.__db.set_process(process)
+
+        except Exception as e:
+            logging.error("Failed to resume process %s: %s", process.get('pid'), str(e))

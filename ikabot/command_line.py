@@ -29,7 +29,7 @@ from ikabot.function.importExportCookie import exportCookie, importCookie
 from ikabot.function.islandMonitoringBotConfigurator import \
     island_monitoring_bot_configurator
 from ikabot.function.islandWorkplaces import islandWorkplaces
-from ikabot.function.killTasks import kill_tasks
+from ikabot.function.manageTasks import manage_tasks
 from ikabot.function.loginDailyBotConfigurator import \
     login_daily_bot_configurator
 from ikabot.function.miracle_donate import miracle_donate
@@ -150,7 +150,7 @@ _global_menu = [
             ['Change bot data', update_telegram_bot],
             ['Test message the bot', test_telegram_bot],
         ]],
-        ['Kill tasks', kill_tasks],
+        ['Manage tasks', manage_tasks],
         ['Configure captcha resolver', decaptchaConf],
         ['Cookies', [
             __command_back,
