@@ -149,6 +149,16 @@ class SellResourcesToOfferBot(Bot):
                     'transportDisplayPrice': '0',
                     'premiumTransporter': '0',
                     'normalTransportersMax': ships_available,
+                }
+
+                if self.resource_type == 0:
+                    data['resourcePrice'] = precio
+                    data['cargo_resource'] = amount_to_sell
+                else:
+                    data['tradegood{:d}Price'.format(self.resource_type)] = precio
+                    data['cargo_tradegood{:d}'.format(self.resource_type)] = amount_to_sell
+
+                data.update({
                     'capacity': '5',
                     'max_capacity': '5',
                     'jetPropulsion': '0',
@@ -159,13 +169,7 @@ class SellResourcesToOfferBot(Bot):
                     'currentTab': 'bargain',
                     'actionRequest': actionRequest,
                     'ajax': '1'
-                }
-                if self.resource_type == 0:
-                    data['cargo_resource'] = amount_to_sell
-                    data['resourcePrice'] = precio
-                else:
-                    data['tradegood{:d}Price'.format(self.resource_type)] = precio
-                    data['cargo_tradegood{:d}'.format(self.resource_type)] = amount_to_sell
+                })
 
                 self.ikariam_service.get(city_url + self.city_to_buy_from['id'], noIndex=True)
                 self.ikariam_service.post(params=data)

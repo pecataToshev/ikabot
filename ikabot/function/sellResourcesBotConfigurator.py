@@ -232,7 +232,7 @@ def sellToOffers(ikariam_service: IkariamService, city_to_buy_from, resource_typ
     SellResourcesToOfferBot(
         ikariam_service=ikariam_service,
         bot_config={
-            'left_to_sell': left_to_sell,
+            'left_to_sell': amount_to_sell,
             'amount_to_sell': amount_to_sell,
             'offers': chosen_offers,
             'resource_type': resource_type,
