@@ -291,3 +291,19 @@ class IkabotProcessListManager:
 
         except Exception as e:
             logging.error("Failed to resume process %s: %s", process.get('pid'), str(e))
+
+    def wakeup_process(self, process):
+        """
+        Wakes up the given process (skips waiting time)
+        """
+        logging.info("Waking up process: %s", process)
+        try:
+            if isWindows:
+                # Windows doesn't handle SIGUSR1 natively for Python processes nicely without win32api
+                # For now, we'll log a warning or use a workaround if needed.
+                # Since the user is on Mac, we prioritize that. 
+                logging.warning("Wake up (Skip Wait) is not fully supported on Windows yet.")
+            else:
+                os.kill(process['pid'], signal.SIGUSR1)
+        except Exception as e:
+            logging.error("Failed to wake up process %s: %s", process.get('pid'), str(e))

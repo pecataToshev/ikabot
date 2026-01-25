@@ -13,6 +13,10 @@ from ikabot.helpers.ikabotProcessListManager import IkabotProcessListManager, Pr
 from ikabot.helpers.telegram import Telegram
 
 
+class WakeUpException(Exception):
+    pass
+
+
 class Bot(ABC):
     @abstractmethod
     def _get_process_info(self) -> str:
@@ -36,6 +40,11 @@ class Bot(ABC):
         signal.signal(signal.SIGTERM, exit_child)
         signal.signal(signal.SIGABRT, exit_child)
 
+        def wake_up(signum, frame):
+            logging.info("Received wake up signal: %s", signum)
+            raise WakeUpException()
+        signal.signal(signal.SIGUSR1, wake_up)
+
     def __prepare_and_start_process(self, process_info):
         try:
             logging.info("Preparing %s with config: %s", self.__class__.__name__, self.bot_config)
@@ -52,7 +61,17 @@ class Bot(ABC):
             self.__process_manager.upsert_process(process_info)
 
             logging.info("Starting %s with config: %s", self.__class__.__name__, self.bot_config)
-            self._start()
+            while True:
+                try:
+                    self._start()
+                    break
+                except WakeUpException:
+                    logging.info("Received WakeUpException, restarting process loop...")
+                    self.__process_manager.upsert_process({
+                        'status': ProcessStatus.RUNNING,
+                        'info': 'Restarting process...'
+                    })
+                    continue
 
             logging.info("Done executing %s with config: %s", self.__class__.__name__, self.bot_config)
             self.__process_manager.upsert_process({

@@ -40,7 +40,8 @@ def manage_tasks(ikariam_service: IkariamService, db: Database, telegram: Telegr
         print(' 1) Kill')
         print(' 2) Pause')
         print(' 3) Resume')
-        action_choice = read(min=0, max=3, digit=True)
+        print(' 4) Wake Up / Skip Wait')
+        action_choice = read(min=0, max=4, digit=True)
 
         if action_choice == 0:
             continue
@@ -74,4 +75,10 @@ def manage_tasks(ikariam_service: IkariamService, db: Database, telegram: Telegr
             # We don't strictly check if it's running because it might be 'waiting' but actually suspended in OS
             process_list_manager.resume_process(process)
             print("Process resumed.")
+            enter()
+        
+        elif action_choice == 4:
+            # Wake Up
+            process_list_manager.wakeup_process(process)
+            print("Process woken up (wait skipped).")
             enter()
