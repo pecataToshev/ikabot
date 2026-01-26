@@ -138,9 +138,9 @@ class TransportGoodsBot(Bot):
                 wait_time = getMinimumWaitingTime(self.ikariam_service)
                 # If next ships arrive in less than 10 minutes, wait for them
                 if 0 < wait_time < (10 * 60):
-                    self._wait(wait_time + 10, 'Waiting to reduce chunks')
-                    ships_available = waitForAvailableShips(self.ikariam_service, self._wait,
-                                                            additional='; Resources left: {}'.format(addThousandSeparator(sum(all_remaining_resources))))
+                    _remaining_resources_to_send_str = '; Resources left: {}'.format(addThousandSeparator(sum(all_remaining_resources)))
+                    self._wait(wait_time + 10, 'Waiting to reduce chunks', additional=_remaining_resources_to_send_str)
+                    ships_available = waitForAvailableShips(self.ikariam_service, self._wait, additional=_remaining_resources_to_send_str)
                 else:
                     break
         storage_capacity_in_ships = ships_available * self.ship_size
