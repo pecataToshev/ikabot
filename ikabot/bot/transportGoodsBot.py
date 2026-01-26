@@ -63,12 +63,12 @@ class TransportGoodsBot(Bot):
                 # No undone jobs left
                 break
 
-            _remaining_resources_to_send = sum([sum(jobs[i].resources) for i in _remaining_job_indexes])
+            _remaining_resources_to_send = [sum(job.resources[j] for job in jobs if job is not None) for j in range(len(materials_names))]
 
             for i in _remaining_job_indexes:
-                _current_job_remaining_resources_sum_start = sum(jobs[i].resources)
+                _current_job_remaining_resources_start = list(jobs[i].resources)
                 job = self.__execute_job(jobs[i], batch_size, _remaining_resources_to_send)
-                _current_job_remaining_resources_sum_after = sum(job.resources)
+                _current_job_remaining_resources_after = job.resources if job else [0]*len(materials_names)
 
                 # Remove job if no resource left
                 if _current_job_remaining_resources_sum_after == 0:
@@ -76,8 +76,9 @@ class TransportGoodsBot(Bot):
                 jobs[i] = job
 
                 # Update total remaining resources
-                _remaining_resources_to_send -= _current_job_remaining_resources_sum_start
-                _remaining_resources_to_send += _current_job_remaining_resources_sum_after
+                for j in range(len(materials_names)):
+                    _remaining_resources_to_send[j] -= _current_job_remaining_resources_start[j]
+                    _remaining_resources_to_send[j] += _current_job_remaining_resources_after[j]
 
 
 
@@ -110,7 +111,7 @@ class TransportGoodsBot(Bot):
             job_map[key] = None
         return res
 
-    def __execute_job(self, job: TransportJob, batch_size: Union[int, None], sum_of_all_remaining_resources_to_send: int) -> TransportJob:
+    def __execute_job(self, job: TransportJob, batch_size: Union[int, None], all_remaining_resources: List[int]) -> TransportJob:
         """
         Executes the transport job (even in batches)
         :param job: what to execute
@@ -127,7 +128,7 @@ class TransportGoodsBot(Bot):
 
         
         ships_available = waitForAvailableShips(self.ikariam_service, self._wait,
-                                                additional='; Resources left: {}'.format(addThousandSeparator(sum_of_all_remaining_resources_to_send)))
+                                                additional='; Resources left: {}'.format(addThousandSeparator(sum(all_remaining_resources))))
 
         # Wait for more ships if they arrive soon and we can send a bigger batch
         if batch_size is not None:
@@ -138,7 +139,7 @@ class TransportGoodsBot(Bot):
                 if 0 < wait_time < (10 * 60):
                     self._wait(wait_time + 10, 'Waiting to reduce chunks')
                     ships_available = waitForAvailableShips(self.ikariam_service, self._wait,
-                                                            additional='; Resources left: {}'.format(addThousandSeparator(sum_of_all_remaining_resources_to_send)))
+                                                            additional='; Resources left: {}'.format(addThousandSeparator(sum(all_remaining_resources))))
                 else:
                     break
         storage_capacity_in_ships = ships_available * self.ship_size
