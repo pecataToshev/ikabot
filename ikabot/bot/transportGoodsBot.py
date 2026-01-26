@@ -13,8 +13,7 @@ from ikabot.config import (SECONDS_IN_HOUR, actionRequest, city_url,
 from ikabot.helpers.citiesAndIslands import getCurrentCityId
 from ikabot.helpers.getJson import getCity
 from ikabot.helpers.gui import addThousandSeparator
-from ikabot.helpers.naval import TransportShip
-from ikabot.helpers.planRoutes import waitForAvailableShips
+from ikabot.helpers.planRoutes import waitForAvailableShips, getMinimumWaitingTime
 
 
 class TransportJob:
@@ -129,6 +128,19 @@ class TransportGoodsBot(Bot):
         
         ships_available = waitForAvailableShips(self.ikariam_service, self._wait,
                                                 additional='; Resources left: {}'.format(addThousandSeparator(sum_of_all_remaining_resources_to_send)))
+
+        # Wait for more ships if they arrive soon and we can send a bigger batch
+        if batch_size is not None:
+            max_batch_ships = batch_size // self.ship_size
+            while ships_available < max_batch_ships and sum(job.resources) > (ships_available * self.ship_size):
+                wait_time = getMinimumWaitingTime(self.ikariam_service)
+                # If next ships arrive in less than 10 minutes, wait for them
+                if 0 < wait_time < (10 * 60):
+                    self._wait(wait_time + 10, 'Waiting to reduce chunks')
+                    ships_available = waitForAvailableShips(self.ikariam_service, self._wait,
+                                                            additional='; Resources left: {}'.format(addThousandSeparator(sum_of_all_remaining_resources_to_send)))
+                else:
+                    break
         storage_capacity_in_ships = ships_available * self.ship_size
 
         # Consider maximum batch size
