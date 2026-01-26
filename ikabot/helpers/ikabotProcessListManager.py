@@ -243,6 +243,7 @@ class IkabotProcessListManager:
                 {'key': 'objective', 'title': 'Objective'},
                 {'key': 'info', 'title': 'Info'},
             ],
+            print_row_separator=lambda i: i == 0
         )
 
     def suspend_process(self, process):

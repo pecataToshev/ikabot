@@ -192,7 +192,7 @@ def shipMovements(ikariam_service, db, telegram):
                 {'key': 'cargo', 'title': 'Cargo', 'align': '<'}
             ]
 
-            printTable(table_config, table_data)
+            printTable(table_config, table_data, print_row_separator=lambda i: i == 0)
 
         print("\nActions:")
         print(" 0) Exit")
