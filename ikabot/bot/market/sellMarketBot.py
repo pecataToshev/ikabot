@@ -159,3 +159,4 @@ class SellMarketToOfferBot(Bot):
                     return
                 if amount_to_buy == 0:
                     break
+                self._wait(5, 'Wait before next batch. Remaining: {}'.format(addThousandSeparator(self.left_to_sell)), max_random=10)

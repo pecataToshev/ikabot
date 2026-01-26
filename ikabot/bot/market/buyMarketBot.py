@@ -47,6 +47,7 @@ class BuyMarketBot(Bot):
                 offer['amountAvailable'] -= buy_amount
                 self.__buy(offer, buy_amount, ship_size, ships_available)
                 # start from the beginning again, so that we always buy from the cheapest offers fisrt
+                self._wait(5, 'Wait before next batch. Remaining: {}'.format(addThousandSeparator(self.amount_to_buy)), max_random=10)
                 break
 
     def __buy(self, offer, amount_to_buy, ship_size, ships_available):
