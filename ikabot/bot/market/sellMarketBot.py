@@ -130,7 +130,7 @@ class SellMarketToOfferBot(Bot):
                 amount_to_sell = min(amount_to_buy, self.left_to_sell)
                 ships_available = waitForAvailableShips(self.ikariam_service, self._wait)
                 ships_needed = math.ceil((Decimal(amount_to_sell) / Decimal(ship_size)))
-                ships_used = min(ships_available, ships_needed)
+                ships_used = min(ships_available, ships_needed, 30)
                 if ships_needed > ships_used:
                     amount_to_sell = ships_used * ship_size
                 self.left_to_sell -= amount_to_sell

@@ -39,7 +39,8 @@ class BuyMarketBot(Bot):
                     continue
 
                 ships_available = waitForAvailableShips(self.ikariam_service, self._wait)
-                storage_capacity = ships_available * ship_size
+                ships_to_use = min(ships_available, 30)
+                storage_capacity = ships_to_use * ship_size
                 buy_amount = min(self.amount_to_buy, storage_capacity, offer['amountAvailable'])
 
                 self.amount_to_buy -= buy_amount
