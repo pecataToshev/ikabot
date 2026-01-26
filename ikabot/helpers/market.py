@@ -89,8 +89,17 @@ def getFinances(session, city_id):
     :param city_id : int
     :return json
     """
-    url = 'view=finances&backgroundView=city&currentCityId={}&templateView=finances&actionRequest={}&ajax=1'.format(city_id, actionRequest)
-    data = session.post(url)
+    params = {
+        'view': 'finances',
+        'backgroundView': 'city',
+        'currentCityId': city_id,
+        'templateView': 'finances',
+        'actionRequest': actionRequest,
+        'ajax': '1'
+    }
+    data = session.post(params=params)
+    if not data or data.strip() == '':
+        return None
     return json.loads(data, strict=False)
 
 
@@ -105,6 +114,8 @@ def getGold(session, city_id):
     gold : int
     """
     json_data = getFinances(session, city_id)
+    if not json_data:
+        return 0, 0
     gold = json_data[0][1]['headerData']['gold']
     gold = gold.split('.')[0]
     gold = int(gold)
@@ -187,6 +198,7 @@ def execute_market_offer_transfer(session, city_id, destination_city_id, market_
         'transportDisplayPrice': '0',
         'premiumTransporter': '0',
         'normalTransportersMax': ships_available,
+        'usedFreightersShips': '0',
     }
 
     # 2. Resource/Price Data
@@ -204,10 +216,10 @@ def execute_market_offer_transfer(session, city_id, destination_city_id, market_
 
     # 3. Tail Data
     data.update({
+        'transporters': str(ships_used),
         'capacity': '5',
         'max_capacity': '5',
         'jetPropulsion': '0',
-        'transporters': str(ships_used),
         'backgroundView': 'city',
         'currentCityId': city_id,
         'templateView': 'takeOffer',

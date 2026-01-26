@@ -131,10 +131,15 @@ def shipMovements(ikariam_service, db, telegram):
                     decoded_avatar = decodeUnicodeEscape(city_data['avatarName'])
                     if decoded_avatar == ikariam_service.username:
                         return Colours.Text.RESET
+
+                    # If not hostile (no troops/warships) and not mine
+                    if not isHostile(movement):
+                        return Colours.Text.Light.CYAN
+
                     # If the movement is from an alliance member, and this city belongs to the one who started the movement
                     if movement['isSameAlliance'] and not movement['isOwnArmyOrFleet']:
                         return Colours.Text.Light.GREEN
-                    
+
                     # If the city owner is different from the player and it's not our city
                     return Colours.Text.Light.RED
 

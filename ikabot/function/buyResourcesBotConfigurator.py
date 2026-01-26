@@ -93,8 +93,9 @@ def getOffers(session, city):
             break
             
         html = json.loads(data, strict=False)[1][1][1]
-        
-        hits = re.findall(r'short_text80">(.*?) *<br/>\((.*?)\)\s *</td>\s *<td>(\d+)</td>\s *<td>(.*?)/td>\s *<td><img src="(.*?)\.png[\s\S]*?white-space:nowrap;">(\d+)\s[\s\S]*?href="\?view=takeOffer&destinationCityId=(\d+)&oldView=branchOffice&activeTab=bargain&cityId=(\d+)&position=(\d+)&type=(\d+)&resource=(\w+)"', html)
+        html_cleaned = re.sub(r'\s+', ' ', html).strip()
+
+        hits = re.findall(r'short_text80">(.*?) <br/>\((.*?)\).*?<td>(\d+)</td>.*?tooltip">([\d\s.,]+)</div>.*?src="(.*?)\.png".*?white-space:nowrap;">(\d+).*?view=takeOffer&destinationCityId=(\d+)&oldView=branchOffice&activeTab=bargain&cityId=(\d+)&position=(\d+)&type=(\d+)&resource=(\w+)"', html_cleaned)
         
         offers_before = len(all_offers)
         
@@ -239,22 +240,81 @@ def buy_resources_bot_configurator(ikariam_service: IkariamService, db: Database
     
     printTable(table_config, table_data, print_row_separator=lambda i: i == 0)
 
-    # ask how much to buy
-    print('\nTotal amount available to purchase: {}, for {}'.format(addThousandSeparator(total_amount), addThousandSeparator(total_price)))
+    print('\nSelect offers to buy from (e.g., "1,3,5" or "all" for all offers):')
+    selection = read(msg='Selection: ', empty=False)
+
+    if selection == '0':
+        return
+
+    # Parse selection
+    chosen_offers = []
+    if selection.lower() == 'all':
+        chosen_offers = offers
+    else:
+        try:
+            indices = [int(x.strip()) for x in selection.split(',')]
+            chosen_offers = [offers[i-1] for i in indices if 1 <= i <= len(offers)]
+        except (ValueError, IndexError):
+            print('Invalid selection')
+            enter()
+            return
+
+    if len(chosen_offers) == 0:
+        print('No offers selected')
+        enter()
+        return
+
+    # Calculate totals for selected offers
+    total_amount = sum(offer['amountAvailable'] for offer in chosen_offers)
+    total_price = sum(offer['amountAvailable'] * offer['precio'] for offer in chosen_offers)
+
+    banner()
+    print('Selected {} offers:'.format(len(chosen_offers)))
+
+    # Convert selected offers to list of dicts for printTable
+    selected_table_data = []
+    for idx, offer in enumerate(chosen_offers, 1):
+        selected_table_data.append({
+            'city': offer['ciudadDestino'].strip(),
+            'player': offer['jugadorAComprar'],
+            'amount': offer['amountAvailable'],
+            'price': offer['precio'],
+            'total': offer['amountAvailable'] * offer['precio']
+        })
+
+    # Configure table columns for selected offers
+    selected_table_config = [
+        {'key': 'city', 'title': 'City', 'align': '<'},
+        {'key': 'player', 'title': 'Player', 'align': '<'},
+        {'key': 'amount', 'title': 'Amount', 'align': '>', 'fmt': addThousandSeparator},
+        {'key': 'price', 'title': 'Price', 'align': '>'},
+        {'key': 'total', 'title': 'Total Gold', 'align': '>', 'fmt': addThousandSeparator}
+    ]
+
+    printTable(selected_table_config, selected_table_data, print_row_separator=lambda i: i == 0)
+
+    print('\nTotal demand from selected offers: {}'.format(addThousandSeparator(total_amount)))
     available = city['freeSpaceForResources'][resource]
     if available < total_amount:
-        print('You just can buy {} due to storing capacity'.format(addThousandSeparator(available)))
-        total_amount = available
+        print('You can only buy up to {} due to storage capacity'.format(addThousandSeparator(available)))
+        limit_amount = available
+    else:
+        limit_amount = total_amount
+
     print('')
-    amount_to_buy = read(msg='How much do you want to buy?: ', min=0, max=total_amount)
+    amount_to_buy = read(msg='How much do you want to buy? [max = {}]: '.format(addThousandSeparator(limit_amount)), min=0, max=limit_amount)
     if amount_to_buy == 0:
         return
 
     # calculate the total cost
     (gold, __) = getGold(ikariam_service, city)
-    total_cost = calculateCost(offers, amount_to_buy)
+    total_cost = calculateCost(chosen_offers, amount_to_buy)
 
-    print('\nCurrent gold: {}.\nTotal cost  : {}.\nFinal gold  : {}.'. format(addThousandSeparator(gold), addThousandSeparator(total_cost), addThousandSeparator(gold - total_cost)))
+    if gold > 0:
+        print('\nCurrent gold: {}.\nTotal cost  : {}.\nFinal gold  : {}.'. format(addThousandSeparator(gold), addThousandSeparator(total_cost), addThousandSeparator(gold - total_cost)))
+    else:
+        print('\nTotal cost: {}.'.format(addThousandSeparator(total_cost)))
+
     if not askUserYesNo('Proceed'):
         return
 
@@ -265,7 +325,7 @@ def buy_resources_bot_configurator(ikariam_service: IkariamService, db: Database
         ikariam_service=ikariam_service,
         bot_config={
             'amountToBuy': amount_to_buy,
-            'offers': offers,
+            'offers': chosen_offers,
             'buildingPosition': city['marketPosition'],
             'resource': resource,
             'cityName': city['name'],

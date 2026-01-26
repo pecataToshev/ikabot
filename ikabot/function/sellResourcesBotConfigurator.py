@@ -71,10 +71,10 @@ def getOffers(session, my_market_city, resource_type):
             break
             
         html = json.loads(resp, strict=False)[1][1][1]
-
-        # Taken from #306
         html_cleaned = re.sub(r'\s+', ' ', html).strip()
-        page_offers = re.findall(r'<td class="short_text80">(.*?)<br/>\((.*?)\).*?tooltip">([\d\s.,]+)</div>.*?<td style="white-space:nowrap;">(\d+).*?<td>(\d+)</td>.*?href="\?view=takeOffer&destinationCityId=(\d+)', html_cleaned)
+
+        page_offers = re.findall(r'short_text80">(.*?) <br/>\((.*?)\).*?tooltip">([\d\s.,]+)</div>.*?white-space:nowrap;">(\d+).*?<td>(\d+)</td>.*?href="\?view=takeOffer&destinationCityId=(\d+)', html_cleaned)
+        
         page_offers = [(cityname.strip(), username.strip(), parse_int(re.sub(r"\s+", "", amount)), parse_int(price), dist, destination_city_id) for cityname, username, amount, price, dist, destination_city_id in page_offers]
         
         all_offers.extend(page_offers)

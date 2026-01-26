@@ -69,6 +69,7 @@ class TransportGoodsBot(Bot):
                 _current_job_remaining_resources_start = list(jobs[i].resources)
                 job = self.__execute_job(jobs[i], batch_size, _remaining_resources_to_send)
                 _current_job_remaining_resources_after = job.resources if job else [0]*len(materials_names)
+                _current_job_remaining_resources_sum_after = sum(_current_job_remaining_resources_after)
 
                 # Remove job if no resource left
                 if _current_job_remaining_resources_sum_after == 0:
