@@ -24,15 +24,25 @@ def obtainMiraclesAvailable(session):
     islands = []
     for idIsland in idsIslands:
         html = session.get(island_url + idIsland)
-        island = getIsland(html)
-        island['activable'] = False
-        islands.append(island)
+        if not html:
+            continue
+        try:
+            island = getIsland(html)
+            island['activable'] = False
+            islands.append(island)
+        except Exception:
+            continue
 
     ids, cities = getIdsOfCities(session)
     for city_id in cities:
         city = cities[city_id]
-        # get the wonder for this city
-        wonder = [island['wonder'] for island in islands if city['coords'] == '[{}:{}] '.format(island['x'], island['y'])][0]
+        # Find the island for this city
+        matching_islands = [island for island in islands if city['coords'] == '[{}:{}] '.format(island['x'], island['y'])]
+        
+        if not matching_islands:
+            continue
+            
+        wonder = matching_islands[0]['wonder']
         # if the wonder is not new, continue
         if wonder in [island['wonder'] for island in islands if island['activable']]:
             continue

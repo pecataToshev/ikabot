@@ -193,12 +193,33 @@ def getIsland(html):
     island : Island
         this function returns a json parsed Island object. For more information about this object refer to the github wiki page of Ikabot.
     """
-    isla = re.search(r'\[\["updateBackgroundData",([\s\S]*?),"specialServerBadges', html).group(1) + '}'
+    try:
+        # Find the start of the island data object
+        marker = 'updateBackgroundData",'
+        start_index = html.find(marker)
+        if start_index == -1:
+            marker = 'updateBackgroundData", '
+            start_index = html.find(marker)
+            
+        if start_index == -1:
+            with open('island_error.html', 'w', encoding='utf-8') as f:
+                f.write(html)
+            raise ValueError("Failed to find updateBackgroundData in island HTML")
 
-    isla = isla.replace('buildplace', 'empty')
+        start_index += len(marker)
+        while start_index < len(html) and html[start_index] != '{':
+            start_index += 1
+            
+        if start_index >= len(html):
+            raise ValueError("Found marker but no JSON object starts after it")
 
-    # {"id":idIsla,"name":nombreIsla,"x":,"y":,"good":numeroBien,"woodLv":,"goodLv":,"wonder":numeroWonder, "wonderName": "nombreDelMilagro","wonderLv":"5","cities":[{"type":"city","name":cityName,"id":cityId,"level":lvIntendencia,"Id":playerId,"Name":playerName,"AllyId":,"AllyTag":,"state":"vacation"},...}}
-    isla = json.loads(isla, strict=False)
+        isla, end_offset = json.JSONDecoder().raw_decode(html[start_index:])
+        
+    except Exception:
+        with open('island_error.html', 'w', encoding='utf-8') as f:
+            f.write(html)
+        raise
+
     isla['tipo'] = re.search(r'"tradegood":(\d)', html).group(1)
     isla['x'] = int(isla['xCoord'])
     isla['y'] = int(isla['yCoord'])
