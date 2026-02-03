@@ -58,8 +58,8 @@ class ActivateMiracleBot(Bot):
 
             for elem in temple_response:
                 if 'countdown' in temple_response[elem]:
-                    end_time = temple_response[elem]['countdown']['enddate']
-                    current_time = temple_response[elem]['countdown']['currentdate']
+                    end_time = int(temple_response[elem]['countdown']['enddate'])
+                    current_time = int(temple_response[elem]['countdown']['currentdate'])
                     wait_time = end_time - current_time
                     break
             else:
@@ -111,8 +111,8 @@ class ActivateMiracleBot(Bot):
         temple_response = activate_miracle_response[2][1]
         for elem in temple_response:
             if 'countdown' in temple_response[elem]:
-                end_time = temple_response[elem]['countdown']['enddate']
-                current_time = temple_response[elem]['countdown']['currentdate']
+                end_time = int(temple_response[elem]['countdown']['enddate'])
+                current_time = int(temple_response[elem]['countdown']['currentdate'])
                 return end_time - current_time
         return 0
 

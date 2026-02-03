@@ -38,13 +38,23 @@ class WorkshopUpgradeBot(Bot):
                     # Build info message about what's being upgraded
                     info_msg = 'Upgrade in progress'
                     if upgrade_info:
-                        if 'unit_name' in upgrade_info and 'upgrade_name' in upgrade_info:
-                            info_msg = 'Upgrading {} - {}'.format(
-                                upgrade_info['unit_name'],
-                                upgrade_info['upgrade_name']
-                            )
-                        elif 'unit_name' in upgrade_info:
-                            info_msg = 'Upgrading {}'.format(upgrade_info['unit_name'])
+                        components = []
+                        if 'unit_name' in upgrade_info:
+                            components.append(upgrade_info['unit_name'])
+                        if 'upgrade_name' in upgrade_info:
+                            components.append(upgrade_info['upgrade_name'])
+                        
+                        level_points = []
+                        if 'level' in upgrade_info:
+                            level_points.append('Level {}'.format(upgrade_info['level']))
+                        if 'points' in upgrade_info:
+                            level_points.append(upgrade_info['points'])
+                        
+                        if level_points:
+                            components.append('({})'.format(', '.join(level_points)))
+                        
+                        if components:
+                            info_msg = 'Upgrading {}'.format(' - '.join(components))
                     
                     self._wait(
                         seconds=waiting_time + 5,
@@ -93,8 +103,9 @@ class WorkshopUpgradeBot(Bot):
             self.__start_upgrade(selected_unit)
             
             self._set_process_info(
-                'Started upgrading {} (Glass: {}, Gold: {})'.format(
+                'Started upgrading {} {} (Glass: {}, Gold: {})'.format(
                     selected_unit['name'],
+                    selected_unit.get('level_points', ''),
                     addThousandSeparator(selected_unit['glass']),
                     addThousandSeparator(selected_unit['gold'])
                 )

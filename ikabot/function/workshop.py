@@ -51,12 +51,36 @@ def extract_units_data(html: str) -> Tuple[bool, List[dict], dict]:
                 _upgrade_info['upgrade_name'] = img['title']
         
         if upgrade_desc_title:
+            title_text = upgrade_desc_title.get_text(separator=' ', strip=True)
+            _upgrade_info['full_title'] = title_text
+            
+            # Try to extract level/points from title
+            level_match = re.search(r'Level\s*(\d+)', title_text, re.IGNORECASE)
+            if level_match:
+                _upgrade_info['level'] = level_match.group(1)
+            
+            points_match = re.search(r'(\+\d+)', title_text)
+            if points_match:
+                _upgrade_info['points'] = points_match.group(1)
+
             spans = upgrade_desc_title.find_all('span')
             if len(spans) >= 2:
                 _upgrade_info['upgrade_type'] = spans[1].text.strip()
         
         if upgrade_effect:
-            _upgrade_info['effect'] = upgrade_effect.text.strip()
+            effect_text = upgrade_effect.get_text(separator=' ', strip=True)
+            _upgrade_info['effect'] = effect_text
+            
+            # If we haven't found level/points yet, try effect text
+            if 'level' not in _upgrade_info:
+                level_match = re.search(r'Level\s*(\d+)', effect_text, re.IGNORECASE)
+                if level_match:
+                    _upgrade_info['level'] = level_match.group(1)
+            
+            if 'points' not in _upgrade_info:
+                points_match = re.search(r'(\+\d+)', effect_text)
+                if points_match:
+                    _upgrade_info['points'] = points_match.group(1)
 
     for _group in _groups:
         _units_tab_params = extract_url_parameters(soup.find(id='js_'+_group.get('id'))['onclick'])
@@ -120,12 +144,32 @@ def extract_units_data(html: str) -> Tuple[bool, List[dict], dict]:
                     _upgrade_p = _upgrade_html.find('p')
                     _upgrade_desc = re.sub(r'\s+', ' ', _upgrade_p.text.strip()) if _upgrade_p else ''
                     
+                    # Extract level or points from improvement text or upgrade description
+                    level_points = ''
+                    level_match = re.search(r'Level\s*(\d+)', _improvement, re.IGNORECASE)
+                    if not level_match:
+                        level_match = re.search(r'Level\s*(\d+)', _upgrade_desc, re.IGNORECASE)
+                    
+                    if level_match:
+                        level_points = 'Level ' + level_match.group(1)
+                    
+                    points_match = re.search(r'(\+\d+)', _improvement)
+                    if not points_match:
+                        points_match = re.search(r'(\+\d+)', _upgrade_desc)
+                    
+                    if points_match:
+                        if level_points:
+                            level_points += ' (' + points_match.group(1) + ')'
+                        else:
+                            level_points = points_match.group(1)
+
                     _unit = {
                         'tab': _group.get('id'),
                         'tableName': _unit_name,  # Always use unit name, not the type
                         'type': _units_type,
                         'name': _unit_name,
                         'improvement': _improvement,
+                        'level_points': level_points,
                         'glass': parse_int(_glass_elem.text),
                         'gold': parse_int(_gold_elem.text),
                         'time': _time_elem.text.strip(),
@@ -203,12 +247,32 @@ def extract_units_data(html: str) -> Tuple[bool, List[dict], dict]:
                     # Get full upgrade text
                     _upgrade_full_text = re.sub(r'\s+', ' ', _upgrade_html.get_text(strip=True))
                     
+                    # Extract level or points from improvement text or upgrade description
+                    level_points = ''
+                    level_match = re.search(r'Level\s*(\d+)', _improvement, re.IGNORECASE)
+                    if not level_match:
+                        level_match = re.search(r'Level\s*(\d+)', _upgrade_full_text, re.IGNORECASE)
+                    
+                    if level_match:
+                        level_points = 'Level ' + level_match.group(1)
+                    
+                    points_match = re.search(r'(\+\d+)', _improvement)
+                    if not points_match:
+                        points_match = re.search(r'(\+\d+)', _upgrade_full_text)
+                    
+                    if points_match:
+                        if level_points:
+                            level_points += ' (' + points_match.group(1) + ')'
+                        else:
+                            level_points = points_match.group(1)
+
                     _unit = {
                         'tab': _group.get('id'),
                         'tableName': _unit_name,  # Always use unit name, not the type
                         'type': _units_type,
                         'name': _unit_name,
                         'improvement': _improvement,
+                        'level_points': level_points,
                         'glass': _glass_value,
                         'gold': parse_int(_gold_elem.text),
                         'time': _time_elem.text.strip(),
@@ -318,6 +382,10 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
             print('  Unit: {}'.format(decodeUnicodeEscape(upgrade_info['unit_name'])))
         if 'upgrade_name' in upgrade_info:
             print('  Upgrade: {}'.format(decodeUnicodeEscape(upgrade_info['upgrade_name'])))
+        if 'level' in upgrade_info:
+            print('  Level: {}'.format(upgrade_info['level']))
+        if 'points' in upgrade_info:
+            print('  Points: {}'.format(upgrade_info['points']))
         if 'upgrade_type' in upgrade_info:
             print('  Type: {}'.format(decodeUnicodeEscape(upgrade_info['upgrade_type'])))
         if 'effect' in upgrade_info:
@@ -342,6 +410,7 @@ def use_workshop(ikariam_service: IkariamService, db: Database, telegram: Telegr
             {'title': 'ID', 'useDataRowIndexForValue': lambda data_index: data_index + 1,
              'setColour': __determine_action_color},
             {'key': 'tableName', 'title': 'Name', 'fmt': decodeUnicodeEscape, 'align': '<'},
+            {'key': 'level_points', 'title': 'Points/Level', 'align': '^'},
             {'key': 'glass', 'title': 'Glass', 'setColour': lambda v, r: Colours.MATERIALS[3],
              'fmt': addThousandSeparator},
             {'key': 'gold', 'title': 'Gold', 'fmt': addThousandSeparator},

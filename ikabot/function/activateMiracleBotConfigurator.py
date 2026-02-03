@@ -67,8 +67,8 @@ def obtainMiraclesAvailable(session):
         if available is False:
             for elem in data:
                 if 'countdown' in data[elem]:
-                    enddate = data[elem]['countdown']['enddate']
-                    currentdate = data[elem]['countdown']['currentdate']
+                    enddate = int(data[elem]['countdown']['enddate'])
+                    currentdate = int(data[elem]['countdown']['currentdate'])
                     break
 
         # set the information on the island which wonder we can activate
