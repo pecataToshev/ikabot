@@ -288,7 +288,7 @@ class Colours:
             CYAN = '\033[106m'
             WHITE = '\033[107m'
 
-    MATERIALS = [Text.YELLOW, Text.Light.MAGENTA, Text.Light.WHITE, Text.Light.BLUE, Text.Light.YELLOW]
+    MATERIALS = [Text.YELLOW, Text.Light.MAGENTA, Text.Light.BLACK, Text.Light.BLUE, Text.Light.YELLOW]
     SATISFACTION = {
         "ecstatic": Text.GREEN,
         "happy": Text.YELLOW,
