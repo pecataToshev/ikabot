@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import json
 import math
 import re
 import time
@@ -112,6 +113,8 @@ def shipMovements(ikariam_service, db, telegram):
 
                 # Build details string
                 details = []
+                if movement['event']['type'] == 'piracy':
+                    details.append('{}{}Piracy{}{}'.format(Colours.Text.BLACK, Colours.Background.WHITE, Colours.Text.RESET, Colours.Background.RESET))
                 # Troops moved to cargo
                 if military_ships > 0:
                     details.append('Fleets: {}'.format(addThousandSeparator(military_ships)))
@@ -197,6 +200,10 @@ def shipMovements(ikariam_service, db, telegram):
         print("\nActions:")
         print(" 0) Exit")
         print(" 1) Refresh")
-        action = read(min=0, max=1, digit=True)
+        print(" 2) Print raw data")
+        action = read(min=0, max=2, digit=True)
         if action == 0:
             break
+        elif action == 2:
+            print(json.dumps(movements))
+            enter()
