@@ -618,21 +618,31 @@ class IkariamService:
     def __sessionExpired(self):
         logging.info('__sessionExpired()')
         self.__backoff()
-        cookies = self.db.get_stored_value('cookies')
 
-        try:
-            if cookies is None or self.s.cookies['PHPSESSID'] != cookies['PHPSESSID']:
-                self.__getCookie()
-            else:
-                try:
-                    self.__login(3)
-                except Exception:
-                    self.__sessionExpired()
-        except KeyError:
+        # Try to get the login lock
+        if self.db.get_lock('login', timeout=120): # 2 minutes timeout for login
             try:
+                # Re-check if cookies were updated while we were waiting for the lock
+                self.__getCookie()
+                # Test connection
+                try:
+                    html = self.get(ignoreExpire=True)
+                    if not self.isExpired(html):
+                        logging.info('Session restored after cookie reload')
+                        return
+                except Exception:
+                    pass
+
+                # Still expired, perform login
                 self.__login(3)
-            except Exception:
-                self.__sessionExpired()
+            finally:
+                self.db.release_lock('login')
+        else:
+            # Another process is logging in, wait and reload
+            logging.info('Another process is logging in, waiting...')
+            time.sleep(10)
+            self.__getCookie()
+            # The next request will trigger __checkCookie which will see the new cookies
 
     def __proxy_error(self):
         proxy_conf = self.db.get_stored_value('proxy')
@@ -668,16 +678,21 @@ class IkariamService:
 
     def __checkCookie(self):
         logging.debug('__checkCookie()')
-        cookies = self.db.get_stored_value('cookies')
+        stored_cookies = self.db.get_stored_value('cookies')
+        if stored_cookies is None:
+             return
 
-        try:
-            if cookies is None or self.s.cookies['PHPSESSID'] != cookies['PHPSESSID']:
-                self.__getCookie()
-        except KeyError:
-            try:
-                self.__login(3)
-            except Exception:
-                self.__sessionExpired()
+        current_cookies = dict(self.s.cookies.items())
+        # Check if any cookie has changed in the DB
+        changed = False
+        for key, value in stored_cookies.items():
+            if key not in current_cookies or current_cookies[key] != value:
+                changed = True
+                break
+
+        if changed:
+            logging.info('Cookies in database changed, reloading...')
+            self.__getCookie()
 
     def __uniqueRequestId(self):
         return base64.b64encode(os.urandom(32))[:8]
