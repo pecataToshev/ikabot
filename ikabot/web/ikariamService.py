@@ -59,7 +59,7 @@ class IkariamService:
         return 'nologin_umod' in html
 
     def isExpired(self, html):
-        return 'index.php?logout' in html or '<a class="logout"' in html
+        return 'index.php?logout' in html or '<a class="logout"' in html or 'browsergamelobby' in html
 
     def __saveNewCookies(self):
         self.db.store_value('cookies', dict(self.s.cookies.items()))
