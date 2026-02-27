@@ -163,7 +163,8 @@ def getIdsOfCities(ikariam_service, all=False):
                 pass
             url_base = getattr(ikariam_service, 'urlBase', 'unknown')
             proxies = getattr(ikariam_service.s, 'proxies', {}) if hasattr(ikariam_service, 's') else {}
-            raise Exception(f"Cannot parse relatedCityData. HTML saved to {dump_file}. URL: {url_base}, Proxies: {proxies}")
+            history = getattr(ikariam_service, 'requestHistory', [{}])[-1] if hasattr(ikariam_service, 'requestHistory') and getattr(ikariam_service, 'requestHistory') else {}
+            raise Exception(f"Cannot parse relatedCityData. HTML saved to {dump_file}. URL: {url_base}, Proxies: {proxies}, History: {history}")
         cities_cache = match.group(1) + '}'
         cities_cache = cities_cache.replace('\\', '')
         cities_cache = cities_cache.replace('city_', '')
