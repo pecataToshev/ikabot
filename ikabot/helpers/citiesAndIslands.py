@@ -153,7 +153,16 @@ def getIdsOfCities(ikariam_service, all=False):
     global ids_cache
     if ids_cache is None or cities_cache is None or ikariam_service.padre is False:
         html = ikariam_service.get()
-        cities_cache = re.search(r'relatedCityData:\sJSON\.parse\(\'(.+?),\\"additionalInfo', html).group(1) + '}'
+        match = re.search(r'relatedCityData:\sJSON\.parse\(\'(.+?),\\"additionalInfo', html)
+        if not match:
+            dump_file = '/tmp/ikabot_html_dump.txt'
+            try:
+                with open(dump_file, 'w', encoding='utf-8') as f:
+                    f.write(html)
+            except Exception:
+                pass
+            raise Exception("Cannot parse relatedCityData in getIdsOfCities. HTML saved to " + dump_file)
+        cities_cache = match.group(1) + '}'
         cities_cache = cities_cache.replace('\\', '')
         cities_cache = cities_cache.replace('city_', '')
         cities_cache = json.loads(cities_cache, strict=False)
