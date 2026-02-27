@@ -161,7 +161,9 @@ def getIdsOfCities(ikariam_service, all=False):
                     f.write(html)
             except Exception:
                 pass
-            raise Exception("Cannot parse relatedCityData in getIdsOfCities. HTML saved to " + dump_file)
+            url_base = getattr(ikariam_service, 'urlBase', 'unknown')
+            proxies = getattr(ikariam_service.s, 'proxies', {}) if hasattr(ikariam_service, 's') else {}
+            raise Exception(f"Cannot parse relatedCityData. HTML saved to {dump_file}. URL: {url_base}, Proxies: {proxies}")
         cities_cache = match.group(1) + '}'
         cities_cache = cities_cache.replace('\\', '')
         cities_cache = cities_cache.replace('city_', '')
