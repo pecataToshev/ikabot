@@ -420,7 +420,7 @@ class IkariamService:
                     i = 0
                     for account in [account for account in accounts if account['blocked'] is False]:
                         account_group = account['accountGroup']
-                        world, server_lang = [(srv['name'], srv['language']) for srv in servers if srv['accountGroup'] == account_group][0]
+                        world, server_lang = [(srv['name'], srv['language']) for srv in servers if srv['language'] == account['server']['language'] and str(srv['number']) == str(account['server']['number'])][0]
 
                         i += 1
                         pad = ' ' * (max_name - len(account['name']))
@@ -434,7 +434,7 @@ class IkariamService:
             self.account_group = self.account['accountGroup']
             self.server_number = str(self.account['server']['number'])
 
-            self.word, self.server = [(srv['name'], srv['language']) for srv in servers if srv['accountGroup'] == self.account_group][0]
+            self.word, self.server = [(srv['name'], srv['language']) for srv in servers if srv['language'] == self.server_language and str(srv['number']) == self.server_number][0]
 
             config.infoUser = 'Server:{}'.format(self.server)
             config.infoUser += ', World:{}'.format(self.word)
